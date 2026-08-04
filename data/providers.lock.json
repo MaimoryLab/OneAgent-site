@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "default_fallback_probe_model": "deepseek/deepseek-v3",
+  "providers": {
+    "ppio": {
+      "name": "PPIO",
+      "home": "https://ppio.com/",
+      "base_url": "https://api.ppio.com/openai",
+      "anthropic_base_url": "https://api.ppio.com/anthropic",
+      "fallback_probe_model": "deepseek/deepseek-v3",
+      "relationship": "none",
+      "disclosure": "",
+      "referral_url": "",
+      "order": 1,
+      "protocols": {
+        "openai": "implementation-supported",
+        "anthropic": "implementation-supported",
+        "responses": "release-candidate-required"
+      }
+    },
+    "novita": {
+      "name": "Novita",
+      "home": "https://novita.ai/",
+      "base_url": "https://api.novita.ai/openai",
+      "anthropic_base_url": "https://api.novita.ai/anthropic",
+      "fallback_probe_model": "deepseek/deepseek_v3",
+      "relationship": "none",
+      "disclosure": "",
+      "referral_url": "",
+      "order": 2,
+      "protocols": {
+        "openai": "implementation-supported",
+        "anthropic": "implementation-supported",
+        "responses": "release-candidate-required"
+      }
+    }
+  }
+}

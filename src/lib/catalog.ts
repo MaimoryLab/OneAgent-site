@@ -1,5 +1,10 @@
-import agentLock from "../../../agents.lock.json";
-import providerConfig from "../../../providers.lock.json";
+/* Vendored under data/ rather than read from the OneAgent repository. The site
+   describes what a published release supports, so it must not follow that
+   repository's HEAD: an agent added there but not yet shipped would be
+   advertised as available. data/README.md records where these came from and how
+   to refresh them. */
+import agentLock from "../../data/agents.lock.json";
+import providerConfig from "../../data/providers.lock.json";
 /* The site-facing shapes are declared once, in explorer.ts, because the explorer
    is what constrains them: it narrows platforms and protocols to the ids it can
    actually render a compatibility verdict for. Re-declaring them here would let

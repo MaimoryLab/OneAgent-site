@@ -1,0 +1,9 @@
+# Paths are anchored with a leading slash. A bare `dist/` would also match
+# `public/dist/` or any future nested directory of that name, which is how a
+# tracked file gets silently dropped from a build.
+/node_modules/
+/dist/
+/.astro/
+/coverage/
+/test-results/
+/playwright-report/
