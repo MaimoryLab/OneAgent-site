@@ -1,0 +1,41 @@
+OneAgent public site
+Copyright 2026 MaimoryLab
+
+This product includes software developed at MaimoryLab.
+
+Licensed under the Apache License, Version 2.0. See LICENSE for the full text.
+
+================================================================================
+Bundled image assets
+================================================================================
+
+Agent marks under public/images/agents/ are redistributed under their own
+licenses. Each one's source, license, copyright owner and SHA-256 are recorded
+in public/images/agents/asset-rights.json, with the corresponding license text
+under licenses/.
+
+  codex.svg     MIT  LobeHub contributors  licenses/lobehub-LICENSE
+  opencode.svg  MIT  LobeHub contributors  licenses/lobehub-LICENSE
+
+An agent with no entry in asset-rights.json has no bundled mark and renders a
+letter glyph instead. That is deliberate: a vendor favicon copied in without an
+auditable redistribution basis would be both a licensing and a trademark
+problem, so the absence of a mark is the correct state rather than a gap.
+
+================================================================================
+Third-party trademarks
+================================================================================
+
+This site names supported Agents and Providers in order to say what OneAgent
+does and does not support. This is nominative use: the names identify the
+referenced products and do not imply endorsement, affiliation or sponsorship.
+The two bundled image assets are not recoloured or restyled and remain the
+property of their respective owners.
+
+================================================================================
+Catalog data
+================================================================================
+
+data/agents.lock.json and data/providers.lock.json are copies of files of the
+same name in MaimoryLab/OneAgent, which is licensed under Apache-2.0. See
+data/README.md for the commit they came from and how to refresh them.

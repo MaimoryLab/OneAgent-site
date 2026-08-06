@@ -187,9 +187,15 @@ const demoLabel = (status: string) => status === "ready"
     <button class="button button-secondary explorer-clear" type="button" data-clear-filters>{copy.clear}</button>
   </section>
 
-  <div class="explorer-result-line" aria-live="polite">
-    <strong data-result-count>{explorerAgents.length}</strong>
-    <span>{copy.results}</span>
+  {/* The live region is the count and its unit, not the whole line. Six selects
+      feed this, and a select fires change per keystroke under arrow-key
+      navigation — with aria-live on the container, every one of those
+      re-announced copy.illustrative, a static sentence that never changes. */}
+  <div class="explorer-result-line">
+    <span aria-live="polite">
+      <strong data-result-count>{explorerAgents.length}</strong>
+      <span>{copy.results}</span>
+    </span>
     <span aria-hidden="true">·</span>
     <span>{copy.illustrative}</span>
   </div>

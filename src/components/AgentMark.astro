@@ -5,26 +5,23 @@ interface Props {
   size?: number;
 }
 const { id, name, size = 24 } = Astro.props;
-/* An agent with no entry here renders the letter fallback below rather than a
-   broken image. That is the intended state for the desktop applications and the
-   coming-soon entries: upstream only ships an image asset when its source,
-   license and digest are recorded in asset-rights.json, and uses a generic mark
-   otherwise. Adding a vendor icon here without that record would put artwork in
-   a public repository with no redistribution basis. */
+/* Only the marks whose source, license, owner and SHA-256 are recorded in
+   public/images/agents/asset-rights.json. An agent absent from this map renders
+   the letter fallback below, which is the intended state rather than a gap to
+   fill: copying a vendor favicon into a public repository without an auditable
+   redistribution basis is a licensing problem, and a trademark one besides.
+   Upstream reaches the same conclusion in the other direction, using generic
+   Lucide symbols where this site uses a letter.
+
+   So the desktop applications and the coming-soon entries have no mark by
+   design, not for want of one. */
 const extensions: Record<string, string> = {
   codex: "svg",
-  "claude-code": "svg",
-  cursor: "svg",
   opencode: "svg",
-  openclaw: "svg",
-  hermes: "png",
-  "kilo-cli": "svg",
-  aider: "png",
 };
-/* These two marks ship as fill="currentColor". Loaded through <img> the keyword
-   has no page to inherit from and falls back to black, which disappears on a
-   dark ground — so they get inverted there while the marks carrying their own
-   brand colours are left alone. */
+/* Both marks ship as fill="currentColor". Loaded through <img> the keyword has
+   no page to inherit from and falls back to black, which disappears on a dark
+   ground — so they get inverted there. */
 const monochrome = new Set(["codex", "opencode"]);
 const extension = extensions[id];
 const imageSource = extension ? `${import.meta.env.BASE_URL}images/agents/${id}.${extension}` : null;

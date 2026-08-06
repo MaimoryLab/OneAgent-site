@@ -566,6 +566,59 @@ test("hero text contrast is proven once the decorative canvas is removed", async
   expect(result.incomplete, JSON.stringify(result.incomplete, null, 2)).toEqual([]);
 });
 
+/* WCAG 1.4.11 wants 3:1 for a focus indicator, and nothing else in this suite
+ * measures it: axe's color-contrast rule evaluates text only, so a focus ring can
+ * fail without any of the accessibility tests above going red. This one did —
+ * --focus-ring was translucent and composited to 1.55:1 on the light theme, close
+ * to invisible for the keyboard-only users it exists for.
+ *
+ * Computed against the ring's own painted colour and the ground behind it, in
+ * both themes, since the two tokens are set independently.
+ */
+for (const scheme of ["light", "dark"] as const) {
+  test(`focus ring meets WCAG non-text contrast in ${scheme} mode`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto("/");
+
+    const ratio = await page.evaluate(() => {
+      /* Resolved by the browser rather than parsed here. A token can be any CSS
+         colour syntax — #rrggbb, rgb(), rgba(), a named colour — and hand-rolling
+         that parse is how this test first shipped broken: a regex for digit runs
+         turned "#2467f2" into [2467, 2, 0] and "#ececef" into [0, 0, 0], so it
+         compared two meaningless numbers and passed against the very value it
+         was written to reject. Painting the colour and reading it back cannot
+         disagree with what the user sees. */
+      const probe = document.createElement("span");
+      probe.style.display = "none";
+      document.body.append(probe);
+      const resolve = (token: string): [number, number, number, number] => {
+        probe.style.color = "";
+        probe.style.color = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+        const parts = getComputedStyle(probe).color.match(/[\d.]+/g)?.map(Number) ?? [];
+        return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0, parts[3] ?? 1];
+      };
+      const ring = resolve("--focus-ring");
+      const ground = resolve("--paper");
+      probe.remove();
+
+      const luminance = ([r, g, b]: number[]) => {
+        const channel = (c: number) => {
+          const s = c / 255;
+          return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+      };
+      // The ring is painted over the ground, so an alpha below 1 has to be
+      // composited before measuring — that is exactly what the old value hid.
+      const composited = ring.slice(0, 3).map((c, i) => c * ring[3] + ground[i] * (1 - ring[3]));
+      const [lighter, darker] = [luminance(composited), luminance(ground)].sort((a, b) => b - a);
+      return (lighter + 0.05) / (darker + 0.05);
+    });
+
+    expect(ratio, `focus ring contrast in ${scheme} mode`).toBeGreaterThanOrEqual(3);
+  });
+}
+
 // Navigation animates via the native cross-document path, so the proof is that
 // the outgoing document reports a live transition on pageswap. Asserting on the
 // CSS alone would still pass if the browser declined to run it.

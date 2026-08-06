@@ -44,6 +44,22 @@ const releasesUrl = `https://api.github.com/repos/${repository}/releases?per_pag
 export const releasesPageUrl = `https://github.com/${repository}/releases`;
 let releasesRequest: Promise<GitHubRelease[]> | undefined;
 
+/**
+ * Statuses that mean "this build cannot see the release feed", as opposed to
+ * "the feed answered and something is wrong".
+ *
+ * 404 is a private or absent repository, which is the state a fresh fork is in.
+ * 403 and 429 are rate limiting: unauthenticated requests share a 60-per-hour
+ * budget per IP, and CI runners share an outbound IP with every other job on the
+ * host — so a build can exhaust a budget it never spent.
+ *
+ * All three degrade to an empty feed rather than failing the build. A download
+ * page that says "not published yet" is a worse page; a build that exits 1 is no
+ * page at all, and the failure would be unrelated to the commit under test.
+ * Callers already render the empty state honestly — see release-channel.ts.
+ */
+const unreachableFeedStatuses = new Set([403, 404, 429]);
+
 function getPublishedReleases(): Promise<GitHubRelease[]> {
   releasesRequest ??= fetch(releasesUrl, {
     headers: {
@@ -52,7 +68,17 @@ function getPublishedReleases(): Promise<GitHubRelease[]> {
       ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
     },
   }).then(async (response) => {
-    if (response.status === 404 && !process.env.GITHUB_TOKEN) return [];
+    if (unreachableFeedStatuses.has(response.status)) {
+      /* Loud on purpose. Silently shipping a site with no downloads listed is
+         the failure this branch introduces, so it must be visible in the build
+         log even though it does not stop the build. */
+      console.warn(
+        `[downloads] GitHub Releases unreachable (${response.status} ${response.statusText}). ` +
+          `Rendering the "not published yet" state. ` +
+          (process.env.GITHUB_TOKEN ? "" : "Set GITHUB_TOKEN to raise the rate limit."),
+      );
+      return [];
+    }
     if (!response.ok) throw new Error(`GitHub Releases request failed: ${response.status} ${response.statusText}`);
     const releases = await response.json();
     if (!Array.isArray(releases)) throw new Error("GitHub Releases response must be an array");
