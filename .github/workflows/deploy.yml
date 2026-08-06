@@ -24,10 +24,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Publishing Pages from a private repository needs a paid plan, and this
+  # repository is private on a free org. Without this gate the deploy job below
+  # would fail at actions/configure-pages after every green CI run on main,
+  # leaving the default branch permanently red — which teaches everyone to stop
+  # reading the badge, the same way the rate-limit failures in #3 did.
+  #
+  # So the availability of Pages is a precondition to check, not an error to hit.
+  # When it becomes available (the repository goes public, or the plan changes)
+  # this passes on its own with no edit here. See issue #4.
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      pages_available: ${{ steps.check.outputs.available }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 404 means Pages is not configured, which is not the same as not
+          # allowed — so ask whether it *can* be enabled by reading the
+          # repository's own capability flag rather than its current state.
+          if gh api "repos/${GITHUB_REPOSITORY}" --jq '.has_pages' | grep -qx true; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "Pages is configured for this repository."
+          elif [ "$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.visibility')" = "public" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "Repository is public, so Pages can be enabled by the deploy step."
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Deploy skipped::Pages is unavailable: this repository is private and the plan does not permit Pages from private repositories. See issue #4."
+          fi
+
   deploy:
+    needs: preflight
     # workflow_run fires on failure too, so the conclusion has to be checked
     # explicitly — without this, a red CI run would still publish.
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: |
+      needs.preflight.outputs.pages_available == 'true'
+      && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
