@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "source": "internal/desktopapp/registry.go",
+  "source_commit": "206a610",
+  "note": "Transcribed by hand from upstream's Go registry, which has no generated lock file. See data/README.md.",
+  "agents": {
+    "chatgpt-desktop": {
+      "name": "ChatGPT Desktop",
+      "config_adapter": "codex",
+      "shared_config_agent": "codex",
+      "config_path": ".codex/config.toml",
+      "protocol": "responses",
+      "install": {
+        "macos": "macos-dmg",
+        "windows": "windows-store"
+      },
+      "rank": 1
+    },
+    "workbuddy": {
+      "name": "WorkBuddy",
+      "config_adapter": "workbuddy",
+      "config_path": ".workbuddy/models.json",
+      "protocol": "openai",
+      "install": {
+        "macos": "macos-zip",
+        "windows": "windows-installer"
+      },
+      "rank": 2
+    }
+  }
+}

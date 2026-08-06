@@ -76,18 +76,20 @@ test("activation demo reaches Ready only for a supported managed combination", a
   expect(fetches, "the public demo must not call a local or remote activation API").toEqual([]);
 });
 
-test("activation demo preserves guide-only and preview-gate boundaries", async ({ page }) => {
+/* This used to drive the guide-only branch first, by picking Cursor. Upstream
+ * removed every guide-only agent from agents.lock.json, so the reducer's
+ * guide-only phase is unreachable from the real catalog — it is still exercised
+ * against a fixture in src/lib/activation.test.ts, which is where a branch with
+ * no catalog subject belongs.
+ *
+ * The preview gate is the boundary that still has one, and it is the one worth
+ * driving end to end: a release-candidate-required protocol must not reach Ready
+ * no matter what the visitor clicks afterwards.
+ */
+test("activation demo preserves the preview-gate boundary", async ({ page }) => {
   await page.goto("/");
   const console = page.locator("#activation-console");
 
-  await page.getByRole("button", { name: "开始激活演示" }).click();
-  await expect(console).toHaveAttribute("data-phase", "agent");
-  await console.getByRole("button", { name: /Cursor/ }).click();
-  await expect(console).toHaveAttribute("data-phase", "guide-only");
-  await expect(console.getByRole("heading", { name: "转入官方设置" })).toBeVisible();
-  await expect(console.getByRole("link", { name: "下载 OneAgent" })).toBeHidden();
-
-  await console.getByRole("button", { name: "重置演示" }).click();
   await page.getByRole("button", { name: "开始激活演示" }).click();
   await expect(console).toHaveAttribute("data-phase", "agent");
   await console.getByRole("button", { name: /Codex/ }).click();
@@ -301,12 +303,33 @@ test("Explorer filters only catalog-backed combinations", async ({ page }) => {
   await explorer.locator('[data-filter="platform"]').selectOption("windows");
   await explorer.locator('[data-filter="protocol"]').selectOption("responses");
   await explorer.locator('[data-filter="provider"]').selectOption("ppio");
+  /* Two agents speak Responses on Windows: the Codex CLI and ChatGPT Desktop,
+     which shares Codex's configuration while being a separate product at install
+     time. Asserting the set rather than a count keeps the test honest about
+     which ones matched. */
   const visible = explorer.locator("[data-agent-card]:visible");
-  await expect(visible).toHaveCount(1);
-  await expect(visible).toHaveAttribute("data-agent-id", "codex");
+  await expect(visible).toHaveCount(2);
+  expect(await visible.evaluateAll((cards) => cards.map((card) => (card as HTMLElement).dataset.agentId).sort()))
+    .toEqual(["chatgpt-desktop", "codex"]);
   await expect(page).toHaveURL(/platform=windows/);
   await expect(page).toHaveURL(/protocol=responses/);
   await expect(page).toHaveURL(/provider=ppio/);
+});
+
+/* A coming-soon agent has no protocol to compare against a provider, so every
+   pair including it would render as "unsupported" — a claim about the provider
+   rather than the truth, that OneAgent does not support the agent yet. It belongs
+   on the catalog page and not in the verdict grid. */
+test("Explorer leaves coming-soon agents out of the verdict grid", async ({ page }) => {
+  await page.goto("/explore/");
+  const explorer = page.locator("compatibility-explorer");
+  for (const planned of ["openclaw", "hermes"]) {
+    await expect(explorer.locator(`[data-agent-card][data-agent-id="${planned}"]`)).toHaveCount(0);
+  }
+
+  // A shared URL naming one must not restore it either.
+  await page.goto("/explore/?agent=openclaw");
+  await expect(explorer.locator("[data-agent-card].is-selected")).toHaveCount(0);
 });
 
 /* The download page renders from whatever the GitHub Releases feed returned at
@@ -409,11 +432,37 @@ for (const [route, expected] of [
   });
 }
 
-test("guide-only compatibility remains distinct from managed installation", async ({ page }) => {
-  await page.goto("/agents/cursor/");
-  await expect(page.getByText("按官方方式安装", { exact: true })).toBeVisible();
-  await expect(page.getByText("由 Agent 官方流程管理", { exact: true })).toBeVisible();
-  await expect(page.getByText("OneAgent 可管理安装", { exact: true })).toHaveCount(0);
+/* Replaces a test that opened /agents/cursor/ to check the guide-only path.
+ * Upstream removed Cursor — and every other guide-only entry — from
+ * agents.lock.json, so the catalog has no agent left whose install path is an
+ * official flow, and there is nothing to point that assertion at.
+ *
+ * The distinction worth keeping is the one that replaced it: a desktop
+ * application and a command-line agent are different products, and the page must
+ * not describe one with the other's facts. A desktop app has no launch command
+ * and no pinned version; both are installed by OneAgent.
+ */
+test("a desktop application is described as a desktop application", async ({ page }) => {
+  await page.goto("/agents/chatgpt-desktop/");
+  await expect(page.getByText("桌面端 Agent", { exact: true }).first()).toBeVisible();
+  // Rendered twice by design: once as a fact cell, once as a summary chip.
+  await expect(page.getByText("OneAgent 可管理安装", { exact: true }).first()).toBeVisible();
+  // Shares Codex's config target, which is the fact a reader needs before install.
+  await expect(page.getByText(/\.codex\/config\.toml/)).toBeVisible();
+  // No CLI facts invented for it.
+  await expect(page.getByText("启动命令", { exact: true })).toHaveCount(0);
+});
+
+/* A coming-soon agent has a page so a reader can find out what is planned, but
+   that page must not print an install, config, protocol or platform contract —
+   there is no catalog entry to read one from, and a null rendered in a fact cell
+   reads as a capability claim. */
+test("a coming-soon agent claims no support it does not have", async ({ page }) => {
+  await page.goto("/agents/openclaw/");
+  await expect(page.getByText("即将支持").first()).toBeVisible();
+  for (const claim of ["OneAgent 可管理安装", "OneAgent 可管理配置", "按官方方式安装"]) {
+    await expect(page.getByText(claim, { exact: true })).toHaveCount(0);
+  }
 });
 
 /* Replaces a test that fetched the site's own release-index.json and asserted the

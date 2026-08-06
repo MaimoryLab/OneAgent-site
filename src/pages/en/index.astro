@@ -11,7 +11,12 @@ import { getPreviewChannel } from "../../lib/release-channel";
 
 const preview = await getPreviewChannel();
 const available = preview?.targets.find((target) => target.status === "available");
-const primaryAgents = catalog.agents.slice(0, 6);
+/* Available agents only — see the Chinese home page for why this is not a
+   positional slice of the whole catalog. */
+const availableAgents = catalog.agents.filter((agent) => agent.status === "available");
+const cliCount = availableAgents.filter((agent) => agent.kind === "cli").length;
+const desktopCount = availableAgents.length - cliCount;
+const primaryAgents = availableAgents.slice(0, 6);
 const { agentDescriptions, groupLabels, agentFallbackDescription } = useCatalogLabels("en");
 const href = (path: string) => localePath("en", path);
 ---
@@ -52,7 +57,7 @@ const href = (path: string) => localePath("en", path);
     <div class="shell reveal">
       <div class="section-heading">
         <div><p class="eyebrow">Compatibility Explorer</p><h2 class="section-title">A real catalog, not a static compatibility poster.</h2></div>
-        <p>{catalog.agents.length} agents, {catalog.providers.length} public providers, and independent compatibility for OpenAI Responses, Anthropic Messages and Chat Completions.</p>
+        <p>{availableAgents.length} agents ({cliCount} command-line, {desktopCount} desktop), {catalog.providers.length} public providers, and independent compatibility for OpenAI Responses, Anthropic Messages and Chat Completions.</p>
       </div>
       <div class="agent-list">
         {primaryAgents.map((agent) => (

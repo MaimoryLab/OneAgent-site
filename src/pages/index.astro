@@ -15,7 +15,14 @@ import { getPreviewChannel } from "../lib/release-channel";
    particular release existing. */
 const preview = await getPreviewChannel();
 const available = preview?.targets.find((target) => target.status === "available");
-const primaryAgents = catalog.agents.slice(0, 6);
+/* Only agents the catalog can describe a support contract for. Slicing the
+   catalog positionally would put a coming-soon entry on the home page as soon as
+   one outranked an installable agent, in a section whose whole claim is that the
+   compatibility it shows is real. */
+const availableAgents = catalog.agents.filter((agent) => agent.status === "available");
+const cliCount = availableAgents.filter((agent) => agent.kind === "cli").length;
+const desktopCount = availableAgents.length - cliCount;
+const primaryAgents = availableAgents.slice(0, 6);
 const { agentDescriptions, groupLabels, agentFallbackDescription } = useCatalogLabels("zh-CN");
 const href = (path: string) => localePath("zh-CN", path);
 ---
@@ -56,7 +63,7 @@ const href = (path: string) => localePath("zh-CN", path);
     <div class="shell reveal">
       <div class="section-heading">
         <div><p class="eyebrow">Compatibility catalog</p><h2 class="section-title">真实目录，不用一张静态兼容表糊弄你。</h2></div>
-        <p>{catalog.agents.length} 个 Agent、{catalog.providers.length} 个公开 Provider，以及 OpenAI Responses、Anthropic Messages 与 Chat Completions 的独立兼容状态。</p>
+        <p>{availableAgents.length} 个 Agent（{cliCount} 个命令行、{desktopCount} 个桌面端）、{catalog.providers.length} 个公开 Provider，以及 OpenAI Responses、Anthropic Messages 与 Chat Completions 的独立兼容状态。</p>
       </div>
       <div class="agent-list">
         {primaryAgents.map((agent) => (

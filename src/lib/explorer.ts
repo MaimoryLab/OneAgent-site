@@ -16,9 +16,25 @@ interface SiteAgentSupport {
   managedConfig: boolean;
 }
 
+/* A command-line agent is installed from a package manager and probed with
+   `--version`; a desktop application is installed from a vendor download and has
+   neither. They are separate products upstream — internal/desktopapp is its own
+   package precisely because a desktop app has no package-manager command or CLI
+   version probe — so the distinction is carried here rather than inferred from a
+   null command. */
+export type AgentKind = "cli" | "desktop";
+
+/* `available` is the only kind of support the catalog can prove. `planned` is an
+   agent OneAgent intends to support and does not yet: it has no entry in
+   agents.lock.json, so there is no install or config contract to describe, and
+   the explorer must not offer it as a combination a reader could act on. */
+export type AgentStatus = "available" | "planned";
+
 export interface SiteAgent {
   id: string;
   name: string;
+  kind: AgentKind;
+  status: AgentStatus;
   group: string;
   rank: number;
   command: string | null;
@@ -100,6 +116,7 @@ export function recommendedCombination(catalog: SiteCatalogV2): RecommendedCombi
   );
 
   for (const agent of agents) {
+    if (agent.status !== "available") continue;
     if (!agent.support.managedConfig || !agent.protocol) continue;
     const provider = providers.find((candidate) => {
       const compatibility = compatibilityFor(agent, candidate);
@@ -120,7 +137,11 @@ function isProtocol(value: string | null): value is ProtocolId {
 
 export function parseExplorerSearch(search: string, catalog: SiteCatalogV2): ExplorerSearchState {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
-  const selectedAgent = catalog.agents.find((agent) => agent.id === params.get("agent")) ?? null;
+  /* A planned agent is dropped rather than selected: a shared URL naming one
+     would otherwise restore a combination the explorer cannot give a verdict
+     for, since a planned agent has no protocol to compare against. */
+  const requestedAgent = catalog.agents.find((agent) => agent.id === params.get("agent")) ?? null;
+  const selectedAgent = requestedAgent?.status === "available" ? requestedAgent : null;
   let selectedProvider = catalog.providers.find((provider) => provider.id === params.get("provider")) ?? null;
   const requestedPlatform = params.get("platform");
   const requestedProtocol = params.get("protocol");

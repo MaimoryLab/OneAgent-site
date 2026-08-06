@@ -5,28 +5,40 @@ import { catalog } from "../../lib/catalog";
 import { protocolLabels } from "../../lib/content";
 import { localeFromPath } from "../../i18n";
 import { useCatalogLabels } from "../../i18n/catalog";
-const { agentDescriptions, groupLabels, agentFallbackDescription } = useCatalogLabels(localeFromPath(Astro.url.pathname));
+const { agentDescriptions, groupLabels, agentFallbackDescription, statusLabels } = useCatalogLabels(localeFromPath(Astro.url.pathname));
+const availableCount = catalog.agents.filter((agent) => agent.status === "available").length;
+const plannedCount = catalog.agents.length - availableCount;
+const desktopCount = catalog.agents.filter((agent) => agent.kind === "desktop").length;
 ---
 <BaseLayout title="Agent 兼容目录 — OneAgent" description="按安装、配置、协议和平台分别查看 OneAgent 对各 Agent 的真实支持范围。">
   <header class="page-hero">
     <div class="shell page-hero-grid">
       <div><nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / Agent</nav><p class="eyebrow">Compatibility catalog</p><h1 class="page-title">把“支持”拆成可以核对的事实。</h1></div>
-      <div class="page-hero-aside"><strong>{catalog.agents.length} 个目录项</strong>排序反映用户认知和使用广度，不代表商业合作，也不等于 OneAgent 能自动安装。</div>
+      <div class="page-hero-aside"><strong>{availableCount} 个已支持{plannedCount > 0 && <>，{plannedCount} 个即将支持</>}</strong>排序反映用户认知和使用广度，不代表商业合作，也不等于 OneAgent 能自动安装。</div>
     </div>
   </header>
   <section class="section-compact">
     <div class="shell">
-      <div class="notice notice-info" style="margin-bottom:34px"><span class="notice-mark">i</span><div><strong>guide-only 仍然是有效流程</strong><p>它表示 OneAgent 返回官方安装或配置指引并在 Review 中保留结果，而不是一个不可选择的禁用项。</p></div></div>
+      <div class="notice notice-info" style="margin-bottom:34px"><span class="notice-mark">i</span><div><strong>命令行 Agent 与桌面端 Agent 是两类产品</strong><p>命令行 Agent 由包管理器安装、用 <code>--version</code> 探测版本；{desktopCount} 个桌面端应用从厂商自己的下载渠道安装，没有命令也没有可锁定的版本号。标为「{statusLabels.planned}」的条目还没有安装或配置流程。</p></div></div>
       <div class="agent-list reveal">
         {catalog.agents.map((agent) => (
-          <a class="agent-row" href={`agents/${agent.id}/`}>
+          <a class="agent-row" href={`agents/${agent.id}/`} data-status={agent.status}>
             <AgentMark id={agent.id} name={agent.name} />
             <div><strong>{agent.name}</strong><span class="agent-meta">{groupLabels[agent.group] ?? agent.group}</span></div>
             <span class="agent-meta">{agentDescriptions[agent.id] ?? agentFallbackDescription}</span>
             <div class="agent-status">
-              {agent.support.managedInstall ? <span class="chip chip-green">管理安装</span> : <span class="chip">官方引导</span>}
-              {agent.support.managedConfig ? <span class="chip chip-blue">管理配置</span> : <span class="chip">官方配置</span>}
-              {agent.protocol && <span class="chip">{protocolLabels[agent.protocol]}</span>}
+              {agent.status === "planned" ? (
+                /* A planned agent gets one chip and no others: every support
+                   claim would be a guess, since it has no catalog entry to
+                   read one from. */
+                <span class="chip">{statusLabels.planned}</span>
+              ) : (
+                <>
+                  {agent.support.managedInstall ? <span class="chip chip-green">管理安装</span> : <span class="chip">官方引导</span>}
+                  {agent.support.managedConfig ? <span class="chip chip-blue">管理配置</span> : <span class="chip">官方配置</span>}
+                  {agent.protocol && <span class="chip">{protocolLabels[agent.protocol]}</span>}
+                </>
+              )}
             </div>
           </a>
         ))}

@@ -2,7 +2,7 @@
 import AgentMark from "./AgentMark.astro";
 import { catalog } from "../lib/catalog";
 import { bestLocaleFor, localeFromPath, localePath, switchesLanguage } from "../i18n";
-import { DEMO_CUSTOM_MODEL_HINT, demoStateFor } from "../lib/demo-environment";
+import { DEMO_CUSTOM_MODEL_HINT, demoStateFor, featuredDemoAgents } from "../lib/demo-environment";
 import { recommendedCombination } from "../lib/explorer";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 
 const { id = "activation-console" } = Astro.props;
 const locale = localeFromPath(Astro.url.pathname);
-const featuredAgents = catalog.agents.slice(0, 4);
+const featuredAgents = featuredDemoAgents(catalog);
 const recommendation = recommendedCombination(catalog);
 const href = (path: string) => localePath(bestLocaleFor(locale, path), path);
 const copy = locale === "en"
