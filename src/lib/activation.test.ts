@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { CUSTOM_PROVIDER_ID, activationReducer, initialActivationState, validateDemoBaseUrl } from "./activation";
 import type { SiteCatalogV2 } from "./explorer";
-import { DEMO_AGENT_STATES, demoModelsFor, missingDemoAgentIds } from "./demo-environment";
+import { DEMO_AGENT_STATES, demoModelsFor, featuredDemoAgents, missingDemoAgentIds } from "./demo-environment";
 
 const catalog: SiteCatalogV2 = {
   schema_version: 2,
@@ -11,6 +11,8 @@ const catalog: SiteCatalogV2 = {
     {
       id: "managed",
       name: "Managed",
+      kind: "cli",
+      status: "available",
       group: "auto",
       rank: 1,
       command: "managed",
@@ -27,6 +29,8 @@ const catalog: SiteCatalogV2 = {
     {
       id: "preview",
       name: "Preview",
+      kind: "cli",
+      status: "available",
       group: "auto",
       rank: 2,
       command: "preview",
@@ -43,6 +47,8 @@ const catalog: SiteCatalogV2 = {
     {
       id: "guided",
       name: "Guided",
+      kind: "cli",
+      status: "available",
       group: "ide",
       rank: 3,
       command: null,
@@ -138,6 +144,26 @@ describe("demo environment fixture", () => {
   it("references only real catalog agents", async () => {
     const realCatalog = (await import("./catalog")).catalog;
     expect(missingDemoAgentIds(realCatalog, DEMO_AGENT_STATES)).toEqual([]);
+  });
+
+  // The console's first screen has to keep offering both product shapes. A rank
+  // change upstream already emptied it of its second branch once, back when the
+  // screen was the first four agents by rank, and nothing failed until an
+  // end-to-end test timed out looking for a button.
+  it("features both a command-line and a desktop agent", async () => {
+    const realCatalog = (await import("./catalog")).catalog;
+    const featured = featuredDemoAgents(realCatalog);
+
+    expect(featured.some((agent) => agent.kind === "cli")).toBe(true);
+    expect(featured.some((agent) => agent.kind === "desktop")).toBe(true);
+  });
+
+  // A coming-soon agent has no install or config contract, so the demo must not
+  // offer it as something a visitor can walk to Ready.
+  it("never features an agent that is only planned", async () => {
+    const realCatalog = (await import("./catalog")).catalog;
+
+    expect(featuredDemoAgents(realCatalog).every((agent) => agent.status === "available")).toBe(true);
   });
 
   it("offers a model list for every provider the real catalog publishes", async () => {

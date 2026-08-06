@@ -5,6 +5,12 @@
    to refresh them. */
 import agentLock from "../../data/agents.lock.json";
 import providerConfig from "../../data/providers.lock.json";
+/* Desktop applications and planned agents have no generated lock file upstream —
+   the first live in a Go registry, the second are an intention rather than a
+   contract. Both are hand-transcribed and kept in their own files so refreshing
+   the vendored lock copies cannot silently drop them. */
+import desktopConfig from "../../data/desktop-agents.json";
+import plannedConfig from "../../data/planned-agents.json";
 /* The site-facing shapes are declared once, in explorer.ts, because the explorer
    is what constrains them: it narrows platforms and protocols to the ids it can
    actually render a compatibility verdict for. Re-declaring them here would let
@@ -18,6 +24,7 @@ const adapterProtocols: Record<string, ProtocolId> = {
   opencode: "openai",
   "kilo-cli": "openai",
   aider: "openai",
+  workbuddy: "openai",
 };
 
 interface AgentSource {
@@ -46,8 +53,24 @@ const groupNames: Record<string, string> = {
   auto: "One-click configurable",
   gateway: "Gateway agents",
   platform: "Official account agents",
-  ide: "IDE extensions",
+  desktop: "Desktop applications",
 };
+
+interface DesktopSource {
+  name?: string;
+  config_adapter: string;
+  shared_config_agent?: string;
+  config_path?: string;
+  protocol?: string;
+  install?: Record<string, string>;
+  rank?: number;
+}
+
+interface PlannedSource {
+  name?: string;
+  group?: string;
+  rank?: number;
+}
 
 interface ProviderSource {
   name?: string;
@@ -60,12 +83,14 @@ interface ProviderSource {
 }
 
 
-const agents = Object.entries(agentLock.agents as Record<string, AgentSource>)
+const cliAgents = Object.entries(agentLock.agents as Record<string, AgentSource>)
   .map(([id, meta]): SiteAgent => {
     const managedConfig = meta.config_mode === "auto" && Boolean(meta.config_adapter);
     return {
       id,
       name: meta.name ?? id,
+      kind: "cli",
+      status: "available",
       group: meta.group ?? "other",
       rank: meta.rank ?? 99,
       /* Both are shown on the site so a reader can check what OneAgent will run
@@ -88,8 +113,78 @@ const agents = Object.entries(agentLock.agents as Record<string, AgentSource>)
         managedConfig,
       },
     };
-  })
-  .sort((left, right) => left.rank - right.rank || left.id.localeCompare(right.id));
+  });
+
+/* Every desktop application OneAgent installs is installed by OneAgent — the
+   registry pairs each one with its own install function, so there is no
+   guide-only desktop app to model. Both currently ship a config adapter too,
+   which is why managedConfig follows the adapter rather than a mode flag the
+   source does not carry. */
+const desktopAgents = Object.entries(desktopConfig.agents as Record<string, DesktopSource>)
+  .map(([id, meta]): SiteAgent => ({
+    id,
+    name: meta.name ?? id,
+    kind: "desktop",
+    status: "available",
+    group: "desktop",
+    rank: meta.rank ?? 99,
+    /* A desktop application is launched from the dock, not a shell, so it has no
+       command to print. The install source per platform is the equivalent fact,
+       and it is carried in `platforms` below. */
+    command: null,
+    configPath: meta.config_path ?? null,
+    platforms: Object.keys(meta.install ?? {}) as PlatformId[],
+    /* OneAgent installs the vendor's current build from the vendor's own
+       endpoint; there is no pinned version to quote, and no package manifest
+       declaring a license for the site to repeat. */
+    lockedVersion: null,
+    source: null,
+    license: null,
+    licenseUrl: null,
+    guide: null,
+    protocol: meta.protocol ? adapterProtocols[meta.config_adapter] ?? (meta.protocol as ProtocolId) : null,
+    support: {
+      managedInstall: true,
+      officialInstallGuide: false,
+      managedConfig: Boolean(meta.config_adapter),
+    },
+  }));
+
+/* A planned agent carries no support claims at all: every flag is false and
+   every contract field null, because there is no entry in agents.lock.json to
+   read one from. The pages render this as "coming soon", and the explorer skips
+   it, so an absence of evidence cannot read as a capability. */
+const plannedAgents = Object.entries(plannedConfig.agents as Record<string, PlannedSource>)
+  .map(([id, meta]): SiteAgent => ({
+    id,
+    name: meta.name ?? id,
+    kind: "cli",
+    status: "planned",
+    group: meta.group ?? "other",
+    rank: meta.rank ?? 99,
+    command: null,
+    configPath: null,
+    platforms: [],
+    lockedVersion: null,
+    source: null,
+    license: null,
+    licenseUrl: null,
+    guide: null,
+    protocol: null,
+    support: { managedInstall: false, officialInstallGuide: false, managedConfig: false },
+  }));
+
+/* Ranks are only meaningful within a source: the desktop registry numbers its
+   two entries from 1, as does the planned list, so sorting the merged array by
+   rank would interleave them with the command-line agents. Each source is sorted
+   on its own and then concatenated — command-line first, then desktop, then the
+   coming-soon entries last, which is also the order the pages present them. */
+const byRank = (left: SiteAgent, right: SiteAgent) => left.rank - right.rank || left.id.localeCompare(right.id);
+const agents = [
+  ...cliAgents.sort(byRank),
+  ...desktopAgents.sort(byRank),
+  ...plannedAgents.sort(byRank),
+];
 
 const providers = Object.entries(providerConfig.providers as Record<string, ProviderSource>)
   .map(([id, meta]): SiteProvider => ({

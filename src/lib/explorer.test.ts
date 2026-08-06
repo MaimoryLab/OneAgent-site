@@ -15,6 +15,8 @@ const catalog: SiteCatalogV2 = {
     {
       id: "responses-agent",
       name: "Responses Agent",
+      kind: "cli",
+      status: "available",
       group: "auto",
       rank: 1,
       command: "responses-agent",
@@ -31,6 +33,8 @@ const catalog: SiteCatalogV2 = {
     {
       id: "anthropic-agent",
       name: "Anthropic Agent",
+      kind: "cli",
+      status: "available",
       group: "auto",
       rank: 2,
       command: "anthropic-agent",
@@ -47,6 +51,8 @@ const catalog: SiteCatalogV2 = {
     {
       id: "guided-agent",
       name: "Guided Agent",
+      kind: "cli",
+      status: "available",
       group: "ide",
       rank: 3,
       command: null,

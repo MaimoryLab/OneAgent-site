@@ -5,6 +5,12 @@ interface Props {
   size?: number;
 }
 const { id, name, size = 24 } = Astro.props;
+/* An agent with no entry here renders the letter fallback below rather than a
+   broken image. That is the intended state for the desktop applications and the
+   coming-soon entries: upstream only ships an image asset when its source,
+   license and digest are recorded in asset-rights.json, and uses a generic mark
+   otherwise. Adding a vendor icon here without that record would put artwork in
+   a public repository with no redistribution basis. */
 const extensions: Record<string, string> = {
   codex: "svg",
   "claude-code": "svg",

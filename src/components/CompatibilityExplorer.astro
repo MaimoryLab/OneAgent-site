@@ -9,6 +9,12 @@ import { compatibilityFor, type Compatibility } from "../lib/explorer";
 
 const locale = localeFromPath(Astro.url.pathname);
 const { agentDescriptions, groupLabels, agentFallbackDescription } = useCatalogLabels(locale);
+/* The explorer's job is to return a compatibility verdict for a pair. A planned
+   agent has no protocol to compare against a provider, so every pair including
+   it would read "unsupported" — which is a claim about the provider rather than
+   the truth, that OneAgent does not support the agent yet. Excluded here so the
+   grid, the counter and the shareable URL all agree. */
+const explorerAgents = catalog.agents.filter((agent) => agent.status === "available");
 const technicalHref = (agentId: string) => localePath("zh-CN", `agents/${agentId}/`);
 const providerHref = (providerId: string) => localePath("zh-CN", `providers/${providerId}/`);
 const copy = locale === "en"
@@ -182,14 +188,14 @@ const demoLabel = (status: string) => status === "ready"
   </section>
 
   <div class="explorer-result-line" aria-live="polite">
-    <strong data-result-count>{catalog.agents.length}</strong>
+    <strong data-result-count>{explorerAgents.length}</strong>
     <span>{copy.results}</span>
     <span aria-hidden="true">·</span>
     <span>{copy.illustrative}</span>
   </div>
 
   <div class="explorer-grid" data-explorer-grid>
-    {catalog.agents.map((agent) => {
+    {explorerAgents.map((agent) => {
       const demo = demoStateFor(agent);
       const providers = catalog.providers
         .filter((provider) => compatibilityFor(agent, provider) !== "unsupported")
@@ -234,7 +240,7 @@ const demoLabel = (status: string) => status === "ready"
   </div>
 
   <div hidden data-detail-templates>
-    {catalog.agents.map((agent) => {
+    {explorerAgents.map((agent) => {
       const demo = demoStateFor(agent);
       const version = demo.version === "locked"
         ? agent.lockedVersion
@@ -311,6 +317,10 @@ const demoLabel = (status: string) => status === "ready"
     serializeExplorerSearch,
     type ExplorerSearchState,
   } from "../lib/explorer";
+
+  /* Mirrors the server-side filter above: this script only ever opens a drawer
+     for an agent the grid rendered, and the grid renders available agents. */
+  const explorerAgents = catalog.agents.filter((agent) => agent.status === "available");
 
 
   class CompatibilityExplorerElement extends HTMLElement {
@@ -429,7 +439,7 @@ const demoLabel = (status: string) => status === "ready"
     }
 
     openAgent(agentId: string, trigger: HTMLElement | null, updateUrl = true) {
-      const agent = catalog.agents.find((candidate) => candidate.id === agentId);
+      const agent = explorerAgents.find((candidate) => candidate.id === agentId);
       const template = this.querySelector<HTMLTemplateElement>(`template[data-agent-template="${agentId}"]`);
       const slot = this.querySelector<HTMLElement>("[data-drawer-slot]");
       if (!agent || !template || !slot || !this.drawer) return;
