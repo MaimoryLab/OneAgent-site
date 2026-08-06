@@ -1,18 +1,37 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import DownloadSelector from "../../components/DownloadSelector.astro";
+import { getPreviewChannel } from "../../lib/release-channel";
+
+/* The title, description and integrity copy below used to promise per-artifact
+   SHA-256 and cleanroom records unconditionally. With no published release the
+   body correctly says nothing is available, so the page advertised evidence for
+   artifacts that do not exist — in the two strings a search engine indexes and a
+   social preview shows, which are also the first thing a reader sees.
+
+   Reading the same channel the selector reads keeps the promise and the artifact
+   from disagreeing. */
+const channel = await getPreviewChannel();
+const published = channel?.targets.some((target) => target.status === "available") ?? false;
 ---
-<BaseLayout title="下载 OneAgent — 未签名技术预览版" description="下载经过 manifest、SHA-256 与原生 cleanroom 记录的 OneAgent 技术预览版。">
+<BaseLayout
+  title={published ? "下载 OneAgent — 未签名技术预览版" : "下载 OneAgent — 尚未公开发行"}
+  description={published
+    ? "下载 OneAgent 技术预览版，每个产物都附 GitHub Releases 报告的 SHA-256。"
+    : "OneAgent 尚未公开发行。这里会列出各平台产物、体积与 SHA-256，供下载前核对。"}
+>
   <header class="page-hero">
     <div class="shell page-hero-grid">
       <div>
         <nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / 下载</nav>
         <p class="eyebrow">Download center</p>
-        <h1 class="page-title">选好平台，直接开始。</h1>
+        <h1 class="page-title">{published ? "选好平台，直接开始。" : "还没有可下载的产物。"}</h1>
       </div>
       <div class="page-hero-aside">
         <strong>无需 OneAgent 账号</strong>
-        每个产物都带着版本、体积、构建日期与 SHA-256，下载前你就能核对清楚。
+        {published
+          ? "每个产物都带着版本、体积、构建日期与 SHA-256，下载前你就能核对清楚。"
+          : "发行之后，每个产物都会带上版本、体积、构建日期与 SHA-256，供你下载前核对。"}
       </div>
     </div>
   </header>
@@ -22,8 +41,11 @@ import DownloadSelector from "../../components/DownloadSelector.astro";
   <section class="section section-muted">
     <div class="narrow prose">
       <p class="eyebrow">Integrity</p>
-      <h2 class="section-title">页面上的 SHA-256 让你可以自己核对。</h2>
-      <p>下载渠道只是镜像。同一版本在官网、GitHub Release、网盘和企业云盘上的文件，SHA-256 完全一致。</p>
+      <h2 class="section-title">{published ? "页面上的 SHA-256 让你可以自己核对。" : "发行之后，页面上的 SHA-256 让你可以自己核对。"}</h2>
+      {/* The old copy claimed byte-identical files across "官网、GitHub Release、
+          网盘和企业云盘". Only one of those channels exists: the download page
+          links to GitHub Releases and prints the digest that feed reports. */}
+      <p>产物只通过 GitHub Releases 发行，页面上的 SHA-256 就是该发行流报告的摘要。</p>
       <p>渠道不追加推广文件，不替换安装脚本，不二次签名。</p>
       <p>算出来的值和页面不一致？别运行它，把下载地址、文件名和实际哈希发到支持页面。</p>
       <h3>当前是技术预览版</h3>

@@ -1,0 +1,70 @@
+name: Deploy
+
+# Publishes the site to GitHub Pages. Separate from CI so a deploy cannot happen
+# without the three gates in ci.yml having passed on the same commit.
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+  # Manual runs are allowed so a Pages configuration change can be published
+  # without an empty commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# A superseded deploy is cancelled rather than queued: the newest commit on main
+# is the one that should be live, and two deploys racing would decide by finish
+# order instead.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # workflow_run fires on failure too, so the conclusion has to be checked
+    # explicitly — without this, a red CI run would still publish.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # workflow_run checks out the default branch by default, not the commit
+          # that was tested. Pin it so the artifact matches what CI verified.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.17.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+
+      # Reports the site's real origin and path, so SITE_URL and BASE_PATH are
+      # not hardcoded here. Left unset, astro.config.mjs falls back to
+      # http://localhost:4321 and the sitemap advertises loopback to crawlers.
+      - uses: actions/configure-pages@v6
+        id: pages
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build
+        env:
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+      - uses: actions/deploy-pages@v5
+        id: deployment

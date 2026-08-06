@@ -1,3 +1,15 @@
+# Response headers for hosts that read this file — Cloudflare Pages and Netlify
+# use this convention. GITHUB PAGES DOES NOT: it has no mechanism for custom
+# response headers, and serves this file as a plain static asset at /_headers.
+#
+# So on Pages, none of the below is sent. What still applies there is the
+# <meta http-equiv="Content-Security-Policy"> and <meta name="referrer"> in
+# src/layouts/BaseLayout.astro, which browsers do honour. Keep the CSP here and
+# the CSP there in sync.
+#
+# What is unavoidably lost on Pages: nosniff, Permissions-Policy, and
+# frame-ancestors — the last because it is invalid in a meta tag, so nothing
+# stops the site being framed. See the note in BaseLayout.astro.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

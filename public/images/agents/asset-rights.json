@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "note": "Provenance for every image asset in this directory. An agent absent from this file has no mark and renders the letter fallback in src/components/AgentMark.astro — that is the intended state, not a gap to fill. Mirrors frontend/src/components/icons/asset-rights.json in MaimoryLab/OneAgent.",
+  "assets": {
+    "codex": {
+      "file": "codex.svg",
+      "source": "https://github.com/lobehub/lobe-icons/blob/master/packages/static-svg/icons/openai.svg",
+      "license": "MIT",
+      "licenseSource": "licenses/lobehub-LICENSE",
+      "copyrightOwner": "LobeHub contributors",
+      "sha256": "a595df6b423920c67a7f8f73c063e4bfb72d415948097b6cac063a2366bb5186"
+    },
+    "opencode": {
+      "file": "opencode.svg",
+      "source": "https://github.com/lobehub/lobe-icons/blob/master/packages/static-svg/icons/opencode.svg",
+      "license": "MIT",
+      "licenseSource": "licenses/lobehub-LICENSE",
+      "copyrightOwner": "LobeHub contributors",
+      "sha256": "7cfa6e9d6726f7c9fa26c7d9aef0dfec52d20a137380454340f30f12ccbfd302"
+    }
+  }
+}

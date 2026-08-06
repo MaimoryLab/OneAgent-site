@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { detectTargetFromUserAgent, formatBytes, supportLabels } from "./downloads";
 import { recommendedTargetIn, type ReleaseChannel } from "./release-channel";
 
@@ -85,5 +85,46 @@ describe("compatibility labels", () => {
     expect(
       supportLabels({ managedInstall: false, officialInstallGuide: true, managedConfig: false }),
     ).toEqual(["官方安装引导", "配置由 Agent 官方流程管理"]);
+  });
+});
+
+/* The build fetches this feed, so how it handles a refusal decides whether a
+ * build succeeds. A 403 from rate limiting used to throw, which failed the whole
+ * build — on CI runners that share an outbound IP, over a budget the build never
+ * spent, on a commit that changed nothing about downloads.
+ *
+ * Each case re-imports the module: getPublishedReleases memoises its promise at
+ * module scope, so a shared instance would answer every test from the first
+ * response.
+ */
+describe("release feed reachability", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  const respondWith = (status: number, statusText = "") => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ status, statusText, ok: status >= 200 && status < 300, json: async () => [] }),
+    );
+  };
+
+  for (const [status, cause] of [[403, "rate limit"], [404, "private or absent repo"], [429, "too many requests"]] as const) {
+    it(`degrades to an empty feed on ${status} (${cause}) instead of failing the build`, async () => {
+      respondWith(status);
+      const { getLatestRelease } = await import("./downloads");
+
+      await expect(getLatestRelease()).resolves.toBeNull();
+    });
+  }
+
+  // A 500 is the feed answering that something is wrong on its side, which is
+  // not the same as being unreachable. Swallowing it would hide a real fault.
+  it("still throws on a server error", async () => {
+    respondWith(500, "Internal Server Error");
+    const { getLatestRelease } = await import("./downloads");
+
+    await expect(getLatestRelease()).rejects.toThrow(/500/);
   });
 });

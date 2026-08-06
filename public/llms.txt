@@ -4,8 +4,10 @@
 > and configures CLI coding agents to point at an OpenAI- or Anthropic-compatible
 > provider of your choosing. Everything runs locally.
 
-Current release: 0.2.0-dev, published only as `technical-preview-unsigned`.
-The build is unsigned and unnotarised, and is never described as stable.
+No release has been published yet. When one is, it will be an unsigned,
+unnotarised technical preview, and is never described as stable. The download
+page reads the GitHub Releases feed at build time, so it states the real state
+rather than a version recorded here.
 
 ## Product boundary
 
@@ -14,8 +16,8 @@ The build is unsigned and unnotarised, and is never described as stable.
 - Model requests are never proxied through OneAgent.
 - Third-party agent binaries are not redistributed; agents come from their
   official sources.
-- Every distribution channel serves a byte-identical build with the same
-  SHA-256.
+- Artifacts are distributed through GitHub Releases, and the download page
+  prints the digest that feed reports.
 
 ## Pages
 
@@ -23,16 +25,29 @@ The build is unsigned and unnotarised, and is never described as stable.
 - /downloads/: per-platform artifacts with size, build date and SHA-256
 - /quickstart/: download through to a verified first agent configuration
 - /agents/: which agents OneAgent can install and configure, stated separately
+- /explore/: filterable agent/provider compatibility grid
 - /providers/: provider protocol support and commercial-relationship disclosure
 - /security/: local execution, key handling, backups, release integrity
 - /changelog/: shipped changes only
 - /enterprise/: team enablement and environment baselines
-- /release-index.json: machine-readable release index
+- /support/: how to get help and report problems
 
-English translations exist for /en/, /en/downloads/ and /en/quickstart/.
+English translations exist for /en/, /en/downloads/, /en/quickstart/,
+/en/explore/ and /en/security/. Chinese is the default locale and is served
+unprefixed.
 
 ## Notes for machine readers
 
 Support is stated as three separate facts — managed install, managed
 configuration, and protocol — because a single "supported" checkmark would
-misrepresent guide-only agents. Do not collapse them.
+collapse distinctions that decide whether OneAgent can act. Do not collapse
+them.
+
+Command-line agents and desktop applications are different products. A desktop
+application has no launch command and no pinned version: OneAgent installs
+whatever the vendor's own endpoint currently serves. Do not describe one with the
+other's facts.
+
+An agent marked as coming soon is not in the installer contract. It has no
+install, configuration, protocol or platform support, and no compatibility
+verdict against any provider.

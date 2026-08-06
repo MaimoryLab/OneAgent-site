@@ -2,21 +2,31 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import DownloadSelector from "../../../components/DownloadSelector.astro";
 import { localePath } from "../../../i18n";
+import { getPreviewChannel } from "../../../lib/release-channel";
+
+/* See the Chinese download page for why this reads the channel: the metadata
+   promised verification evidence for artifacts that do not exist yet. */
+const channel = await getPreviewChannel();
+const published = channel?.targets.some((target) => target.status === "available") ?? false;
 ---
 <BaseLayout
-  title="Download OneAgent — unsigned technical preview"
-  description="Download the OneAgent technical preview, published with a manifest, SHA-256 and native cleanroom evidence."
+  title={published ? "Download OneAgent — unsigned technical preview" : "Download OneAgent — not yet released"}
+  description={published
+    ? "Download the OneAgent technical preview. Every artifact carries the SHA-256 reported by GitHub Releases."
+    : "OneAgent has not been released publicly yet. This page will list each platform's artifact, size and SHA-256 so you can check it before downloading."}
 >
   <header class="page-hero">
     <div class="shell page-hero-grid">
       <div>
         <nav class="breadcrumb" aria-label="Breadcrumb"><a href={localePath("en", "")}>Home</a> / Downloads</nav>
         <p class="eyebrow">Download center</p>
-        <h1 class="page-title">Pick your platform and get started.</h1>
+        <h1 class="page-title">{published ? "Pick your platform and get started." : "There is nothing to download yet."}</h1>
       </div>
       <div class="page-hero-aside">
         <strong>No OneAgent account required</strong>
-        Every artifact carries its version, size, build date and SHA-256, so you can check it before you download.
+        {published
+          ? "Every artifact carries its version, size, build date and SHA-256, so you can check it before you download."
+          : "Once released, every artifact will carry its version, size, build date and SHA-256, so you can check it before you download."}
       </div>
     </div>
   </header>
@@ -26,8 +36,11 @@ import { localePath } from "../../../i18n";
   <section class="section section-muted">
     <div class="narrow prose">
       <p class="eyebrow">Integrity</p>
-      <h2 class="section-title">The SHA-256 on this page is here so you can check it yourself.</h2>
-      <p>A distribution channel is a mirror. For a given version, the file on this site, on GitHub Releases, on a file host and on an internal drive all carry the identical SHA-256.</p>
+      <h2 class="section-title">{published ? "The SHA-256 on this page is here so you can check it yourself." : "Once released, the SHA-256 on this page is here so you can check it yourself."}</h2>
+      {/* The old copy claimed byte-identical files across this site, GitHub
+          Releases, a file host and an internal drive. Only one of those exists:
+          the page links to GitHub Releases and prints that feed's digest. */}
+      <p>Artifacts are distributed through GitHub Releases, and the SHA-256 on this page is the digest that feed reports.</p>
       <p>Channels do not append promotional files, swap the install script, or re-sign the build.</p>
       <p>If the value you compute does not match the page, do not run the file. Send the download URL, the filename and the hash you actually got to the support page.</p>
       <h3>This is a technical preview</h3>

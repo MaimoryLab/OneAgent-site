@@ -28,8 +28,16 @@ jobs:
       - run: pnpm run test
 
       # Runs astro check and validate-build.mjs, so a type error or a malformed
-      # page fails here rather than reaching the deploy job.
+      # page fails here rather than reaching the deploy workflow.
+      #
+      # GITHUB_TOKEN raises the Releases API budget from the 60/hour that every
+      # unauthenticated caller sharing this runner's IP competes for, to 1000/hour
+      # for this repository. The build tolerates a refusal either way, but it
+      # renders an empty download page when it happens, which is not what a
+      # release build should publish.
       - run: pnpm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -37,6 +45,7 @@ jobs:
       - run: pnpm run test:e2e
         env:
           CI: "true"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload the Playwright report on failure
         if: failure()
