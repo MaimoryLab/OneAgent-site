@@ -22,6 +22,15 @@ letter glyph instead. That is deliberate: a vendor favicon copied in without an
 auditable redistribution basis would be both a licensing and a trademark
 problem, so the absence of a mark is the correct state rather than a gap.
 
+Screenshots under public/images/guide/ are screen captures of macOS system UI,
+showing what the operating system displays when it blocks an unsigned
+application. The interface elements pictured are the property of Apple Inc. They
+are included to document the operating system's own behaviour, which the
+first-launch guide cannot be followed without; no endorsement or affiliation is
+implied. Each one's contents and SHA-256 are recorded in
+public/images/guide/asset-rights.json. They contain no account name, device name
+or other identifying detail.
+
 ================================================================================
 Third-party trademarks
 ================================================================================
