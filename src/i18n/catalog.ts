@@ -16,8 +16,8 @@ const catalog = {
       aider: "结对编程式仓库编辑 Agent，模型在启动命令中明确选择。",
       "chatgpt-desktop": "OpenAI 的桌面应用；与 Codex CLI 共用 ~/.codex 配置，但安装时是两个独立产品。",
       workbuddy: "桌面端 Agent 应用；自有 ~/.workbuddy/models.json 配置，使用 OpenAI-compatible 协议。",
-      openclaw: "多渠道 Agent 网关；即将支持，目前尚未纳入安装清单。",
-      hermes: "自我成长型 Agent 框架；即将支持，目前尚未纳入安装清单。",
+      openclaw: "多渠道 Agent 网关；OneAgent 可管理安装与模型 Provider 配置，网关启动与渠道配对仍由 openclaw onboard 完成。",
+      hermes: "自我成长型 Agent 框架；OneAgent 通过官方安装脚本安装并管理其 YAML 配置。",
     } as Record<string, string>,
     groupLabels: {
       auto: "OneAgent 可管理",
@@ -52,8 +52,8 @@ const catalog = {
       aider: "Pair-programming repository editor; the model is named explicitly at launch.",
       "chatgpt-desktop": "OpenAI's desktop app. It shares Codex's ~/.codex configuration but is a separate product at install time.",
       workbuddy: "Desktop agent application; owns its own ~/.workbuddy/models.json and speaks the OpenAI-compatible protocol.",
-      openclaw: "Multi-channel agent gateway. Coming soon — not yet part of the install contract.",
-      hermes: "Self-improving agent framework. Coming soon — not yet part of the install contract.",
+      openclaw: "Multi-channel agent gateway. OneAgent installs it and writes its model provider; starting the gateway and pairing channels stay with `openclaw onboard`.",
+      hermes: "Self-improving agent framework. OneAgent installs it via the official script and manages its YAML configuration.",
     } as Record<string, string>,
     groupLabels: {
       auto: "OneAgent-managed",

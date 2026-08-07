@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { detectTargetFromUserAgent, formatBytes, supportLabels } from "./downloads";
+import { detectTargetFromUserAgent, formatBytes, releaseTargets, supportLabels } from "./downloads";
 import { recommendedTargetIn, type ReleaseChannel } from "./release-channel";
 
 const channel: ReleaseChannel = {
@@ -26,6 +26,7 @@ const channel: ReleaseChannel = {
           sha256: "abc",
           bytes: 1024,
           kind: "binary",
+          checksumUrl: null,
           downloads: [{ id: "website", label: "官网下载", kind: "official", url: "downloads/OneAgent.zip", primary: true }],
         },
       ],
@@ -126,5 +127,54 @@ describe("release feed reachability", () => {
     const { getLatestRelease } = await import("./downloads");
 
     await expect(getLatestRelease()).rejects.toThrow(/500/);
+  });
+});
+
+/**
+ * Regression cover for the v0.3.0 sync. Upstream builds with Go, so its assets
+ * are named by GOOS/GOARCH — `darwin`, `amd64` — while the site's own vocabulary
+ * is macos/x64. Matching only the site's spelling silently dropped three of four
+ * assets and published an empty download page against a complete release, which
+ * is exactly the failure the page is supposed to make impossible.
+ */
+describe("release asset naming", () => {
+  const release = {
+    name: "v0.3.0",
+    tag_name: "v0.3.0",
+    html_url: "https://github.com/MaimoryLab/OneAgent/releases/tag/v0.3.0",
+    published_at: "2026-08-06T11:10:43Z",
+    prerelease: false,
+    draft: false,
+    assets: [
+      { name: "OneAgent-darwin-amd64.zip", size: 5026026, digest: `sha256:${"9".repeat(64)}`, browser_download_url: "https://example.test/darwin-amd64" },
+      { name: "OneAgent-darwin-arm64.zip", size: 4517447, digest: `sha256:${"1".repeat(64)}`, browser_download_url: "https://example.test/darwin-arm64" },
+      { name: "OneAgent-windows-amd64.zip", size: 5206787, digest: `sha256:${"2".repeat(64)}`, browser_download_url: "https://example.test/windows-amd64" },
+      { name: "OneAgent-windows-arm64.zip", size: 4683982, digest: `sha256:${"a".repeat(64)}`, browser_download_url: "https://example.test/windows-arm64" },
+      { name: "SHA256SUMS", size: 370, digest: `sha256:${"8".repeat(64)}`, browser_download_url: "https://example.test/sums" },
+    ],
+  };
+
+  it("maps Go's GOOS/GOARCH names onto the site's platform vocabulary", () => {
+    const ids = releaseTargets(release).map((target) => target.id).sort();
+
+    expect(ids).toEqual(["macos-arm64", "macos-x64", "windows-arm64", "windows-x64"]);
+  });
+
+  it("carries the published digest and size through, so the page can state both", () => {
+    const target = releaseTargets(release).find((candidate) => candidate.id === "macos-arm64");
+
+    expect(target?.file).toBe("OneAgent-darwin-arm64.zip");
+    expect(target?.bytes).toBe(4517447);
+    expect(target?.sha256).toBe("1".repeat(64));
+  });
+
+  it("falls back to the combined SHA256SUMS when no per-target file exists", () => {
+    for (const target of releaseTargets(release)) {
+      expect(target.checksumUrl).toBe("https://example.test/sums");
+    }
+  });
+
+  it("does not treat the checksum manifest as a downloadable build", () => {
+    expect(releaseTargets(release).some((target) => target.file === "SHA256SUMS")).toBe(false);
   });
 });

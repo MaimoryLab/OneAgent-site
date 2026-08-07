@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import axe from "axe-core";
+import { readFileSync } from "node:fs";
 
 const criticalPages = ["/", "/explore/", "/downloads/", "/agents/", "/security/"];
 
@@ -319,17 +320,27 @@ test("Explorer filters only catalog-backed combinations", async ({ page }) => {
 /* A coming-soon agent has no protocol to compare against a provider, so every
    pair including it would render as "unsupported" — a claim about the provider
    rather than the truth, that OneAgent does not support the agent yet. It belongs
-   on the catalog page and not in the verdict grid. */
+   on the catalog page and not in the verdict grid.
+ *
+ * The rule is asserted against whatever is currently planned rather than against
+ * a hardcoded list. Upstream v0.3.0 shipped openclaw and hermes, which this test
+ * used to name as planned — so a fixed list turns the invariant into a fact about
+ * one release, and the test fails for the wrong reason the next time the catalog
+ * moves. `planned-agents.json` is legitimately empty today, and an empty planned
+ * set is a vacuous pass, which is the honest outcome: there is nothing to exclude. */
 test("Explorer leaves coming-soon agents out of the verdict grid", async ({ page }) => {
+  const planned = Object.keys(
+    (JSON.parse(readFileSync("data/planned-agents.json", "utf8")) as { agents: Record<string, unknown> }).agents,
+  );
   await page.goto("/explore/");
   const explorer = page.locator("compatibility-explorer");
-  for (const planned of ["openclaw", "hermes"]) {
-    await expect(explorer.locator(`[data-agent-card][data-agent-id="${planned}"]`)).toHaveCount(0);
-  }
+  for (const id of planned) {
+    await expect(explorer.locator(`[data-agent-card][data-agent-id="${id}"]`)).toHaveCount(0);
 
-  // A shared URL naming one must not restore it either.
-  await page.goto("/explore/?agent=openclaw");
-  await expect(explorer.locator("[data-agent-card].is-selected")).toHaveCount(0);
+    // A shared URL naming one must not restore it either.
+    await page.goto(`/explore/?agent=${id}`);
+    await expect(explorer.locator("[data-agent-card].is-selected")).toHaveCount(0);
+  }
 });
 
 /* The download page renders from whatever the GitHub Releases feed returned at
@@ -360,12 +371,31 @@ test("download center recommends an available artifact but keeps manual choices"
   const picker = page.getByRole("group", { name: "选择平台与架构" });
   await expect(picker).toBeVisible();
   const platform = (id: string) => picker.locator(`input[type="radio"][value="${id}"]`);
-  await platform("windows-x64").check();
+
+  /* Linux is the unpublished platform to assert against. This used to be
+     windows-x64, which upstream v0.3.0 now ships — so the assertion was checking
+     that a real, downloadable artifact was absent. Every platform stays in the
+     picker whether or not it has an asset, and choosing one with no asset has to
+     say so rather than offering a dead button. */
+  await platform("linux-x64").check();
   await expect(page.getByRole("heading", { name: "这个平台尚未公开发行" })).toBeVisible();
+
   await platform("macos-arm64").check();
   await expect(page.getByRole("link", { name: "下载 macOS 预览版" })).toBeVisible();
-  await expect(page.locator("[data-release-panel].is-active .hash-value")).toHaveText(/^[a-f0-9]{64}$/);
-  await expect(page.getByText("未签名、未公证", { exact: true })).toBeVisible();
+  const active = page.locator("[data-release-panel].is-active");
+  await expect(active.locator(".hash-value")).toHaveText(/^[a-f0-9]{64}$/);
+  /* Scoped to the active panel, as the sibling test below already does. Every
+     platform panel is in the DOM with only CSS hiding the inactive ones, so an
+     unscoped match was passing on the coincidence that one platform had an
+     artifact; with four published it resolves to four nodes and fails strict mode. */
+  await expect(active.getByText("未签名、未公证", { exact: true })).toBeVisible();
+
+  /* Windows shipping is the substance of the v0.3.0 sync, so it is asserted
+     rather than left implied: the parsing bug that prompted this dropped three of
+     four assets, and a green suite that never checks a second platform would not
+     have caught it. */
+  await platform("windows-x64").check();
+  await expect(active.locator(".hash-value")).toHaveText(/^[a-f0-9]{64}$/);
 });
 
 /* Security and enterprise came out of the chrome, but the pages did not go
@@ -456,12 +486,25 @@ test("a desktop application is described as a desktop application", async ({ pag
 /* A coming-soon agent has a page so a reader can find out what is planned, but
    that page must not print an install, config, protocol or platform contract —
    there is no catalog entry to read one from, and a null rendered in a fact cell
-   reads as a capability claim. */
+   reads as a capability claim.
+ *
+ * Driven from planned-agents.json for the same reason as the Explorer test above:
+ * this named openclaw, which v0.3.0 now ships with a config adapter, so the test
+ * was asserting that a genuinely supported agent claims no support. Skips when
+ * nothing is planned — there is no page to check, and a fabricated one would test
+ * the fixture rather than the site. */
 test("a coming-soon agent claims no support it does not have", async ({ page }) => {
-  await page.goto("/agents/openclaw/");
-  await expect(page.getByText("即将支持").first()).toBeVisible();
-  for (const claim of ["OneAgent 可管理安装", "OneAgent 可管理配置", "按官方方式安装"]) {
-    await expect(page.getByText(claim, { exact: true })).toHaveCount(0);
+  const planned = Object.keys(
+    (JSON.parse(readFileSync("data/planned-agents.json", "utf8")) as { agents: Record<string, unknown> }).agents,
+  );
+  test.skip(planned.length === 0, "No planned agents in the catalog, so there is no coming-soon page to assert on.");
+
+  for (const id of planned) {
+    await page.goto(`/agents/${id}/`);
+    await expect(page.getByText("即将支持").first()).toBeVisible();
+    for (const claim of ["OneAgent 可管理安装", "OneAgent 可管理配置", "按官方方式安装"]) {
+      await expect(page.getByText(claim, { exact: true })).toHaveCount(0);
+    }
   }
 });
 

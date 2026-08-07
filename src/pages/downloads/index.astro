@@ -13,6 +13,10 @@ import { getPreviewChannel } from "../../lib/release-channel";
    from disagreeing. */
 const channel = await getPreviewChannel();
 const published = channel?.targets.some((target) => target.status === "available") ?? false;
+/* One manifest covers the whole release, so the first artifact that names one is
+   the link for every target. */
+const checksumUrl =
+  channel?.targets.flatMap((target) => target.artifacts).find((artifact) => artifact.checksumUrl)?.checksumUrl ?? null;
 ---
 <BaseLayout
   title={published ? "下载 OneAgent — 未签名技术预览版" : "下载 OneAgent — 尚未公开发行"}
@@ -47,6 +51,12 @@ const published = channel?.targets.some((target) => target.status === "available
           links to GitHub Releases and prints the digest that feed reports. */}
       <p>产物只通过 GitHub Releases 发行，页面上的 SHA-256 就是该发行流报告的摘要。</p>
       <p>渠道不追加推广文件，不替换安装脚本，不二次签名。</p>
+      {/* Linking the published manifest matters more than printing the digest:
+          it lets a reader check against the release itself rather than against a
+          number this page could have got wrong. */}
+      {checksumUrl && (
+        <p>也可以直接对照发行流发布的校验清单：<a href={checksumUrl} rel="noopener">SHA256SUMS</a>。</p>
+      )}
       <p>算出来的值和页面不一致？别运行它，把下载地址、文件名和实际哈希发到支持页面。</p>
       <h3>当前是技术预览版</h3>
       <p>macOS Developer ID 公证与 Windows Authenticode 还没完成，所以它不叫 Stable。签名、公证与原生验证门禁齐备后，每个平台各自进入 Stable。</p>

@@ -1,7 +1,8 @@
 {
   "schema_version": 1,
   "source": "internal/desktopapp/registry.go",
-  "source_commit": "206a610",
+  "source_ref": "v0.3.0",
+  "source_commit": "64da015",
   "note": "Transcribed by hand from upstream's Go registry, which has no generated lock file. See data/README.md.",
   "agents": {
     "chatgpt-desktop": {
