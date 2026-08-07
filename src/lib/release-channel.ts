@@ -38,6 +38,11 @@ export interface ReleaseArtifact {
   sha256: string;
   bytes: number;
   kind: "binary" | "source";
+  /* The published checksum manifest, so a reader can compare against the release
+     itself rather than against a number this page prints. Carried through from
+     the asset feed — it was parsed but dropped here, which left the integrity
+     section telling readers to verify with nothing to verify against. */
+  checksumUrl: string | null;
   downloads: DownloadLink[];
 }
 
@@ -76,20 +81,32 @@ const plannedTargets: Array<{ id: string; platform: string; platformLabel: strin
   { id: "macos-arm64", platform: "macos", platformLabel: "macOS", arch: "arm64", archLabel: "Apple silicon / ARM64" },
   { id: "macos-x64", platform: "macos", platformLabel: "macOS", arch: "x64", archLabel: "Intel / AMD 64-bit" },
   { id: "windows-x64", platform: "windows", platformLabel: "Windows", arch: "x64", archLabel: "Intel / AMD 64-bit" },
+  { id: "windows-arm64", platform: "windows", platformLabel: "Windows", arch: "arm64", archLabel: "ARM64" },
   { id: "linux-x64", platform: "linux", platformLabel: "Linux", arch: "x64", archLabel: "Intel / AMD 64-bit" },
 ];
 
 const previewChannelId = "technical-preview-unsigned";
 
-/* The tag carries the channel. A prerelease tag, or one saying so in its name,
-   is the unsigned technical preview; anything else is a signed stable build.
-   Read from the release rather than hardcoded so the site follows the tag
-   instead of needing an edit on the day Stable ships. */
+/* What separates Stable from the preview is signing: Developer ID notarisation on
+   macOS, Authenticode on Windows. GitHub's `prerelease` flag does not record
+   either, so it cannot be the input to that decision.
+ *
+ * v0.3.0 is the case that proves it. It is marked `prerelease: false` and its tag
+ * says nothing about a preview, so reading the flag alone labelled it 稳定版 — a
+ * claim that the binaries are signed, which nothing verified. The release notes
+ * mention no signing or notarisation step at all.
+ *
+ * So the default is the unsigned preview, and Stable requires positive evidence:
+ * a tag that opts in explicitly (`+stable`, or a `signed` marker). Getting this
+ * backwards puts an unearned trust badge on the download page, which is worse
+ * than under-claiming — the whole point of the page is that a reader can check
+ * what they are running. */
+const stableTagMarker = /\+stable\b|[-.]signed\b/i;
+
 function channelOf(release: GitHubRelease): { channel: string; label: string; unsigned: boolean } {
-  const preview = release.prerelease || /preview|unsigned|dev|rc/i.test(release.tag_name);
-  return preview
-    ? { channel: previewChannelId, label: "未签名技术预览版", unsigned: true }
-    : { channel: "stable", label: "稳定版", unsigned: false };
+  return stableTagMarker.test(release.tag_name)
+    ? { channel: "stable", label: "稳定版", unsigned: false }
+    : { channel: previewChannelId, label: "未签名技术预览版", unsigned: true };
 }
 
 function artifactFor(asset: AssetTarget): ReleaseArtifact[] {
@@ -102,6 +119,7 @@ function artifactFor(asset: AssetTarget): ReleaseArtifact[] {
     sha256: asset.sha256,
     bytes: asset.bytes,
     kind: "binary",
+    checksumUrl: asset.checksumUrl,
     downloads: [{ id: "github", label: "GitHub Releases", kind: "official", url: asset.downloadUrl, primary: true }],
   }];
 }

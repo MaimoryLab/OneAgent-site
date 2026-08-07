@@ -39,7 +39,13 @@ export interface AgentSupport {
   managedConfig: boolean;
 }
 
-const repository = process.env.GITHUB_REPOSITORY || "MaimoryLab/OneAgent";
+/* The product's repository, which is not this one. Actions sets
+   GITHUB_REPOSITORY to the repository being built — this site — so reading it
+   here pointed every CI and Pages build at MaimoryLab/OneAgent-site, which has
+   no releases, and the download page rendered "not published yet" no matter what
+   upstream had shipped. RELEASE_REPOSITORY overrides it for a fork that
+   publishes its own builds. */
+const repository = process.env.RELEASE_REPOSITORY || "MaimoryLab/OneAgent";
 const releasesUrl = `https://api.github.com/repos/${repository}/releases?per_page=20`;
 export const releasesPageUrl = `https://github.com/${repository}/releases`;
 let releasesRequest: Promise<GitHubRelease[]> | undefined;
@@ -95,14 +101,40 @@ const platformLabels = { macos: "macOS", windows: "Windows", linux: "Linux" } as
 const archLabels = { arm64: "Apple silicon / ARM64", x64: "Intel / AMD 64-bit" } as const;
 const binarySuffixes = [".zip", ".tar.gz", ".dmg", ".msi", ".exe", ".appimage"];
 
+/* Asset names carry Go's GOOS/GOARCH, because that is what upstream's release
+   workflow builds with: `OneAgent-darwin-arm64.zip`, not `-macos-arm64`. The
+   site's own vocabulary is macos/x64, so accept both spellings and normalise to
+   the site's. Matching only the site's spelling is what made the download page
+   render "not published yet" against a release that had four assets. */
+const platformAliases: Record<string, ReleaseTarget["platform"]> = {
+  macos: "macos",
+  darwin: "macos",
+  windows: "windows",
+  linux: "linux",
+};
+const archAliases: Record<string, ReleaseTarget["arch"]> = {
+  arm64: "arm64",
+  aarch64: "arm64",
+  x64: "x64",
+  amd64: "x64",
+  x86_64: "x64",
+};
+
 export function releaseTargets(release: GitHubRelease): ReleaseTarget[] {
   return release.assets.flatMap((asset) => {
-    const match = asset.name.toLowerCase().match(/-(macos|windows|linux)-(arm64|x64)(?:\.[a-z0-9.]+)$/);
+    const match = asset.name
+      .toLowerCase()
+      .match(/-(macos|darwin|windows|linux)-(arm64|aarch64|x64|amd64|x86_64)(?:\.[a-z0-9.]+)$/);
     if (!match || !binarySuffixes.some((suffix) => asset.name.toLowerCase().endsWith(suffix))) return [];
-    const platform = match[1] as ReleaseTarget["platform"];
-    const arch = match[2] as ReleaseTarget["arch"];
+    const platform = platformAliases[match[1]];
+    const arch = archAliases[match[2]];
     const digest = asset.digest?.match(/^sha256:([a-f0-9]{64})$/i)?.[1].toLowerCase() ?? null;
-    const checksum = release.assets.find((candidate) => candidate.name === `SHA256SUMS-${platform}-${arch}.txt`);
+    /* Upstream publishes one combined `SHA256SUMS` covering every asset. Prefer a
+       per-target file if one ever appears, then fall back to the combined one, so
+       the page can still point at something a reader can verify by hand. */
+    const checksum =
+      release.assets.find((candidate) => candidate.name === `SHA256SUMS-${platform}-${arch}.txt`) ??
+      release.assets.find((candidate) => /^sha256sums(\.txt)?$/i.test(candidate.name));
     return [{
       id: `${platform}-${arch}`,
       platform,
