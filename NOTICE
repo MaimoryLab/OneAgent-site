@@ -14,8 +14,11 @@ licenses. Each one's source, license, copyright owner and SHA-256 are recorded
 in public/images/agents/asset-rights.json, with the corresponding license text
 under licenses/.
 
-  codex.svg     MIT  LobeHub contributors  licenses/lobehub-LICENSE
-  opencode.svg  MIT  LobeHub contributors  licenses/lobehub-LICENSE
+  codex.svg        MIT  LobeHub contributors              licenses/lobehub-LICENSE
+  opencode.svg     MIT  LobeHub contributors              licenses/lobehub-LICENSE
+  claude-code.svg  MIT  LobeHub contributors              licenses/lobehub-LICENSE
+  kilo-cli.svg     MIT  LobeHub contributors              licenses/lobehub-LICENSE
+  openclaw.svg     MIT  Jason Young (cc-switch contributors)  licenses/cc-switch-LICENSE
 
 An agent with no entry in asset-rights.json has no bundled mark and renders a
 letter glyph instead. That is deliberate: a vendor favicon copied in without an

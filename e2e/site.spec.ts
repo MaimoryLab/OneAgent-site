@@ -34,7 +34,23 @@ test("home presents one activation entry without claiming a real scan", async ({
      and this test is not the one about the trigger threshold. */
   const console = page.locator("#activation-console");
   await console.scrollIntoViewIfNeeded();
-  await expect(console).toHaveAttribute("data-autoplaying", "true");
+  /* The guarantee is that the page drove the demo without being clicked, which
+     holds both while it plays and once it has finished. Asserting
+     data-autoplaying="true" alone made this a race: on a slow first paint the run
+     completes before the assertion arrives, leaving data-phase="ready" and the
+     flag cleared — the same correct behaviour passing or failing by timing. */
+  await expect
+    .poll(
+      async () => {
+        const [autoplaying, phase] = await Promise.all([
+          console.getAttribute("data-autoplaying"),
+          console.getAttribute("data-phase"),
+        ]);
+        return autoplaying === "true" || phase !== "idle";
+      },
+      { message: "the console should drive itself without a click" },
+    )
+    .toBe(true);
   await expect(page.getByText("示例环境", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("不访问设备", { exact: true })).toBeVisible();
   await expect(page.locator('input[type="password"], input[name*="key" i]')).toHaveCount(0);
@@ -939,7 +955,21 @@ test.describe("dark scheme", () => {
       })),
     );
     const monochrome = filters.filter((entry) => entry.monochrome);
-    expect(monochrome.map((entry) => entry.file).sort()).toEqual(["codex.svg", "opencode.svg"]);
+    /* Every mark the site ships is a currentColor glyph, so every one of them
+       needs inverting in the dark. Listed explicitly rather than counted: a mark
+       arriving with its own brand colours must not be added to the monochrome set
+       silently, and only naming the files makes that visible here.
+
+       openclaw.svg belongs in this list despite containing #000 and #fff — those
+       sit inside a <mask>, where the two are channel values punching out the eyes
+       rather than colours that paint anything. */
+    expect(monochrome.map((entry) => entry.file).sort()).toEqual([
+      "claude-code.svg",
+      "codex.svg",
+      "kilo-cli.svg",
+      "openclaw.svg",
+      "opencode.svg",
+    ]);
     for (const entry of monochrome) expect(entry.filter, entry.file).toBe("invert(1)");
     for (const entry of filters.filter((entry) => !entry.monochrome)) {
       expect(entry.filter, `${entry.file} carries its own colours`).toBe("none");

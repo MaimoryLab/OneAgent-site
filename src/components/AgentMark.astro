@@ -18,11 +18,18 @@ const { id, name, size = 24 } = Astro.props;
 const extensions: Record<string, string> = {
   codex: "svg",
   opencode: "svg",
+  "claude-code": "svg",
+  "kilo-cli": "svg",
+  openclaw: "svg",
 };
-/* Both marks ship as fill="currentColor". Loaded through <img> the keyword has
-   no page to inherit from and falls back to black, which disappears on a dark
-   ground — so they get inverted there. */
-const monochrome = new Set(["codex", "opencode"]);
+/* All five marks ship as fill="currentColor". Loaded through <img> the keyword
+   has no page to inherit from and falls back to black, which disappears on a
+   dark ground — so they get inverted there.
+
+   openclaw is here despite containing #000 and #fff: those are inside a <mask>,
+   where black and white are channel values that punch out the eyes rather than
+   colours that paint anything. Every visible path is currentColor like the rest. */
+const monochrome = new Set(["codex", "opencode", "claude-code", "kilo-cli", "openclaw"]);
 const extension = extensions[id];
 const imageSource = extension ? `${import.meta.env.BASE_URL}images/agents/${id}.${extension}` : null;
 ---
