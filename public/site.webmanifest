@@ -6,5 +6,8 @@
   "display": "browser",
   "background_color": "#ececef",
   "theme_color": "#ececef",
-  "icons": [{ "src": "favicon.svg", "type": "image/svg+xml", "sizes": "any" }]
+  "icons": [
+    { "src": "images/brand/oneagent-app-icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "images/brand/oneagent-app-icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ]
 }

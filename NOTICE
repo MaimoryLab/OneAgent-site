@@ -25,6 +25,13 @@ letter glyph instead. That is deliberate: a vendor favicon copied in without an
 auditable redistribution basis would be both a licensing and a trademark
 problem, so the absence of a mark is the correct state rather than a gap.
 
+OneAgent's own mark under public/images/brand/ and public/favicon.png is
+first-party work under this repository's licence, so it carries no third-party
+provenance record — recording it in asset-rights.json would claim an origin it
+does not have. oneagent-logo.png is the 1024px master; nothing on the site
+references it directly, but MaimoryLab/OneAgent traces its vector mark from it,
+so it is kept here as the source of record rather than as a stray asset.
+
 Screenshots under public/images/guide/ are screen captures of macOS system UI,
 showing what the operating system displays when it blocks an unsigned
 application. The interface elements pictured are the property of Apple Inc. They
@@ -41,8 +48,8 @@ Third-party trademarks
 This site names supported Agents and Providers in order to say what OneAgent
 does and does not support. This is nominative use: the names identify the
 referenced products and do not imply endorsement, affiliation or sponsorship.
-The two bundled image assets are not recoloured or restyled and remain the
-property of their respective owners.
+The bundled agent marks are not recoloured or restyled and remain the property
+of their respective owners.
 
 ================================================================================
 Catalog data
