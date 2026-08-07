@@ -60,7 +60,13 @@ const checksumUrl =
       <p>算出来的值和页面不一致？别运行它，把下载地址、文件名和实际哈希发到支持页面。</p>
       <h3>当前是技术预览版</h3>
       <p>macOS Developer ID 公证与 Windows Authenticode 还没完成，所以它不叫 Stable。签名、公证与原生验证门禁齐备后，每个平台各自进入 Stable。</p>
-      <p>在此期间，OneAgent 不提供降低系统安全策略的说明。</p>
+      {/* This used to promise the site documented no way around the OS security
+          policy. It now does, for macOS, because the alternative was readers
+          hitting a "移到废纸篓" dialog with no explanation and no path forward.
+          The promise is replaced rather than quietly dropped: what the site still
+          refuses to do is weaken the policy itself. */}
+      <p>因为未签名，macOS 首次打开会被 Gatekeeper 拦截。<a href="quickstart/#macos-gatekeeper">macOS 首次打开指南</a>说明这一步放行了什么、以及为什么签名版发布后就不再需要它。</p>
+      <p>OneAgent 不会让你关闭 Gatekeeper、执行 <code>spctl --master-disable</code> 或降低系统整体安全设置；上述流程只针对这一个应用，且由你逐步确认。</p>
     </div>
   </section>
 </BaseLayout>

@@ -525,6 +525,73 @@ test("download page states the channel and links to the official release", async
   await expect(download).toHaveAttribute("href", /^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\//);
 });
 
+/* The Gatekeeper guide replaced a promise the site made in five places: that it
+   documented no way around the OS security policy. Reversing that was a decision,
+   so the shape of what replaced it is asserted rather than left to review.
+ *
+ * The load-bearing part is the boundary. Telling a reader how to allow one app is
+ * a different act from telling them to disable Gatekeeper, and the second must
+ * never appear — including by someone later "simplifying" the guide into a
+ * one-line spctl command, which is the shortcut this test exists to block. */
+for (const [locale, path] of [["zh", "/quickstart/"], ["en", "/en/quickstart/"]] as const) {
+  test(`${locale} first-launch guide allows one app without weakening the system`, async ({ page }) => {
+    await page.goto(path);
+
+    /* The side index is display:none below the desktop breakpoint, so navigating
+       through it only proves anything where it is rendered. Where it is hidden the
+       heading still has to be reachable by fragment — that is the link the
+       download page and the page's own warning notice both point at. */
+    const index = page.locator(".side-index").getByRole("link", { name: /macOS/ });
+    if (await index.isVisible()) {
+      await index.click();
+    } else {
+      await page.goto(`${path}#macos-gatekeeper`);
+    }
+    await expect(page.locator("#macos-gatekeeper")).toBeVisible();
+
+    /* Never present, in either language. `spctl --master-disable` turns Gatekeeper
+       off machine-wide, which is exactly what the surviving half of the promise
+       says OneAgent will not ask for. */
+    await expect(page.getByText("spctl --master-disable", { exact: false })).toHaveCount(1);
+    await expect(page.locator("code", { hasText: "spctl --master-disable" })).toBeVisible();
+
+    // Four steps, each with a screenshot that actually resolves.
+    const steps = page.locator(".guide-steps > li");
+    await expect(steps).toHaveCount(4);
+    const images = page.locator(".guide-steps img");
+    await expect(images).toHaveCount(4);
+    const count = await images.count();
+    for (let index = 0; index < count; index += 1) {
+      const image = images.nth(index);
+      /* naturalWidth is 0 for an image that 404ed, which is how a base-path
+         mistake shows up — the English page is under /en/, so a relative src
+         would resolve to a path that does not exist. */
+      await expect
+        .poll(() => image.evaluate((node) => (node as HTMLImageElement).naturalWidth))
+        .toBeGreaterThan(0);
+      // Screenshots carry meaning here, so none may ship with an empty alt.
+      await expect(image).not.toHaveAttribute("alt", "");
+    }
+
+    // The trade-off is stated rather than buried: signing removes the need for this.
+    await expect(page.getByText(locale === "zh" ? /签名与公证完成后/ : /Once signing and notarisation are done/)).toBeVisible();
+  });
+}
+
+test("the download page routes to the first-launch guide instead of promising silence", async ({ page }) => {
+  for (const [path, target] of [["/downloads/", "quickstart/#macos-gatekeeper"], ["/en/downloads/", "en/quickstart/#macos-gatekeeper"]] as const) {
+    await page.goto(path);
+    /* The old copy said the site documented no way around the security policy.
+       A link to the guide is what replaced it; asserting the link keeps the two
+       pages from drifting back into contradicting each other. */
+    /* Located by destination rather than by link text: the two locales word the
+       link differently ("macOS 首次打开指南" / "first-launch guide"), and the
+       guarantee is that the route exists, not how it is phrased. */
+    const link = page.locator(`a[href$="${target}"]`);
+    await expect(link.first()).toBeVisible();
+  }
+});
+
 test("serves its own stylesheet and Agent marks rather than 404ing on them", async ({ page }) => {
   // A base path build (SITE_URL/BASE_PATH, as the Pages job uses) emits an
   // absolute <base href>, and the CSP declares base-uri 'self'. Serving such a

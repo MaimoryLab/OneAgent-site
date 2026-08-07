@@ -45,7 +45,12 @@ const published = channel?.targets.some((target) => target.status === "available
       <p>If the value you compute does not match the page, do not run the file. Send the download URL, the filename and the hash you actually got to the support page.</p>
       <h3>This is a technical preview</h3>
       <p>macOS Developer ID notarisation and Windows Authenticode are not done yet, so it is not called stable. Each platform enters stable on its own once signing, notarisation and native verification are complete.</p>
-      <p>Until then, OneAgent does not document ways around your operating system's security policy.</p>
+      {/* Replaced a promise that the site documented no way around the OS security
+          policy. It now does, for macOS: without it, a reader meets a "Move to
+          Trash" dialog with no explanation. What the site still refuses to do is
+          weaken the policy itself. */}
+      <p>Because it is unsigned, macOS blocks the first launch. The <a href={localePath("en", "quickstart/#macos-gatekeeper")}>first-launch guide</a> explains what allowing it grants, and why a signed build removes the need for it.</p>
+      <p>OneAgent will never ask you to disable Gatekeeper, run <code>spctl --master-disable</code>, or lower your system-wide security settings. That flow covers this one app and every step is yours to confirm.</p>
     </div>
   </section>
 </BaseLayout>

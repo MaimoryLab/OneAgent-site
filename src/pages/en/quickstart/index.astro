@@ -1,6 +1,11 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import { localePath } from "../../../i18n";
+
+/* Screenshots live at the site root, not under /en/. A relative src on this page
+   would resolve against /en/ and 404, so the base path is applied explicitly —
+   the same reason localePath exists for links. */
+const base = import.meta.env.BASE_URL;
 ---
 <BaseLayout
   title="Quickstart — OneAgent"
@@ -23,12 +28,36 @@ import { localePath } from "../../../i18n";
     <div class="shell content-grid reveal">
       <article class="prose">
         <div class="notice notice-warning">
-          <span class="notice-mark">!</span><div><strong>This is an unsigned technical preview</strong><p>If your operating system blocks it from running, stop there and either wait for a signed build or use the supported from-source path in the repository docs. This page does not describe ways around your system's security policy.</p></div>
+          <span class="notice-mark">!</span><div><strong>This is an unsigned technical preview</strong><p>macOS blocks it on first launch, which is expected. <a href="#macos-gatekeeper">The guide below</a> covers how to allow this one app and what that means. You can also wait for a signed build, or use the from-source path in the repository docs.</p></div>
         </div>
         <h2 id="download">1. Download and verify</h2>
         <p>Pick the artifact matching your platform and architecture from the download centre. Compute its SHA-256 before running anything, and compare it character by character with the value shown on that page.</p>
         <h2 id="launch">2. Launch OneAgent</h2>
         <p>Unpack and run it. The interface is served on your machine's loopback address, never exposed to your LAN or the internet, and the local service exits with the app.</p>
+        <h3 id="macos-gatekeeper">First launch on macOS: why it is blocked, and how to allow it</h3>
+        <p>The current builds carry no Apple Developer ID signature and are not notarised. Gatekeeper therefore refuses to open them, and the most prominent button in the first dialog is “Move to Trash”. This is not a corrupt download or a false positive — it is what Gatekeeper does with every un-notarised app.</p>
+        <p>Do one thing before continuing: <strong>go back to the download page and check the SHA-256</strong>. A signature is what normally answers “is this the file the publisher built”. Without one, the checksum is your only equivalent. If it does not match, do not open it.</p>
+        <ol class="guide-steps">
+          <li>
+            <p>This dialog appears on first launch. Choose <strong>Done</strong>, not Move to Trash.</p>
+            <figure><img src={`${base}images/guide/gatekeeper-1-blocked.png`} alt="macOS dialog: “OneAgent” Not Opened. Apple could not verify whether it contains malware, offering Done and Move to Trash." width="520" height="470" loading="lazy" /></figure>
+          </li>
+          <li>
+            <p>Open <strong>System Settings › Privacy &amp; Security</strong> and scroll to <strong>Security</strong>. A line reading “OneAgent” was blocked to protect your Mac appears there, with an <strong>Open Anyway</strong> button. It only shows for a while after the block, so if it is missing, launch the app once more.</p>
+            <figure><img src={`${base}images/guide/gatekeeper-2-settings.jpg`} alt="The Privacy and Security pane of System Settings, whose Security section shows OneAgent was blocked, with an Open Anyway button." width="1446" height="1250" loading="lazy" /></figure>
+          </li>
+          <li>
+            <p>Confirm once more. This dialog states the risk plainly: Apple cannot verify the source. Choose <strong>Open Anyway</strong>.</p>
+            <figure><img src={`${base}images/guide/gatekeeper-3-open-anyway.png`} alt="macOS confirmation dialog: Open “OneAgent”? It warns the app cannot be verified, offering Move to Trash, Open Anyway and Done." width="520" height="638" loading="lazy" /></figure>
+          </li>
+          <li>
+            <p>Authorise with <strong>an administrator's Touch ID or password</strong>. macOS asks for an administrator because this changes an execution policy on the machine, not just a single click.</p>
+            <figure><img src={`${base}images/guide/gatekeeper-4-authenticate.jpg`} alt="macOS authorisation prompt asking for an administrator's Touch ID or password to allow the operation." width="260" height="272" loading="lazy" /></figure>
+          </li>
+        </ol>
+        <div class="notice notice-warning">
+          <span class="notice-mark">!</span><div><strong>What this actually does</strong><p>It adds an exception for OneAgent alone, letting that one app skip the notarisation check. It does not turn Gatekeeper off, does not affect other apps, and does not change your system-wide security settings. OneAgent will never ask you to run <code>spctl --master-disable</code> or anything like it — instructions to disable protection globally do not come from us.</p><p>The trade is worth stating: you give up Apple's assurance that this binary was scanned, and take on verifying the SHA-256 yourself. Once signing and notarisation are done, none of these four steps are needed and this guide comes down.</p></div>
+        </div>
         <h2 id="agent">3. Choose an agent</h2>
         <p>Choose the tool you actually intend to use. Agents marked “official guide” still go through the flow, but OneAgent will not dress them up as automatically installed or configured.</p>
         <h2 id="provider">4. Connect your own provider</h2>
@@ -46,11 +75,12 @@ import { localePath } from "../../../i18n";
           <li>Key rejected: check permissions and balance in the provider's own console. Do not paste the key into a chat or an issue.</li>
           <li>Protocol mismatch: switch to a model that explicitly supports the agent's protocol, rather than only checking <code>/v1/models</code>.</li>
           <li>Checksum mismatch: do not run the file. Keep the filename, the download URL and the hash you computed.</li>
+          <li>macOS says the app “is damaged and can't be opened”: this is usually still the notarisation block rather than a genuinely corrupt file. Check the SHA-256 first; if it matches, follow <a href="#macos-gatekeeper">first launch on macOS</a>.</li>
         </ul>
         <p><a class="button button-primary" href={localePath("en", "downloads/")}>Go to the download centre</a></p>
       </article>
       <nav class="side-index" aria-label="On this page">
-        <a href="#download">1. Download and verify</a><a href="#launch">2. Launch</a><a href="#agent">3. Choose an agent</a><a href="#provider">4. Connect a provider</a><a href="#probe">5. Test the protocol</a><a href="#review">6. Review results</a><a href="#troubleshooting">Troubleshooting</a>
+        <a href="#download">1. Download and verify</a><a href="#launch">2. Launch</a><a href="#macos-gatekeeper">First launch on macOS</a><a href="#agent">3. Choose an agent</a><a href="#provider">4. Connect a provider</a><a href="#probe">5. Test the protocol</a><a href="#review">6. Review results</a><a href="#troubleshooting">Troubleshooting</a>
       </nav>
     </div>
   </section>
