@@ -128,6 +128,34 @@ describe("release feed reachability", () => {
 
     await expect(getLatestRelease()).rejects.toThrow(/500/);
   });
+
+  /* The status checks above only run once GitHub has answered. A request that
+     never arrives rejects instead, which is what actually happened during an e2e
+     run with no network: the build died with "TypeError: fetch failed" rather
+     than rendering the empty state the statuses are careful to produce. */
+  for (const [label, error] of [
+    ["a connect timeout", new TypeError("fetch failed")],
+    ["a DNS failure", new TypeError("fetch failed")],
+  ] as const) {
+    it(`degrades to an empty feed when the request never arrives (${label})`, async () => {
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(error));
+      const { getLatestRelease } = await import("./downloads");
+
+      await expect(getLatestRelease()).resolves.toBeNull();
+    });
+  }
+
+  // A body that is not an array means GitHub answered with something unexpected.
+  // That is a real fault, not an unreachable feed, so it must not be swallowed.
+  it("still throws when the feed answers with a malformed body", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ status: 200, statusText: "OK", ok: true, json: async () => ({ nope: true }) }),
+    );
+    const { getLatestRelease } = await import("./downloads");
+
+    await expect(getLatestRelease()).rejects.toThrow(/must be an array/);
+  });
 });
 
 /**

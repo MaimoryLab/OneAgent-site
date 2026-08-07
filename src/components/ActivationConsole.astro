@@ -1,5 +1,6 @@
 ---
 import AgentMark from "./AgentMark.astro";
+import BrandMark from "./BrandMark.astro";
 import { catalog } from "../lib/catalog";
 import { bestLocaleFor, localeFromPath, localePath, switchesLanguage } from "../i18n";
 import { DEMO_CUSTOM_MODEL_HINT, demoStateFor, featuredDemoAgents } from "../lib/demo-environment";
@@ -48,13 +49,24 @@ const copy = locale === "en"
       managed: "Managed config",
       guide: "Official setup",
       facts: ["No device access", "No API key field", "Registry-derived compatibility"],
-      steps: ["Agent", "Setup", "Provider", "Model", "Confirm"],
-      modeTitle: "How should this agent be configured?",
-      modeBody: "OneAgent can point the agent at a model service, or leave an account you already use in place.",
-      modeProvider: "Configure a model service",
+      /* Mirrors SetupStepper.tsx upstream, which is the single source of truth
+         for the onboarding order and labels. */
+      steps: ["Agent", "Template", "Model service", "Model", "Confirm", "Install"],
+      modeTitle: "Choose a configuration template",
+      modeBody: "Pick a saved template, or create a new one.",
+      modeProvider: "Create a new template",
       modeProviderHint: "Choose a provider or your own endpoint, then verify the protocol before anything is written.",
-      modeExisting: "Keep an existing account or config",
-      modeExistingHint: "Already signed in, or already configured? The provider and model steps are skipped.",
+      modeExisting: "Apply a saved template",
+      modeExistingHint: "A provider and model combination you saved earlier applies directly; both steps are skipped.",
+      reviewTitle: "Review activation",
+      reviewBody: "Check what will be installed, configured and backed up. Your API key is never shown on this page.",
+      reviewAgent: "Agent",
+      reviewService: "Model service",
+      reviewModel: "Model",
+      reviewWrite: "Local write",
+      reviewBackup: "A timestamped backup is created before anything is overwritten.",
+      reviewTemplate: "This run is saved as a configuration template you can apply later.",
+      reviewStart: "Start installing",
       customName: "Custom endpoint",
       customVerdict: "Your own OpenAI-compatible URL",
       customLabel: "Base URL",
@@ -71,7 +83,9 @@ const copy = locale === "en"
       modelBody: "The app reads this list from the endpoint itself. Pick one, or type an id if discovery comes back empty.",
       modelManual: "Discovery empty? Enter an id",
       modelManualLabel: "Model id",
-      confirm: "Confirm activation",
+      /* Opens the review screen rather than finishing the run; the final
+         go-ahead is the button on that screen. */
+      confirm: "Review activation",
       skipped: "Skipped",
       /* The real window's sidebar is a workspace nav, not a progress list — the
          stepper lives in the page header. These are its actual four entries. */
@@ -113,13 +127,24 @@ const copy = locale === "en"
       managed: "托管配置",
       guide: "官方设置",
       facts: ["不访问设备", "不提供 Key 输入框", "兼容结论来自注册表"],
-      steps: ["Agent", "配置", "Provider", "模型", "确认"],
-      modeTitle: "这个 Agent 怎么配置？",
-      modeBody: "可以由 OneAgent 指向某个模型服务，也可以保留你已经在用的账号。",
-      modeProvider: "配置模型服务",
+      /* Mirrors SetupStepper.tsx upstream, which is the single source of truth
+         for the onboarding order and labels. */
+      steps: ["Agent", "选择配置模版", "模型服务", "模型", "确认", "安装"],
+      modeTitle: "选择配置模版",
+      modeBody: "选择一个已有配置模版，或新建配置模版。",
+      modeProvider: "新建配置模版",
       modeProviderHint: "选择 Provider 或你自己的端点，写入前先验证协议。",
-      modeExisting: "使用已有账号或配置",
-      modeExistingHint: "已经登录、或已经配置好？Provider 与模型两步会跳过。",
+      modeExisting: "套用已有配置模版",
+      modeExistingHint: "之前存过的 Provider 与模型组合可以直接应用，两步都会跳过。",
+      reviewTitle: "确认激活",
+      reviewBody: "核对安装、配置和备份范围。API Key 不会显示在此页。",
+      reviewAgent: "Agent",
+      reviewService: "模型服务",
+      reviewModel: "模型",
+      reviewWrite: "本地写入",
+      reviewBackup: "覆盖前会自动创建时间戳备份。",
+      reviewTemplate: "这次安装会保存为一个配置模版，之后可以直接应用。",
+      reviewStart: "开始安装",
       customName: "自定义端点",
       customVerdict: "你自己的 OpenAI 兼容地址",
       customLabel: "Base URL",
@@ -136,7 +161,8 @@ const copy = locale === "en"
       modelBody: "应用会从端点自身读取这个列表。选一个，或在发现结果为空时手动输入 ID。",
       modelManual: "列表为空？手动输入 ID",
       modelManualLabel: "模型 ID",
-      confirm: "确认激活",
+      /* 进入确认步骤，真正的「开始安装」在那一屏。 */
+      confirm: "下一步：确认",
       skipped: "已跳过",
       /* The real window's sidebar is a workspace nav, not a progress list — the
          stepper lives in the page header. These are its actual four entries. */
@@ -159,8 +185,10 @@ const copy = locale === "en"
 
       <div class="activation-body">
         <aside class="activation-rail" aria-label={locale === "en" ? "Workspace" : "工作区"}>
+          {/* The real mark rather than an "OA" monogram: this sidebar stands in
+              for the product's own, which shows the logo. */}
           <div class="activation-rail-brand">
-            <span class="activation-monogram" aria-hidden="true">OA</span>
+            <span class="activation-rail-mark" aria-hidden="true"><BrandMark size={26} /></span>
             <div><strong>OneAgent</strong><span>{copy.sample}</span></div>
           </div>
           {/* Presentational: the real sidebar navigates a workspace, but nothing
@@ -328,6 +356,29 @@ const copy = locale === "en"
             </div>
           </section>
 
+          {/* The product's /setup/review. Its job is to state what is about to be
+              written before anything is, which is the step a visitor afraid of
+              breaking a working config most needs to see. The backup line is not
+              decoration: securefs.AtomicWrite takes a timestamped copy before
+              every managed write. */}
+          <section class="activation-panel activation-review" data-panel="review" tabindex="-1" hidden>
+            <div class="activation-panel-copy">
+              <h3>{copy.reviewTitle}</h3>
+              <p>{copy.reviewBody}</p>
+            </div>
+            <dl class="activation-review-grid">
+              <div><dt>{copy.reviewAgent}</dt><dd data-review-agent>—</dd></div>
+              <div><dt>{copy.reviewService}</dt><dd data-review-provider>—</dd></div>
+              <div><dt>{copy.reviewModel}</dt><dd data-review-model>—</dd></div>
+              <div><dt>{copy.reviewWrite}</dt><dd><code data-review-path>—</code></dd></div>
+            </dl>
+            <p class="activation-review-note">{copy.reviewBackup}</p>
+            <p class="activation-review-note">{copy.reviewTemplate}</p>
+            <div class="activation-review-actions">
+              <button class="button button-primary" type="button" data-start-install>{copy.reviewStart}</button>
+            </div>
+          </section>
+
           <section class="activation-panel activation-result" data-panel="result" tabindex="-1" hidden>
             <div class="activation-result-icon" aria-hidden="true" data-result-icon><svg viewBox="0 0 32 32"><path data-result-path d="M7 17l6 6L26 9"></path></svg></div>
             <div>
@@ -390,6 +441,9 @@ const copy = locale === "en"
 
   const messages = {
     "zh-CN": {
+      /* The review screen names the provider, and a custom endpoint has no
+         catalog entry to take a name from. */
+      customName: "自定义端点",
       status: {
         idle: "待机",
         scanning: "扫描示例",
@@ -398,6 +452,7 @@ const copy = locale === "en"
         provider: "选择 Provider",
         model: "选择模型",
         verifying: "验证示例",
+        review: "确认",
         ready: "Ready",
         "guide-only": "官方引导",
         "preview-gate": "预览门禁",
@@ -419,6 +474,7 @@ const copy = locale === "en"
         verified: "示例协议验证完成，可以选择模型。",
         models: (count: number) => `端点返回 ${count} 个示例模型。`,
         model: (id: string) => `已选择模型 ${id}。`,
+        review: "进入确认步骤，写入范围与备份策略已列出。",
         ready: "示例环境可进入 Ready。",
         preview: "连接路径可演示，但公开状态仍要求发布候选验证。",
         unsupported: "所选 Provider 不支持该 Agent 所需协议。",
@@ -456,6 +512,7 @@ const copy = locale === "en"
         provider: "选择 Provider 或填入你自己的端点",
         model: "选择一个模型后确认",
         verifying: "正在验证，未提交凭证",
+        review: "核对写入范围后开始安装",
         ready: "示例流程已完成",
         "guide-only": "这个 Agent 走官方流程",
         "preview-gate": "组合可演示，但未通过发布门禁",
@@ -464,6 +521,7 @@ const copy = locale === "en"
       },
     },
     en: {
+      customName: "Custom endpoint",
       status: {
         idle: "Idle",
         scanning: "Scanning demo",
@@ -472,6 +530,7 @@ const copy = locale === "en"
         provider: "Choose provider",
         model: "Choose model",
         verifying: "Verifying demo",
+        review: "Review",
         ready: "Ready",
         "guide-only": "Official guide",
         "preview-gate": "Preview gate",
@@ -493,6 +552,7 @@ const copy = locale === "en"
         verified: "Sample protocol verification completed. Choose a model.",
         models: (count: number) => `The endpoint returned ${count} example models.`,
         model: (id: string) => `Selected model ${id}.`,
+        review: "Reached the review step; the write scope and backup policy are listed.",
         ready: "The example environment may reach Ready.",
         preview: "The path can be demonstrated, but the public status still requires release-candidate verification.",
         unsupported: "The selected provider does not support the protocol this agent requires.",
@@ -530,6 +590,7 @@ const copy = locale === "en"
         provider: "Choose a provider, or enter your own endpoint",
         model: "Choose a model, then confirm",
         verifying: "Verifying — no credential submitted",
+        review: "Check the write scope, then start installing",
         ready: "The example flow is complete",
         "guide-only": "This agent uses its official flow",
         "preview-gate": "Demonstrable, but the release gate remains",
@@ -551,7 +612,10 @@ const copy = locale === "en"
     { delay: 900, run: (element) => element.selectProvider("ppio") },
     { delay: 900, run: (element) => element.verify() },
     { delay: 1100, run: (element) => element.selectModel(element.models[0] ?? "", false) },
-    { delay: 900, run: (element) => element.confirm() },
+    /* The review screen is a step the visitor is meant to read, so autoplay pauses
+       on it longer than on the choices it made for them. */
+    { delay: 900, run: (element) => element.review() },
+    { delay: 1600, run: (element) => element.confirm() },
   ];
 
   class ActivationConsoleElement extends HTMLElement {
@@ -586,7 +650,8 @@ const copy = locale === "en"
       this.querySelector<HTMLInputElement>("[data-model-input]")?.addEventListener("input", (event) => {
         this.selectModel((event.currentTarget as HTMLInputElement).value.trim(), false);
       }, { signal });
-      this.querySelector<HTMLButtonElement>("[data-confirm]")?.addEventListener("click", () => this.confirm(), { signal });
+      this.querySelector<HTMLButtonElement>("[data-confirm]")?.addEventListener("click", () => this.review(), { signal });
+      this.querySelector<HTMLButtonElement>("[data-start-install]")?.addEventListener("click", () => this.confirm(), { signal });
       this.querySelector<HTMLButtonElement>("[data-verify]")?.addEventListener("click", () => this.verify(), { signal });
       this.querySelector<HTMLButtonElement>("[data-reset]")?.addEventListener("click", () => this.reset(), { signal });
       document.querySelectorAll<HTMLButtonElement>(`[data-activation-trigger="${this.id}"]`).forEach((button) => {
@@ -770,6 +835,34 @@ const copy = locale === "en"
       if (fromList) this.querySelector<HTMLButtonElement>("[data-confirm]")?.focus();
     }
 
+    /* The footer button now opens the review screen rather than finishing the
+       run, matching the product: choosing a model is not the last decision. */
+    review() {
+      this.dispatch({ type: "review" });
+      if (this.state.phase !== "review") return;
+      this.renderReview();
+      this.appendLog(this.copy.log.review);
+      this.focusPanel("review");
+    }
+
+    renderReview() {
+      const agent = catalog.agents.find((candidate) => candidate.id === this.state.agentId) ?? null;
+      const provider = catalog.providers.find((candidate) => candidate.id === this.state.providerId) ?? null;
+      const set = (selector: string, value: string) => {
+        const node = this.querySelector<HTMLElement>(selector);
+        if (node) node.textContent = value;
+      };
+      set("[data-review-agent]", agent?.name ?? "—");
+      set(
+        "[data-review-provider]",
+        this.state.providerId === CUSTOM_PROVIDER_ID ? this.copy.customName : provider?.name ?? "—",
+      );
+      set("[data-review-model]", this.state.model ?? "—");
+      /* The real path the product writes, read from the catalog rather than
+         invented — a demo naming the wrong file would be worse than naming none. */
+      set("[data-review-path]", agent?.configPath ? `~/${agent.configPath}` : "—");
+    }
+
     confirm() {
       this.dispatch({ type: "confirm" });
       if (this.state.phase !== "ready") return;
@@ -889,7 +982,11 @@ const copy = locale === "en"
     render() {
       const phase = this.state.phase;
       this.dataset.phase = phase;
-      const panel = ["idle", "scanning", "agent", "mode", "provider", "model", "verifying"].includes(phase) ? phase : "result";
+      /* Everything not named here falls through to the result panel, so a new
+         phase must be added or its screen is silently unreachable. */
+      const panel = ["idle", "scanning", "agent", "mode", "provider", "model", "verifying", "review"].includes(phase)
+        ? phase
+        : "result";
       this.querySelectorAll<HTMLElement>("[data-panel]").forEach((element) => {
         element.hidden = element.dataset.panel !== panel;
       });
@@ -1147,17 +1244,16 @@ const copy = locale === "en"
      monogram — that one carries white on the accent fill and a broader
      selector here would win on specificity and make it unreadable. */
   .activation-rail-brand > div span { color: var(--ink-faint); font-size: 11px; }
-  .activation-monogram {
+  /* Replaces an "OA" monogram. The mark carries its own colours, so unlike the
+     currentColor agent glyphs it is never inverted for the dark theme. */
+  .activation-rail-mark {
     width: 26px;
     height: 26px;
     display: grid;
     place-items: center;
-    border-radius: 7px;
-    color: var(--on-accent);
-    background: var(--blue-deep);
-    font: 750 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-    letter-spacing: .04em;
+    flex: none;
   }
+  .activation-rail-mark img { display: block; }
   /* The app's stepper: a horizontal row in the page header, each step a 27px
      numbered circle above an 11px label. Nothing is a card and nothing is dark. */
   .activation-steps {
@@ -1429,6 +1525,28 @@ const copy = locale === "en"
   .activation-result-icon[data-kind="preview-gate"], .activation-result-icon[data-kind="guide-only"] { color: var(--orange); background: var(--orange-soft); }
   .activation-result-icon[data-kind="unsupported"], .activation-result-icon[data-kind="error"] { color: var(--red); background: var(--red-soft); }
   .activation-result-actions { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+  /* Review: a plain definition list of what is about to happen. Two columns so
+     four facts read as pairs rather than a long ladder. */
+  .activation-review-grid {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 18px;
+  }
+  .activation-review-grid > div {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--paper-strong);
+  }
+  .activation-review-grid dt { color: var(--ink-faint); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+  .activation-review-grid dd { margin: 3px 0 0; color: var(--ink); font-size: 13px; font-weight: 600; }
+  .activation-review-grid code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 400; overflow-wrap: anywhere; }
+  .activation-review-note { margin: 12px 0 0; color: var(--ink-soft); font-size: 12px; }
+  .activation-review-actions { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 9px; }
+  @media (max-width: 620px) {
+    .activation-review-grid { grid-template-columns: minmax(0, 1fr); }
+  }
   .activation-log-wrap { min-height: 62px; margin-top: 16px; display: grid; grid-template-columns: 82px 1fr; gap: 12px; }
   .activation-log-wrap > span { padding-top: 4px; color: var(--ink-faint); font: 700 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .1em; }
   .activation-log { max-height: 58px; margin: 0; padding: 0; overflow: auto; list-style: none; color: var(--ink-soft); font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }

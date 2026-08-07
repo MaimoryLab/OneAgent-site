@@ -97,9 +97,27 @@ describe("activation demo state machine", () => {
     state = activationReducer(state, { type: "verify" }, catalog);
     state = activationReducer(state, { type: "verify-complete" }, catalog);
     state = activationReducer(state, { type: "select-model", model: "deepseek/deepseek-v3" }, catalog);
+    /* Review sits between the model choice and the write, mirroring
+       /setup/review upstream: choosing a model is not the last decision. */
+    state = activationReducer(state, { type: "review" }, catalog);
+    expect(state.phase).toBe("review");
     state = activationReducer(state, { type: "confirm" }, catalog);
 
     expect(state).toMatchObject({ phase: "ready", agentId: "managed", providerId: "provider", compatibility: "supported" });
+  });
+
+  // Nothing may skip the review screen, because it is the only place the demo
+  // states what will be written and that a backup is taken first.
+  it("does not reach ready straight from the model step", () => {
+    let state = scanned();
+    state = activationReducer(state, { type: "select-agent", agentId: "managed" }, catalog);
+    state = activationReducer(state, { type: "select-mode", mode: "provider" }, catalog);
+    state = activationReducer(state, { type: "select-provider", providerId: "provider" }, catalog);
+    state = activationReducer(state, { type: "verify" }, catalog);
+    state = activationReducer(state, { type: "verify-complete" }, catalog);
+    state = activationReducer(state, { type: "select-model", model: "deepseek/deepseek-v3" }, catalog);
+
+    expect(activationReducer(state, { type: "confirm" }, catalog).phase).toBe("model");
   });
 
   it("never upgrades release-candidate-required support to ready", () => {
@@ -250,10 +268,11 @@ describe("configuration mode branches", () => {
     state = activationReducer(state, { type: "verify-complete" }, catalog);
 
     expect(state.phase).toBe("model");
-    // Confirming without a model must not reach ready.
-    expect(activationReducer(state, { type: "confirm" }, catalog).phase).toBe("model");
+    // Advancing without a model must not open the review screen.
+    expect(activationReducer(state, { type: "review" }, catalog).phase).toBe("model");
 
     state = activationReducer(state, { type: "select-model", model: "deepseek/deepseek-v3" }, catalog);
+    state = activationReducer(state, { type: "review" }, catalog);
     expect(activationReducer(state, { type: "confirm" }, catalog)).toMatchObject({
       phase: "ready",
       model: "deepseek/deepseek-v3",

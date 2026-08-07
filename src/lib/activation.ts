@@ -1,5 +1,16 @@
 import { compatibilityFor, type Compatibility, type SiteCatalogV2 } from "./explorer";
 
+/* The phases follow the product's own route sequence, which SetupStepper.tsx
+   declares as the single source of truth for order and labels:
+
+     /setup/agents → /setup/profile → /setup/provider → /setup/model
+                   → /setup/review → /setup/activation
+
+   `review` was missing here, so the demo went straight from choosing a model to
+   a finished environment. That skipped the one screen whose entire job is to say
+   what is about to be written and that a timestamped backup is taken first —
+   the step a visitor most needs to see before trusting the tool with a config
+   they are afraid to break. */
 type ActivationPhase =
   | "idle"
   | "scanning"
@@ -8,15 +19,16 @@ type ActivationPhase =
   | "provider"
   | "model"
   | "verifying"
+  | "review"
   | "ready"
   | "guide-only"
   | "preview-gate"
   | "unsupported"
   | "error";
 
-/* Mirrors the product's two ConfigModePage choices. "existing-account" is the
-   real branch for a user who already has a subscription or a working config —
-   it skips the provider and model steps, exactly as SetupGuard does. */
+/* The product's profile step: reuse a saved configuration template, or create a
+   new one. "existing-account" is the branch for an agent already carrying a
+   working config — it skips the provider and model steps, as SetupGuard does. */
 export type ConfigMode = "provider" | "existing-account";
 
 export const CUSTOM_PROVIDER_ID = "custom";
@@ -41,6 +53,7 @@ export type ActivationAction =
   | { type: "select-model"; model: string }
   | { type: "verify" }
   | { type: "verify-complete" }
+  | { type: "review" }
   | { type: "confirm" }
   | { type: "fail" }
   | { type: "reset" };
@@ -145,6 +158,10 @@ export function activationReducer(
       return state.providerId === CUSTOM_PROVIDER_ID ? { ...state, customBaseUrl: action.value } : state;
     case "select-model":
       return state.phase === "model" && action.model ? { ...state, model: action.model } : state;
+    /* Choosing a model no longer finishes the flow: it opens the review screen,
+       which is where the product asks for the final go-ahead. */
+    case "review":
+      return state.phase === "model" && state.model ? { ...state, phase: "review" } : state;
     case "verify": {
       if (state.phase !== "provider" || !state.agentId || !state.providerId || !state.compatibility) {
         return errorState(state);
@@ -164,8 +181,10 @@ export function activationReducer(
         return { ...state, phase: "model" };
       }
       return { ...state, phase: "unsupported" };
+    /* Only reachable from review. Previously this fired straight from the model
+       step, which is why the review screen had nowhere to live. */
     case "confirm":
-      return state.phase === "model" && state.model ? { ...state, phase: "ready" } : state;
+      return state.phase === "review" && state.model ? { ...state, phase: "ready" } : state;
     case "fail":
       return errorState(state);
   }

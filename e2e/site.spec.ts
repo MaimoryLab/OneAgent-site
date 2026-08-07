@@ -68,13 +68,17 @@ test("activation demo reaches Ready only for a supported managed combination", a
   await expect(console).toHaveAttribute("data-phase", "agent");
   await console.getByRole("button", { name: /Claude Code/ }).click();
   await expect(console).toHaveAttribute("data-phase", "mode");
-  await console.getByRole("button", { name: /配置模型服务/ }).click();
+  await console.getByRole("button", { name: /新建配置模版/ }).click();
   await expect(console).toHaveAttribute("data-phase", "provider");
   await console.getByRole("button", { name: /PPIO/ }).click();
   await console.getByRole("button", { name: "验证示例连接" }).click();
   await expect(console).toHaveAttribute("data-phase", "model");
   await console.getByRole("button", { name: "deepseek/deepseek-v3" }).click();
-  await console.getByRole("button", { name: "确认激活" }).click();
+  /* Two steps now, mirroring /setup/model → /setup/review upstream: choosing a
+     model opens the review screen, and the write is authorised there. */
+  await console.getByRole("button", { name: "下一步：确认" }).click();
+  await expect(console).toHaveAttribute("data-phase", "review");
+  await console.getByRole("button", { name: "开始安装" }).click();
   await expect(console).toHaveAttribute("data-phase", "ready");
   await expect(console.getByRole("heading", { name: "示例环境已 Ready" })).toBeVisible();
   await expect(console.getByRole("link", { name: "下载 OneAgent" })).toBeVisible();
@@ -110,7 +114,7 @@ test("activation demo preserves the preview-gate boundary", async ({ page }) => 
   await page.getByRole("button", { name: "开始激活演示" }).click();
   await expect(console).toHaveAttribute("data-phase", "agent");
   await console.getByRole("button", { name: /Codex/ }).click();
-  await console.getByRole("button", { name: /配置模型服务/ }).click();
+  await console.getByRole("button", { name: /新建配置模版/ }).click();
   await console.getByRole("button", { name: /PPIO/ }).click();
   await console.getByRole("button", { name: "验证示例连接" }).click();
   await expect(console).toHaveAttribute("data-phase", "preview-gate");
@@ -131,7 +135,7 @@ test("activation demo validates a custom endpoint the way the app does", async (
   const console = page.locator("#activation-console");
   await page.getByRole("button", { name: "开始激活演示" }).click();
   await console.getByRole("button", { name: /Claude Code/ }).click();
-  await console.getByRole("button", { name: /配置模型服务/ }).click();
+  await console.getByRole("button", { name: /新建配置模版/ }).click();
   await console.getByRole("button", { name: /自定义端点/ }).click();
 
   const url = console.getByLabel("Base URL");
@@ -159,7 +163,11 @@ test("activation demo validates a custom endpoint the way the app does", async (
   await expect(console).toHaveAttribute("data-phase", "model");
   await expect(console.locator("[data-model-grid]")).toBeHidden();
   await console.getByLabel("模型 ID").fill("deepseek/deepseek-v3");
-  await console.getByRole("button", { name: "确认激活" }).click();
+  /* Two steps now, mirroring /setup/model → /setup/review upstream: choosing a
+     model opens the review screen, and the write is authorised there. */
+  await console.getByRole("button", { name: "下一步：确认" }).click();
+  await expect(console).toHaveAttribute("data-phase", "review");
+  await console.getByRole("button", { name: "开始安装" }).click();
   await expect(console).toHaveAttribute("data-phase", "ready");
   await expect(console.locator("[data-result-provider]")).toHaveText("api.example.com");
   expect(fetches, "typing an endpoint must not make the page call it").toEqual([]);
@@ -174,7 +182,7 @@ test("activation demo skips provider and model for an existing account", async (
   await page.getByRole("button", { name: "开始激活演示" }).click();
   await console.getByRole("button", { name: /Claude Code/ }).click();
   await expect(console).toHaveAttribute("data-phase", "mode");
-  await console.getByRole("button", { name: /使用已有账号或配置/ }).click();
+  await console.getByRole("button", { name: /套用已有配置模版/ }).click();
 
   await expect(console).toHaveAttribute("data-phase", "ready");
   await expect(console.getByRole("heading", { name: "保留现有账号" })).toBeVisible();
@@ -197,12 +205,16 @@ test("activation demo keeps a complete event history under reduced motion", asyn
   await expect(console).toHaveAttribute("data-phase", "agent");
   await expect(console.locator("[data-log] li")).toHaveCount(2);
   await console.getByRole("button", { name: /Claude Code/ }).click();
-  await console.getByRole("button", { name: /配置模型服务/ }).click();
+  await console.getByRole("button", { name: /新建配置模版/ }).click();
   await console.getByRole("button", { name: /PPIO/ }).click();
   await console.getByRole("button", { name: "验证示例连接" }).click();
   await expect(console).toHaveAttribute("data-phase", "model");
   await console.getByRole("button", { name: "deepseek/deepseek-v3" }).click();
-  await console.getByRole("button", { name: "确认激活" }).click();
+  /* Two steps now, mirroring /setup/model → /setup/review upstream: choosing a
+     model opens the review screen, and the write is authorised there. */
+  await console.getByRole("button", { name: "下一步：确认" }).click();
+  await expect(console).toHaveAttribute("data-phase", "review");
+  await console.getByRole("button", { name: "开始安装" }).click();
   await expect(console).toHaveAttribute("data-phase", "ready");
   await expect(console.locator("[data-log]")).toContainText("示例协议验证完成");
   const animations = await console.evaluate((element) =>

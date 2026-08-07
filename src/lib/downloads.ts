@@ -89,6 +89,24 @@ function getPublishedReleases(): Promise<GitHubRelease[]> {
     const releases = await response.json();
     if (!Array.isArray(releases)) throw new Error("GitHub Releases response must be an array");
     return (releases as GitHubRelease[]).filter((release) => !release.draft);
+  }).catch((cause: unknown) => {
+    /* A rejected fetch is the same class of problem as the statuses above, and
+       covering only the statuses left the hole this closes: the request never
+       reaching GitHub at all — offline, DNS failure, a connect timeout, a proxy
+       refusing the connection. Those throw rather than returning a response, so
+       the earlier fix did not catch them and a build with no network died with
+       "TypeError: fetch failed" instead of rendering the empty state. Observed
+       exactly that while running the e2e suite.
+
+       A malformed body is deliberately not swallowed here: it means GitHub
+       answered with something unexpected, which is a real fault worth failing on
+       rather than quietly publishing a site with no downloads. */
+    if (cause instanceof Error && /must be an array|request failed/.test(cause.message)) throw cause;
+    console.warn(
+      `[downloads] GitHub Releases unreachable (${cause instanceof Error ? cause.message : String(cause)}). ` +
+        `Rendering the "not published yet" state.`,
+    );
+    return [] as GitHubRelease[];
   });
   return releasesRequest;
 }
