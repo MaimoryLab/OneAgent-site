@@ -1,0 +1,60 @@
+---
+import { getCollection } from "astro:content";
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+/* Ordered by the frontmatter `order`, not by id: inserting an article between two
+   existing ones should not require renaming the files after it, which would break
+   every inbound link to them. */
+const articles = (await getCollection("help", (entry) => entry.id.startsWith("zh-CN/")))
+  .sort((left, right) => left.data.order - right.data.order);
+const slugOf = (id: string) => id.replace(/^[^/]+\//, "");
+---
+<BaseLayout
+  title="帮助文档 — OneAgent"
+  description="OneAgent 的使用文档：安装、切换模型、配置模版、备份与回退、升级、配置迁移与常见问题排查。"
+>
+  <header class="page-hero">
+    <div class="shell page-hero-grid">
+      <div>
+        <nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / 帮助文档</nav>
+        <p class="eyebrow">Help</p>
+        <h1 class="page-title">装好之后，怎么用。</h1>
+      </div>
+      <div class="page-hero-aside">
+        <strong>{articles.length} 篇，按用户链路排序</strong>
+        想尽快跑通第一个 Agent 看<a href="/quickstart/">快速开始</a>；这里讲的是装好之后的日常操作。
+      </div>
+    </div>
+  </header>
+  <section class="section-compact">
+    <div class="shell">
+      <div class="agent-list reveal">
+        {articles.map((article) => (
+          <a class="agent-row help-row" href={`/help/${slugOf(article.id)}/`}>
+            <span class="help-order" aria-hidden="true">{String(article.data.order).padStart(2, "0")}</span>
+            <div><strong>{article.data.title}</strong></div>
+            <span class="agent-meta">{article.data.summary}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* The agent list's row is a four-column grid built for a mark, a name, a
+     description and status chips. A help entry has three of those, so the row is
+     re-declared here rather than fighting the inherited template. */
+  .help-row { grid-template-columns: 42px 240px 1fr; }
+  .help-order {
+    color: var(--ink-faint);
+    font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  /* 680px is the stylesheet's own narrow breakpoint, where .agent-row already
+     collapses. Picking a different one here would leave a band where the two
+     rules disagree about the column count. */
+  @media (max-width: 680px) {
+    .help-row { grid-template-columns: 42px 1fr; }
+  }
+</style>

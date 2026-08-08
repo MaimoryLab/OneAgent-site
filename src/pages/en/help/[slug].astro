@@ -1,0 +1,84 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { localePath } from "../../../i18n";
+
+export async function getStaticPaths() {
+  const articles = (await getCollection("help", (entry) => entry.id.startsWith("en/")))
+    .sort((left, right) => left.data.order - right.data.order);
+  return articles.map((article, index) => ({
+    params: { slug: article.id.replace(/^[^/]+\//, "") },
+    props: {
+      article,
+      previous: articles[index - 1] ?? null,
+      next: articles[index + 1] ?? null,
+    },
+  }));
+}
+
+interface Props {
+  article: CollectionEntry<"help">;
+  previous: CollectionEntry<"help"> | null;
+  next: CollectionEntry<"help"> | null;
+}
+
+const { article, previous, next } = Astro.props;
+const { Content, headings } = await render(article);
+const sections = headings.filter((heading) => heading.depth === 2);
+const slugOf = (entry: CollectionEntry<"help">) => entry.id.replace(/^[^/]+\//, "");
+---
+<BaseLayout title={`${article.data.title} — OneAgent help`} description={article.data.description}>
+  <header class="page-hero">
+    <div class="shell page-hero-grid">
+      <div>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href={localePath("en", "")}>Home</a> / <a href={localePath("en", "help/")}>Help</a> / {article.data.title}
+        </nav>
+        <p class="eyebrow">Help</p>
+        <h1 class="page-title">{article.data.title}</h1>
+      </div>
+      <div class="page-hero-aside"><strong>{article.data.summary}</strong></div>
+    </div>
+  </header>
+  <section class="section-compact">
+    <div class="shell content-grid reveal">
+      {/* Links inside the body are absolute and locale-aware in the Markdown
+          itself: they resolve against <base>, which is the site root and knows
+          nothing about locales, so a bare `help/05-backup/` here would land an
+          English reader on the Chinese article. A link to an untranslated route
+          carries the same lang-hint the nav uses, written in the source beside it,
+          so the language change is visible before the click. */}
+      <article class="prose help-prose">
+        <Content />
+
+        {(previous || next) && (
+          <nav class="help-pager" aria-label="Previous and next">
+            {previous && <a href={localePath("en", `help/${slugOf(previous)}/`)}>← {previous.data.title}</a>}
+            {next && <a class="help-pager-next" href={localePath("en", `help/${slugOf(next)}/`)}>{next.data.title} →</a>}
+          </nav>
+        )}
+      </article>
+      {sections.length > 0 && (
+        <nav class="side-index" aria-label="On this page">
+          {sections.map((section) => <a href={`#${section.slug}`}>{section.text}</a>)}
+        </nav>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .help-prose :global(h2),
+  .help-prose :global(h3) { scroll-margin-top: 90px; }
+  .help-pager {
+    margin-top: 42px;
+    padding-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .help-pager a + .help-pager-next { margin-left: auto; }
+</style>

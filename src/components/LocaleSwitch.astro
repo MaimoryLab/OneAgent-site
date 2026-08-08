@@ -1,5 +1,5 @@
 ---
-import { localeFromPath, localePath, locales, localeNames, routeWithoutLocale, translatedRoutes } from "../i18n";
+import { localeFromPath, localePath, locales, localeNames, routeWithoutLocale, isTranslated } from "../i18n";
 import { useTranslations } from "../i18n/ui";
 
 const current = localeFromPath(Astro.url.pathname);
@@ -8,7 +8,7 @@ const t = useTranslations(current);
 const target = locales.find((locale) => locale !== current)!;
 // Switching keeps the reader on the same page where that page is translated,
 // and falls back to the home page rather than a 404 where it is not.
-const targetHref = localePath(target, translatedRoutes.has(route) ? route : "");
+const targetHref = localePath(target, isTranslated(route) ? route : "");
 ---
 <a class="locale-switch" href={targetHref} hreflang={target} lang={target} aria-label={t("lang.switch")}>
   {localeNames[target]}

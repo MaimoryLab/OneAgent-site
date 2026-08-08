@@ -1,0 +1,54 @@
+---
+import { getCollection } from "astro:content";
+
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { localePath } from "../../../i18n";
+
+const articles = (await getCollection("help", (entry) => entry.id.startsWith("en/")))
+  .sort((left, right) => left.data.order - right.data.order);
+const slugOf = (id: string) => id.replace(/^[^/]+\//, "");
+---
+<BaseLayout
+  title="Help — OneAgent"
+  description="Using OneAgent: installing, switching models, configuration templates, backups and rolling back, upgrading, migrating configuration, and troubleshooting."
+>
+  <header class="page-hero">
+    <div class="shell page-hero-grid">
+      <div>
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href={localePath("en", "")}>Home</a> / Help</nav>
+        <p class="eyebrow">Help</p>
+        <h1 class="page-title">What to do once it is installed.</h1>
+      </div>
+      <div class="page-hero-aside">
+        <strong>{articles.length} pages, in the order you meet them</strong>
+        To get one agent working as fast as possible, read <a href={localePath("en", "quickstart/")}>Quickstart</a>. This is everything after that.
+      </div>
+    </div>
+  </header>
+  <section class="section-compact">
+    <div class="shell">
+      <div class="agent-list reveal">
+        {articles.map((article) => (
+          <a class="agent-row help-row" href={localePath("en", `help/${slugOf(article.id)}/`)}>
+            <span class="help-order" aria-hidden="true">{String(article.data.order).padStart(2, "0")}</span>
+            <div><strong>{article.data.title}</strong></div>
+            <span class="agent-meta">{article.data.summary}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Mirrors the Chinese index; see src/pages/help/index.astro for why the row
+     grid is re-declared rather than inherited. */
+  .help-row { grid-template-columns: 42px 240px 1fr; }
+  .help-order {
+    color: var(--ink-faint);
+    font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (max-width: 680px) {
+    .help-row { grid-template-columns: 42px 1fr; }
+  }
+</style>

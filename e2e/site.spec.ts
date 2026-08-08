@@ -2,14 +2,14 @@ import { test, expect, type Page } from "@playwright/test";
 import axe from "axe-core";
 import { readFileSync } from "node:fs";
 
-const criticalPages = ["/", "/explore/", "/downloads/", "/agents/", "/security/"];
+const criticalPages = ["/", "/explore/", "/downloads/", "/agents/", "/security/", "/help/", "/help/03-models/"];
 
 /* Mirrors translatedRoutes in src/i18n/index.ts. It cannot be imported here:
    that module reads import.meta.env.BASE_URL, which only exists under Vite, and
    Playwright runs this file in plain Node. The englishPages list below is the
    guard — every route named here has to have an /en/ page that gets audited, so
    the two drifting apart fails rather than going unnoticed. */
-const translatedRoutes = ["", "downloads/", "quickstart/", "explore/", "security/"];
+const translatedRoutes = ["", "downloads/", "quickstart/", "explore/", "security/", "help/"];
 
 test("critical pages fit the viewport without horizontal scrolling", async ({ page }) => {
   for (const path of criticalPages) {
@@ -874,7 +874,10 @@ test.describe("english locale", () => {
           const href = link.getAttribute("href") ?? "";
           if (href.startsWith("/en/") || /\.(json|txt|webmanifest)$/.test(href)) return false;
           const route = href.replace(/^\//, "");
-          return !translated.includes(route);
+          /* Prefix match, mirroring isTranslated in src/i18n/index.ts: each help
+             article is a route of its own, so comparing exactly against "help/"
+             would report every one of them as an unmarked language switch. */
+          return !translated.some((candidate) => route === candidate || (candidate !== "" && route.startsWith(candidate)));
         })
         .filter((link) => !link.querySelector(".lang-hint"))
         .map((link) => link.getAttribute("href"));

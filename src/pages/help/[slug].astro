@@ -1,0 +1,89 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const articles = (await getCollection("help", (entry) => entry.id.startsWith("zh-CN/")))
+    .sort((left, right) => left.data.order - right.data.order);
+  return articles.map((article, index) => ({
+    params: { slug: article.id.replace(/^[^/]+\//, "") },
+    /* Neighbours are resolved here rather than in the template because the order
+       is only knowable across the whole collection, and the template renders one
+       entry. */
+    props: {
+      article,
+      previous: articles[index - 1] ?? null,
+      next: articles[index + 1] ?? null,
+    },
+  }));
+}
+
+interface Props {
+  article: CollectionEntry<"help">;
+  previous: CollectionEntry<"help"> | null;
+  next: CollectionEntry<"help"> | null;
+}
+
+const { article, previous, next } = Astro.props;
+const { Content, headings } = await render(article);
+/* Only h2 reaches the index. h3 exists inside articles as a sub-point of the
+   section above it, and listing both flattens a hierarchy the reader relies on. */
+const sections = headings.filter((heading) => heading.depth === 2);
+const slugOf = (entry: CollectionEntry<"help">) => entry.id.replace(/^[^/]+\//, "");
+---
+<BaseLayout title={`${article.data.title} — OneAgent 帮助文档`} description={article.data.description}>
+  <header class="page-hero">
+    <div class="shell page-hero-grid">
+      <div>
+        <nav class="breadcrumb" aria-label="面包屑">
+          <a href="">首页</a> / <a href="/help/">帮助文档</a> / {article.data.title}
+        </nav>
+        <p class="eyebrow">Help</p>
+        <h1 class="page-title">{article.data.title}</h1>
+      </div>
+      <div class="page-hero-aside"><strong>{article.data.summary}</strong></div>
+    </div>
+  </header>
+  <section class="section-compact">
+    <div class="shell content-grid reveal">
+      <article class="prose help-prose">
+        <Content />
+
+        {(previous || next) && (
+          <nav class="help-pager" aria-label="上一篇 / 下一篇">
+            {previous && <a href={`/help/${slugOf(previous)}/`}>← {previous.data.title}</a>}
+            {next && <a class="help-pager-next" href={`/help/${slugOf(next)}/`}>{next.data.title} →</a>}
+          </nav>
+        )}
+      </article>
+      {/* Hidden below the narrow breakpoint by .side-index, so every heading it
+          links to has to be reachable by reading the article itself. */}
+      {sections.length > 0 && (
+        <nav class="side-index" aria-label="本页目录">
+          {sections.map((section) => <a href={`#${section.slug}`}>{section.text}</a>)}
+        </nav>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Markdown emits bare h2/h3 with no class, so the prose rules apply, but the
+     generated ids need somewhere to land clear of the sticky header. */
+  .help-prose :global(h2),
+  .help-prose :global(h3) { scroll-margin-top: 90px; }
+  .help-pager {
+    margin-top: 42px;
+    padding-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+  }
+  /* Pushes "next" to the right edge, but only when a "previous" precedes it.
+     On the first article there is nothing to its left, and an auto margin there
+     would strand the only link against the far edge. */
+  .help-pager a + .help-pager-next { margin-left: auto; }
+</style>

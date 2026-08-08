@@ -40,7 +40,7 @@ walk(rootPath);
 // release-index.json is no longer among them: the site reads release data from
 // GitHub Releases at build time instead of republishing a locally generated
 // index, so there is no such artifact to require.
-for (const required of ["index.html", "downloads/index.html", "quickstart/index.html", "agents/index.html", "providers/index.html", "security/index.html", "explore/index.html", "en/index.html", "en/downloads/index.html", "en/quickstart/index.html", "en/explore/index.html", "en/security/index.html", "llms.txt", "site.webmanifest"]) {
+for (const required of ["index.html", "downloads/index.html", "quickstart/index.html", "agents/index.html", "providers/index.html", "security/index.html", "explore/index.html", "en/index.html", "en/downloads/index.html", "en/quickstart/index.html", "en/explore/index.html", "en/security/index.html", "help/index.html", "en/help/index.html", "llms.txt", "site.webmanifest"]) {
   if (!existsSync(join(rootPath, required))) failures.push(`Missing required output: ${required}`);
 }
 

@@ -43,11 +43,28 @@ export function localePath(locale: Locale, path = ""): string {
  * — which validate-build.mjs fails the build over. Add a route here in the same
  * change that adds its translation.
  */
-export const translatedRoutes = new Set(["", "downloads/", "quickstart/", "explore/", "security/"]);
+export const translatedRoutes = new Set(["", "downloads/", "quickstart/", "explore/", "security/", "help/"]);
+
+/**
+ * Prefixes whose every child route is translated, for families generated from a
+ * content collection rather than written out one file at a time.
+ *
+ * `help/` alone would only cover the index: each article is its own route, and
+ * listing all eight in the set above would go stale the moment an article is
+ * added or renamed. Without this, an article page emitted in both languages
+ * declared no hreflang alternates, so nothing told a crawler the two were
+ * translations of each other.
+ */
+const translatedPrefixes = ["help/"];
+
+/** True for a route that exists in every locale, including collection children. */
+export function isTranslated(route: string): boolean {
+  return translatedRoutes.has(route) || translatedPrefixes.some((prefix) => route.startsWith(prefix));
+}
 
 /** Resolves a link to the current locale when translated, Chinese otherwise. */
 export function bestLocaleFor(locale: Locale, route: string): Locale {
-  return translatedRoutes.has(route) ? locale : defaultLocale;
+  return isTranslated(route) ? locale : defaultLocale;
 }
 
 /**

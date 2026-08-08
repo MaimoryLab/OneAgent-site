@@ -1,7 +1,7 @@
 ---
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import { defaultLocale, htmlLang, localeFromPath, localePath, locales, ogLocale, routeWithoutLocale, translatedRoutes } from "../i18n";
+import { defaultLocale, htmlLang, localeFromPath, localePath, locales, ogLocale, routeWithoutLocale, isTranslated } from "../i18n";
 import { useTranslations } from "../i18n/ui";
 import { getPreviewChannel } from "../lib/release-channel";
 import "../styles/global.css";
@@ -26,7 +26,7 @@ const canonical = new URL(Astro.url.pathname, canonicalOrigin);
 // Only pages that exist in both languages get alternates; pointing hreflang at
 // an unbuilt path would advertise a 404 to crawlers.
 const route = routeWithoutLocale(Astro.url.pathname);
-const alternates = translatedRoutes.has(route)
+const alternates = isTranslated(route)
   ? locales.map((code) => ({
       code,
       href: new URL(localePath(code, route), canonicalOrigin).toString(),
