@@ -1563,9 +1563,36 @@ const copy = locale === "en"
   }
 
   @media not (prefers-reduced-motion: reduce) {
-    .activation-agent, .activation-provider { transition: transform var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple); }
-    .activation-agent:hover, .activation-provider:hover { transform: translateY(-1px); }
+    /* mode and model are included so the press scale below has something to
+       interpolate — without a transition it snaps, which reads as a glitch
+       rather than as give. */
+    .activation-agent, .activation-provider, .activation-mode, .activation-model { transition: transform var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple); }
+    /* Gated on a hover-capable pointer: on touch this fires on tap and then stays
+       lifted until the next tap lands elsewhere, so a chosen card looks stuck. */
+    @media (hover: hover) {
+      .activation-agent:hover, .activation-provider:hover { transform: translateY(-1px); }
+    }
   }
+
+  /* Press feedback for the four selection grids.
+   *
+   * These are the most-clicked surfaces on the homepage and none of them
+   * acknowledged the press — `aria-pressed` showed the *result* a moment later,
+   * which is not the same thing. Feedback has to land on pointer-down.
+   *
+   * One rule for all four rather than four copies: they already share the same
+   * hover and selected treatment, so the press belongs at the same level. Scale
+   * rather than a background change, because the selected state is itself a
+   * background change and the two would cancel out. */
+  .activation-agent:active,
+  .activation-provider:active,
+  .activation-mode:active,
+  .activation-model:active {
+    transform: scale(0.97);
+    transition-duration: 100ms;
+  }
+  .activation-reset:active { color: var(--ink); transition-duration: 100ms; }
+  .activation-manual summary:active { color: var(--ink); transition-duration: 100ms; }
   @media (prefers-reduced-motion: reduce) {
     .activation-scan span { animation: none; border: 2px solid var(--blue); }
   }

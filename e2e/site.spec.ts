@@ -1188,3 +1188,75 @@ test("interactive rows and cards respond to hover", async ({ page, viewport }) =
   await expect(card).not.toHaveCSS("border-color", restingBorder);
   await expect(card).not.toHaveCSS("transform", "none");
 });
+
+/* Press feedback has to land on pointer-down, which is the foundation the rest of
+   the interaction work sits on: the moment feedback waits for the release, the
+   sense of directness goes. The site had seven `:active` rules against
+   twenty-five `:hover` ones, so most of what a visitor taps acknowledged nothing.
+ *
+ * Asserted by holding the pointer down and reading the computed style, rather
+ * than by grepping the stylesheet — a rule that exists but is overridden by a
+ * later selector would pass a source check and still feel dead. */
+test("the elements a visitor taps acknowledge the press itself", async ({ page, viewport }) => {
+  test.skip((viewport?.width ?? 0) < 920, "these targets are laid out for a pointer at this width");
+
+  await page.goto("/");
+  const console_ = page.locator("#activation-console");
+  await page.getByRole("button", { name: "开始激活演示" }).click();
+  const agent = console_.getByRole("button", { name: /Claude Code/ });
+
+  /* The four selection grids are the most-pressed surfaces on the site. They
+     scale rather than changing background, because the selected state is itself a
+     background change and the two would cancel out. */
+  await expect(agent).toHaveCSS("transform", "none");
+  const box = await agent.boundingBox();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await expect(agent).not.toHaveCSS("transform", "none");
+  await page.mouse.up();
+
+  // The one control whose whole job is leaving the drawer had no feedback at all.
+  await page.goto("/explore/");
+  await page.locator(".explorer-card").first().click();
+  const close = page.locator(".drawer-close");
+  await expect(close).toBeVisible();
+  const closeResting = await close.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const closeBox = await close.boundingBox();
+  await page.mouse.move(closeBox!.x + closeBox!.width / 2, closeBox!.y + closeBox!.height / 2);
+  await page.mouse.down();
+  await expect(close).not.toHaveCSS("background-color", closeResting);
+  await page.mouse.up();
+});
+
+/* Decorative hover transforms are gated on `(hover: hover)`. Without the gate a
+   touch device applies them on tap and then leaves them applied until the next tap
+   lands elsewhere, so a card the visitor chose looks stuck mid-animation.
+ *
+ * All three Playwright projects run Desktop Chrome and only vary the viewport, so
+ * none of them emulates a coarse pointer — the narrow ones report
+ * `(hover: hover)` just like the wide one. Rather than change the project matrix
+ * for one assertion, this drives a real touch-capable context so the media query
+ * is evaluated the way a phone would evaluate it. */
+test("decorative hover transforms do not apply to a coarse pointer", async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 375, height: 812 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  const page = await context.newPage();
+  try {
+    await page.goto("/explore/");
+    expect(
+      await page.evaluate(() => matchMedia("(hover: hover)").matches),
+      "a touch context must not report itself as hover-capable",
+    ).toBe(false);
+
+    /* Tapping must not leave the card translated. `:active` still fires — the
+       point is that the *lift* is hover-only, so nothing persists after the tap. */
+    const card = page.locator(".explorer-card").first();
+    await card.tap();
+    await expect(card).toHaveCSS("transform", "none");
+  } finally {
+    await context.close();
+  }
+});
