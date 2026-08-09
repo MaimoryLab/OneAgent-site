@@ -111,6 +111,61 @@ function getPublishedReleases(): Promise<GitHubRelease[]> {
   return releasesRequest;
 }
 
+export const repositoryUrl = `https://github.com/${repository}`;
+let repositoryRequest: Promise<number | null> | undefined;
+
+/**
+ * The upstream repository's star count, or null when it cannot be read.
+ *
+ * Fetched at build time rather than in the browser, and not because that is
+ * tidier: the site's CSP is `default-src 'self'` with no `connect-src` exception,
+ * so a client-side call to api.github.com is blocked outright. Widening the CSP
+ * to render one number would be a poor trade, and a badge image from a third
+ * party would need `img-src` widened for the same reason — as well as reporting
+ * every visitor to that host.
+ *
+ * Null on every failure, including a rate limit. Callers render nothing rather
+ * than a zero: "0 stars" is a claim, and an unreachable API is not evidence for
+ * it. The degradation is silent-but-logged for the same reason the release feed's
+ * is — a build must not fail over a decoration.
+ */
+export function getRepositoryStars(): Promise<number | null> {
+  repositoryRequest ??= fetch(`https://api.github.com/repos/${repository}`, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
+    },
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        console.warn(
+          `[repository] GitHub repository unreachable (${response.status} ${response.statusText}). Omitting the star count. ` +
+            (process.env.GITHUB_TOKEN ? "" : "Set GITHUB_TOKEN to raise the rate limit."),
+        );
+        return null;
+      }
+      const body: unknown = await response.json();
+      const stars = (body as { stargazers_count?: unknown }).stargazers_count;
+      /* A non-number here means the shape changed, which is worth noticing but not
+         worth failing a build over — unlike the release feed, nothing downstream
+         depends on this value being present. */
+      if (typeof stars !== "number" || !Number.isFinite(stars)) {
+        console.warn("[repository] stargazers_count missing or not a number. Omitting the star count.");
+        return null;
+      }
+      return stars;
+    })
+    .catch((cause: unknown) => {
+      console.warn(
+        `[repository] GitHub repository unreachable (${cause instanceof Error ? cause.message : String(cause)}). ` +
+          "Omitting the star count.",
+      );
+      return null;
+    });
+  return repositoryRequest;
+}
+
 export async function getLatestRelease(): Promise<GitHubRelease | null> {
   return (await getPublishedReleases())[0] ?? null;
 }

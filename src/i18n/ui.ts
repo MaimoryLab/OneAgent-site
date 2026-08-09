@@ -43,6 +43,10 @@ const strings = {
     "footer.supportFeedback": "支持与反馈",
     "footer.releaseIndex": "GitHub Releases",
     "footer.channel": "当前公开渠道：technical-preview-unsigned",
+    /* The count is as fresh as the last deploy, so the label says "查看源码"
+       rather than implying a live figure. */
+    "github.label": "在 GitHub 上查看 OneAgent 源码",
+    "github.labelWithCount": "在 GitHub 上查看 OneAgent 源码，已获 {count} 个 star",
   },
   en: {
     "site.title": "OneAgent — a trustworthy local AI development environment activator",
@@ -78,6 +82,8 @@ const strings = {
     "footer.supportFeedback": "Support & feedback",
     "footer.releaseIndex": "GitHub Releases",
     "footer.channel": "Current public channel: technical-preview-unsigned",
+    "github.label": "View the OneAgent source on GitHub",
+    "github.labelWithCount": "View the OneAgent source on GitHub, {count} stars",
   },
 } as const;
 

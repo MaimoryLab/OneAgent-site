@@ -1,0 +1,58 @@
+---
+import { getRepositoryStars, repositoryUrl } from "../lib/downloads";
+import { localeFromPath } from "../i18n";
+import { useTranslations } from "../i18n/ui";
+
+/*
+ * Links the upstream repository, with its star count when that can be read.
+ *
+ * The count comes from the build, not the browser: the site's CSP is
+ * `default-src 'self'` with no `connect-src` exception, so a client-side call to
+ * api.github.com is blocked, and a third-party badge image would need `img-src`
+ * widened as well as reporting every visitor to that host.
+ *
+ * So the number is as fresh as the last deploy, which is the honest trade and
+ * worth stating: it is a link to the repository first and a count second. When the
+ * API cannot be read the count is omitted entirely rather than shown as zero — an
+ * unreachable API is not evidence of no stars.
+ */
+const stars = await getRepositoryStars();
+const locale = localeFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
+
+/* Thousands are abbreviated because the header has a fixed budget of horizontal
+   space and a five-digit number would push the download CTA around. Below 1000
+   the exact figure is shown. */
+const label = stars === null ? null : stars >= 1000 ? `${(stars / 1000).toFixed(1)}k` : String(stars);
+---
+{/* The accessible name is on the link, so the visible number does not have to
+    carry it — "3" alone would be meaningless to a screen reader. */}
+<a
+  class="header-link github-stars"
+  href={repositoryUrl}
+  rel="noopener"
+  aria-label={stars === null ? t("github.label") : t("github.labelWithCount").replace("{count}", String(stars))}
+>
+  {/* Inline so it inherits currentColor and costs no request. */}
+  <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false">
+    <path
+      fill="currentColor"
+      d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-2.65-.89-2.65-2.42 0-.66.23-1.21.61-1.64-.04-.1-.27-.68.06-1.42 0 0 .5-.16 1.64.62a5.6 5.6 0 0 1 1.49-.2c.51 0 1.02.07 1.49.2 1.14-.79 1.64-.62 1.64-.62.33.74.1 1.32.06 1.42.38.43.61.97.61 1.64 0 1.54-.87 2.22-2.66 2.42.28.24.52.71.52 1.44 0 1.04-.01 1.87-.01 2.13 0 .21.15.46.55.38A7.99 7.99 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+    />
+  </svg>
+  {label !== null && <span class="github-stars-text" aria-hidden="true">{label}</span>}
+</a>
+
+<style>
+  /* Scoped to the width where .header-link is shown. A bare `display: inline-flex`
+     here outranks the `display: none` that global.css applies to .header-link
+     below 920px — component styles load after it — so the link stayed visible on
+     a phone and crowded the row it was supposed to leave. The mobile menu carries
+     the repository link at that width instead. */
+  @media (min-width: 921px) {
+    .github-stars { display: inline-flex; align-items: center; gap: 6px; }
+  }
+  /* Tabular figures so the width does not jitter between deploys as the count
+     changes — the header's layout should not depend on which digits are in it. */
+  .github-stars-text { font-variant-numeric: tabular-nums; }
+</style>
