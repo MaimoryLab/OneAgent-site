@@ -557,7 +557,10 @@ const demoLabel = (status: string) => status === "ready"
     background: var(--surface);
     box-shadow: -24px 0 70px rgba(0, 0, 0, .22);
   }
-  .explorer-drawer::backdrop { background: rgba(8, 13, 17, .52); backdrop-filter: blur(3px); }
+  /* The scrim dims the page behind a modal task, which is what separates this from
+     a parallel panel. The blur reads as depth rather than as a flat wash — and it
+     uses the shared token so the site has one blur strength, not three. */
+  .explorer-drawer::backdrop { background: rgba(8, 13, 17, .52); backdrop-filter: blur(calc(var(--blur-material) / 4)); }
   .drawer-shell { height: 100%; position: relative; overflow: auto; }
   .drawer-close {
     width: 38px;
@@ -571,7 +574,10 @@ const demoLabel = (status: string) => status === "ready"
     border-radius: 50%;
     color: var(--ink);
     background: color-mix(in srgb, var(--surface) 88%, transparent);
-    backdrop-filter: blur(12px);
+    /* A small chip reads as a thinner material than the header, per the guidance
+       that bigger surfaces should blur harder — expressed as a fraction of the
+       shared token rather than an unrelated literal. */
+    backdrop-filter: blur(calc(var(--blur-material) * 0.6));
     font-size: 24px;
     cursor: pointer;
     transition: color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple);
@@ -614,6 +620,14 @@ const demoLabel = (status: string) => status === "ready"
       .explorer-card:hover { transform: translateY(-2px); }
     }
     .explorer-drawer[open] { animation: drawer-in 260ms var(--ease-enter) both; }
+  }
+
+  /* The two translucent surfaces here were never covered by the reduced-transparency
+     block in global.css, which only reached .site-header. A reader who asked for
+     less transparency still got a blurred scrim and a translucent close button. */
+  @media (prefers-reduced-transparency: reduce) {
+    .explorer-drawer::backdrop { background: rgba(8, 13, 17, .82); backdrop-filter: none; }
+    .drawer-close { background: var(--surface); backdrop-filter: none; }
   }
 
   /* Settles back down on press: the lift belongs to hover, the give belongs to
