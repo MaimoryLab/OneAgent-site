@@ -557,7 +557,10 @@ const demoLabel = (status: string) => status === "ready"
     background: var(--surface);
     box-shadow: -24px 0 70px rgba(0, 0, 0, .22);
   }
-  .explorer-drawer::backdrop { background: rgba(8, 13, 17, .52); backdrop-filter: blur(3px); }
+  /* The scrim dims the page behind a modal task, which is what separates this from
+     a parallel panel. The blur reads as depth rather than as a flat wash — and it
+     uses the shared token so the site has one blur strength, not three. */
+  .explorer-drawer::backdrop { background: rgba(8, 13, 17, .52); backdrop-filter: blur(calc(var(--blur-material) / 4)); }
   .drawer-shell { height: 100%; position: relative; overflow: auto; }
   .drawer-close {
     width: 38px;
@@ -571,10 +574,19 @@ const demoLabel = (status: string) => status === "ready"
     border-radius: 50%;
     color: var(--ink);
     background: color-mix(in srgb, var(--surface) 88%, transparent);
-    backdrop-filter: blur(12px);
+    /* A small chip reads as a thinner material than the header, per the guidance
+       that bigger surfaces should blur harder — expressed as a fraction of the
+       shared token rather than an unrelated literal. */
+    backdrop-filter: blur(calc(var(--blur-material) * 0.6));
     font-size: 24px;
     cursor: pointer;
+    transition: color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple);
   }
+  /* This had neither hover nor press feedback — a 38px control that gave a
+     visitor no sign it was interactive or that their tap had registered, on the
+     one button whose job is getting out of the drawer. */
+  .drawer-close:hover { border-color: var(--line-strong); background: var(--surface); }
+  .drawer-close:active { background: var(--surface-pressed); transition-duration: 100ms; }
   .drawer-content { padding: 54px 34px 36px; }
   .drawer-head { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: start; gap: 14px; }
   .drawer-head h2 { margin: 5px 0 0; font-size: 30px; line-height: 1.1; }
@@ -587,7 +599,9 @@ const demoLabel = (status: string) => status === "ready"
   .drawer-facts dd { margin: 6px 0 0; overflow-wrap: anywhere; font-size: 13px; }
   .drawer-facts code { font-size: 11px; }
   .drawer-provider-list { display: grid; border-top: 1px solid var(--line); }
-  .drawer-provider-list a { padding: 13px 2px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); }
+  .drawer-provider-list a { padding: 13px 2px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); transition: background-color var(--dur-micro) var(--ease-apple); }
+  .drawer-provider-list a:hover { background: var(--surface-muted); }
+  .drawer-provider-list a:active { background: var(--surface-pressed); transition-duration: 100ms; }
   .drawer-provider-list a > span:first-child { display: grid; gap: 3px; }
   .drawer-provider-list strong { font-size: 13px; }
   .drawer-provider-list small { color: var(--ink-faint); font-size: 10px; }
@@ -601,9 +615,25 @@ const demoLabel = (status: string) => status === "ready"
 
   @media not (prefers-reduced-motion: reduce) {
     .explorer-card { transition: transform var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple), box-shadow var(--dur-micro) var(--ease-apple); }
-    .explorer-card:hover { transform: translateY(-2px); }
+    /* Hover-only, so it does not stick after a tap on touch. */
+    @media (hover: hover) {
+      .explorer-card:hover { transform: translateY(-2px); }
+    }
     .explorer-drawer[open] { animation: drawer-in 260ms var(--ease-enter) both; }
   }
+
+  /* The two translucent surfaces here were never covered by the reduced-transparency
+     block in global.css, which only reached .site-header. A reader who asked for
+     less transparency still got a blurred scrim and a translucent close button. */
+  @media (prefers-reduced-transparency: reduce) {
+    .explorer-drawer::backdrop { background: rgba(8, 13, 17, .82); backdrop-filter: none; }
+    .drawer-close { background: var(--surface); backdrop-filter: none; }
+  }
+
+  /* Settles back down on press: the lift belongs to hover, the give belongs to
+     the press. This grid is the primary interaction on the explore page and had
+     no acknowledgement of a tap at all. */
+  .explorer-card:active { border-color: var(--blue); box-shadow: var(--shadow-lift); transform: translateY(0) scale(0.995); transition-duration: 100ms; }
   @keyframes drawer-in { from { transform: translateX(28px); } }
 
   @media (max-width: 980px) {

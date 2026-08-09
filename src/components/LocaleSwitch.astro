@@ -10,23 +10,8 @@ const target = locales.find((locale) => locale !== current)!;
 // and falls back to the home page rather than a 404 where it is not.
 const targetHref = localePath(target, isTranslated(route) ? route : "");
 ---
-<a class="locale-switch" href={targetHref} hreflang={target} lang={target} aria-label={t("lang.switch")}>
+{/* Shape, fill, hover and press come from .header-control in global.css, so this
+    control, the theme toggle and the GitHub link read as one group. */}
+<a class="locale-switch header-control" href={targetHref} hreflang={target} lang={target} aria-label={t("lang.switch")}>
   {localeNames[target]}
 </a>
-
-<style>
-  .locale-switch {
-    min-height: 34px;
-    padding: 0 10px;
-    display: inline-flex;
-    align-items: center;
-    color: var(--ink-soft);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    font-size: 13px;
-    font-weight: 560;
-    transition: color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple);
-  }
-  .locale-switch:hover { color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
-  .locale-switch:active { background: var(--surface-pressed); transition-duration: 100ms; }
-</style>

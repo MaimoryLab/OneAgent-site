@@ -6,7 +6,7 @@ const t = useTranslations(localeFromPath(Astro.url.pathname));
 const label = t("theme.toggle");
 ---
 <button
-  class="theme-toggle"
+  class="theme-toggle header-control header-control-square"
   type="button"
   data-theme-toggle
   aria-pressed="false"
@@ -23,20 +23,10 @@ const label = t("theme.toggle");
 </button>
 
 <style>
-  .theme-toggle {
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    color: var(--ink-soft);
-    background: transparent;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple);
-  }
-  .theme-toggle:hover { color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
-  .theme-toggle:active { background: var(--surface-pressed); transition-duration: 100ms; }
+  /* Shape, fill, hover and press come from .header-control; only what is specific
+     to a two-glyph toggle stays here. The glyphs are stacked in one grid cell so
+     swapping them cannot shift the button's width. */
+  .theme-toggle { height: 34px; cursor: pointer; }
   .theme-toggle svg { grid-area: 1 / 1; }
   /* Only one glyph shows at a time; which one is decided by the theme class the
      inline head script has already applied, so there is no swap on hydration. */

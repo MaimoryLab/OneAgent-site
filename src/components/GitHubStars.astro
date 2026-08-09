@@ -28,7 +28,7 @@ const label = stars === null ? null : stars >= 1000 ? `${(stars / 1000).toFixed(
 {/* The accessible name is on the link, so the visible number does not have to
     carry it — "3" alone would be meaningless to a screen reader. */}
 <a
-  class="header-link github-stars"
+  class="header-link header-control github-stars"
   href={repositoryUrl}
   rel="noopener"
   aria-label={stars === null ? t("github.label") : t("github.labelWithCount").replace("{count}", String(stars))}
@@ -49,8 +49,11 @@ const label = stars === null ? null : stars >= 1000 ? `${(stars / 1000).toFixed(
      below 920px — component styles load after it — so the link stayed visible on
      a phone and crowded the row it was supposed to leave. The mobile menu carries
      the repository link at that width instead. */
+  /* .header-control supplies the shape, fill and states; only the visibility gate
+     stays here. Without it the component's own display would outrank the
+     `display: none` that global.css applies to .header-link below 920px. */
   @media (min-width: 921px) {
-    .github-stars { display: inline-flex; align-items: center; gap: 6px; }
+    .github-stars { display: inline-flex; }
   }
   /* Tabular figures so the width does not jitter between deploys as the count
      changes — the header's layout should not depend on which digits are in it. */
