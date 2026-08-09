@@ -980,7 +980,11 @@ test.describe("dark scheme", () => {
        rather than colours that paint anything. */
     expect(monochrome.map((entry) => entry.file).sort()).toEqual([
       "claude-code.svg",
+      // Twice: ChatGPT Desktop renders the OpenAI mark rather than a second copy
+      // of the same file, so codex.svg appears once per row that uses it.
       "codex.svg",
+      "codex.svg",
+      "hermes.svg",
       "kilo-cli.svg",
       "openclaw.svg",
       "opencode.svg",
