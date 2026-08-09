@@ -14,24 +14,33 @@ const { id, name, size = 24 } = Astro.props;
    Lucide symbols where this site uses a letter.
 
    So the desktop applications and the coming-soon entries have no mark by
-   design, not for want of one. */
-const extensions: Record<string, string> = {
-  codex: "svg",
-  opencode: "svg",
-  "claude-code": "svg",
-  "kilo-cli": "svg",
-  openclaw: "svg",
+   design, not for want of one. Aider is the same case: no mark exists in
+   lobe-icons, it publishes no brand kit, and its Apache-2.0 code licence grants
+   no trademark rights. */
+/* Keyed by the file each id renders, so an id can point at a mark registered
+   under another name. chatgpt-desktop is the one case: it is OpenAI's own app and
+   shares Codex's configuration, so it renders the same OpenAI mark rather than a
+   second copy of one file. Upstream reaches the same conclusion in
+   frontend/src/components/icons/agents.tsx. */
+const markFiles: Record<string, string> = {
+  codex: "codex.svg",
+  opencode: "opencode.svg",
+  "claude-code": "claude-code.svg",
+  "kilo-cli": "kilo-cli.svg",
+  hermes: "hermes.svg",
+  openclaw: "openclaw.svg",
+  "chatgpt-desktop": "codex.svg",
 };
-/* All five marks ship as fill="currentColor". Loaded through <img> the keyword
+/* All six marks ship as fill="currentColor". Loaded through <img> the keyword
    has no page to inherit from and falls back to black, which disappears on a
    dark ground — so they get inverted there.
 
    openclaw is here despite containing #000 and #fff: those are inside a <mask>,
    where black and white are channel values that punch out the eyes rather than
    colours that paint anything. Every visible path is currentColor like the rest. */
-const monochrome = new Set(["codex", "opencode", "claude-code", "kilo-cli", "openclaw"]);
-const extension = extensions[id];
-const imageSource = extension ? `${import.meta.env.BASE_URL}images/agents/${id}.${extension}` : null;
+const monochrome = new Set(["codex", "opencode", "claude-code", "kilo-cli", "hermes", "openclaw", "chatgpt-desktop"]);
+const markFile = markFiles[id];
+const imageSource = markFile ? `${import.meta.env.BASE_URL}images/agents/${markFile}` : null;
 ---
 <span class="agent-mark-wrap" style={`--mark-size:${size}px`} aria-hidden="true">
   {imageSource ? <img src={imageSource} alt="" width={size} height={size} loading="lazy" data-monochrome={monochrome.has(id) ? "" : undefined} /> : <span class="agent-fallback">{name.slice(0, 1)}</span>}
