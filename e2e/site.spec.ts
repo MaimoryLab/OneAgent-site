@@ -234,7 +234,11 @@ test("activation demo plays itself through to Ready without a click", async ({ p
   const console = page.locator("#activation-console");
   await console.scrollIntoViewIfNeeded();
 
-  await expect(console).toHaveAttribute("data-phase", "ready");
+  /* The unattended run takes ~17s end to end — each panel now stays up long enough
+     to be read rather than just long enough to be seen. That is past the 10s
+     default expect timeout, so this one assertion gets its own budget instead of
+     the whole suite getting a longer one. */
+  await expect(console).toHaveAttribute("data-phase", "ready", { timeout: 30_000 });
   await expect(console.getByRole("heading", { name: "示例环境已 Ready" })).toBeVisible();
   // Reaching the end clears the flag, so the visitor is in charge from here.
   await expect(console).not.toHaveAttribute("data-autoplaying", "true");
@@ -261,10 +265,12 @@ test("interacting during autoplay stops it where it stands", async ({ page }) =>
    *
    * Reading the phase and comparing it against itself, rather than waiting for one
    * named step and asserting that name later, is what keeps this stable. The
-   * earlier version waited for `agent` and expected `agent` 2.5s on; but `agent`
-   * lasts only ~850ms (scan resolves into it near t=1070ms, the script leaves it
-   * at t=1920ms), so under the full suite's three-viewport load the click landed
-   * after the script had moved on and the assertion failed on a name mismatch. */
+   * earlier version waited for `agent` and expected `agent` 2.5s on, but `agent`
+   * lasted less than that wait, so under the full suite's three-viewport load the
+   * click landed after the script had moved on and the assertion failed on a name
+   * mismatch. Every step is longer now that the demo has been slowed down, but the
+   * approach is what matters: it does not need to know which step the click caught,
+   * so it survives the next retiming too. */
   /* Waits for a step that is genuinely waiting on input. `idle` and `scanning`
      both fail the "not scanning" test for different reasons — one has not started,
      the other resolves on its own — so the wait is written as a positive match on
@@ -276,9 +282,11 @@ test("interacting during autoplay stops it where it stands", async ({ page }) =>
   await expect(console).not.toHaveAttribute("data-autoplaying", "true");
   const takenOverAt = await console.getAttribute("data-phase");
   expect(takenOverAt, "takeover must be measured at a decision point").not.toBe("scanning");
-  // Longer than the widest gap in AUTOPLAY_SCRIPT (1500ms), so a resumed script
-  // would have advanced at least one step by the time this returns.
-  await page.waitForTimeout(2500);
+  /* Longer than the widest gap in AUTOPLAY_SCRIPT, so a resumed script would have
+     advanced at least one step by the time this returns. That gap is now 3000ms
+     (it was 1500ms before the demo was slowed down), which is exactly the sort of
+     coupling that goes stale silently — hence the number is named here. */
+  await page.waitForTimeout(4000);
   expect(await console.getAttribute("data-phase"), "autoplay resumed after takeover").toBe(takenOverAt);
 
   // Taken over, not broken: the trigger still replays from the top.
@@ -297,11 +305,16 @@ test("autoplay never takes keyboard focus", async ({ page }) => {
 
   const insideConsole = () =>
     page.evaluate(() => Boolean(document.querySelector("#activation-console")?.contains(document.activeElement)));
-  for (let sample = 0; sample < 12; sample += 1) {
+  /* Sampled across the whole unattended run rather than a fixed 3s window. Every
+     step calls focusPanel, so a step that steals focus late would have gone
+     unnoticed once the demo was slowed to ~17s — the old loop finished long before
+     the script reached review or confirm. Ends when the run does. */
+  for (let sample = 0; sample < 90; sample += 1) {
     expect(await insideConsole(), "autoplay moved focus into the console").toBe(false);
+    if ((await console.getAttribute("data-phase")) === "ready") break;
     await page.waitForTimeout(250);
   }
-  await expect(console).toHaveAttribute("data-phase", "ready");
+  await expect(console).toHaveAttribute("data-phase", "ready", { timeout: 30_000 });
 });
 
 test("Explorer restores shareable state and returns focus after the drawer closes", async ({ page }) => {
