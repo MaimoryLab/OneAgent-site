@@ -620,6 +620,57 @@ test("the download page routes to the first-launch guide instead of promising si
   }
 });
 
+/* The desktop article moved from /help/02-chatgpt-desktop/ to /help/02-desktop/
+   once its title stopped naming one of the two applications it documents. The old
+   URL was published and indexed, so it stays as a stub.
+ *
+ * Pages serves static files and has no redirect rules, so this cannot be a 301 —
+ * which is exactly why it needs a test. A stub that looks like a normal page is
+ * the kind of thing a later cleanup deletes, and nothing else would notice the
+ * inbound links breaking. Asserted per locale, because the two stubs point at
+ * different destinations and swapping them would be invisible in review. */
+for (const [locale, oldPath, newPath] of [
+  ["zh", "/help/02-chatgpt-desktop/", "/help/02-desktop/"],
+  ["en", "/en/help/02-chatgpt-desktop/", "/en/help/02-desktop/"],
+] as const) {
+  test(`${locale} retired desktop URL still reaches its successor`, async ({ page }) => {
+    await page.goto(oldPath);
+
+    /* The meta refresh is what carries a real browser across, so the assertion is
+       that navigation actually happened rather than that the tag is present. */
+    await expect(page).toHaveURL(new RegExp(`${newPath.replace(/\//g, "\\/")}$`));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      locale === "zh" ? "配置桌面端 Agent" : "Configuring desktop agents",
+    );
+  });
+
+  test(`${locale} retired desktop URL does not compete with its successor in search`, async ({ page }) => {
+    const response = await page.goto(oldPath, { waitUntil: "commit" });
+    expect(response?.status(), `${oldPath} must not 404`).toBe(200);
+
+    /* Read from the raw HTML: the meta refresh has usually already navigated by
+       the time a locator would resolve, and these tags belong to the stub rather
+       than to the page it lands on. */
+    const html = await response!.text();
+    expect(html, "the stub must be noindex").toMatch(/<meta name="robots" content="noindex">/);
+    expect(html, "the stub must name its successor as canonical").toMatch(
+      new RegExp(`<link rel="canonical" href="[^"]*${newPath}"`),
+    );
+    // A stub with no visible link is a dead end wherever the refresh does not run.
+    expect(html, "the stub must link its successor in the body").toContain(`href="${newPath}"`);
+  });
+}
+
+test("the sitemap lists the live help URL and not the retired one", async ({ page }) => {
+  const response = await page.goto("/sitemap-0.xml");
+  const xml = await response!.text();
+
+  expect(xml).toContain("/help/02-desktop/");
+  /* A noindex page in the sitemap asks crawlers to index something that asks not
+     to be indexed, which is the contradiction the sitemap filter exists to avoid. */
+  expect(xml, "a noindex stub must not be advertised to crawlers").not.toContain("02-chatgpt-desktop");
+});
+
 test("serves its own stylesheet and Agent marks rather than 404ing on them", async ({ page }) => {
   // A base path build (SITE_URL/BASE_PATH, as the Pages job uses) emits an
   // absolute <base href>, and the CSP declares base-uri 'self'. Serving such a

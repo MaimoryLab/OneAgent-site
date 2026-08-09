@@ -11,6 +11,11 @@ interface Props {
   description?: string;
   image?: string;
   noindex?: boolean;
+  /* Overrides the canonical URL, which otherwise describes the current path.
+     Needed by pages that stand in for another one — a retired URL kept alive for
+     inbound links has to name its successor as canonical, or the two compete in
+     search results for the same content. */
+  canonicalPath?: string;
 }
 
 const locale = localeFromPath(Astro.url.pathname);
@@ -20,9 +25,10 @@ const {
   description = t("site.description"),
   image = "images/oneagent-overview.jpg",
   noindex = false,
+  canonicalPath,
 } = Astro.props;
 const canonicalOrigin = Astro.site ?? Astro.url.origin;
-const canonical = new URL(Astro.url.pathname, canonicalOrigin);
+const canonical = new URL(canonicalPath ?? Astro.url.pathname, canonicalOrigin);
 // Only pages that exist in both languages get alternates; pointing hreflang at
 // an unbuilt path would advertise a 404 to crawlers.
 const route = routeWithoutLocale(Astro.url.pathname);
@@ -114,6 +120,9 @@ const structuredData = {
     <meta name="twitter:card" content="summary_large_image" />
     <title>{title}</title>
     <script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
+    {/* For tags that have to sit in <head> and cannot be expressed as props —
+        currently the meta refresh on retired URLs. */}
+    <slot name="head" />
   </head>
   <body>
     <a class="skip-link" href="#main">{t("skip.main")}</a>

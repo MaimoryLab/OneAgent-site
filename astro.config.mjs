@@ -16,7 +16,14 @@ export default defineConfig({
     locales: ["zh-CN", "en"],
     routing: { prefixDefaultLocale: false },
   },
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      /* Retired URLs are kept as redirect stubs for inbound links, but they carry
+         noindex and a canonical pointing elsewhere. Listing them would ask
+         crawlers to index pages that ask not to be indexed. */
+      filter: (page) => !/\/help\/02-chatgpt-desktop\/$/.test(page),
+    }),
+  ],
   build: {
     assets: "_assets",
   },

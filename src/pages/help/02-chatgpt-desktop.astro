@@ -1,0 +1,38 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { localePath } from "../../i18n";
+
+/*
+ * Retired URL, kept because it was published and indexed.
+ *
+ * The article moved to 02-desktop when its title stopped naming one of the two
+ * desktop applications it documents. GitHub Pages serves static files and has no
+ * redirect rules, so a 301 is not available — this stands in for one: a meta
+ * refresh for browsers, a canonical pointing at the successor so the two do not
+ * compete in search, and noindex so this URL itself drops out of the index.
+ *
+ * The visible link matters. A meta refresh does nothing if a reader has scripting
+ * or auto-refresh restrictions, and a blank page would be a dead end, so the
+ * destination is stated in the body too.
+ */
+const destination = localePath("zh-CN", "help/02-desktop/");
+---
+<BaseLayout
+  title="页面已移动 — OneAgent 帮助文档"
+  description="这篇文档已移至 /help/02-desktop/。"
+  canonicalPath="/help/02-desktop/"
+  noindex
+>
+  <Fragment slot="head">
+    <meta http-equiv="refresh" content={`0; url=${destination}`} />
+  </Fragment>
+  <section class="section-compact">
+    <div class="shell">
+      <article class="prose">
+        <h1 class="page-title">这个页面换了地址</h1>
+        <p>「配置桌面端 Agent」现在位于 <a href={destination}>/help/02-desktop/</a>。浏览器会自动跳转；如果没有，请点上面的链接。</p>
+        <p>原来的地址叫 <code>02-chatgpt-desktop</code>，但这篇文档同时讲 ChatGPT Desktop 和 WorkBuddy，所以改成了不偏向其中一个的名字。</p>
+      </article>
+    </div>
+  </section>
+</BaseLayout>
