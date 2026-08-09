@@ -1,0 +1,27 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { localePath } from "../../../i18n";
+
+/* Retired URL. See the Chinese copy at src/pages/help/02-chatgpt-desktop.astro
+   for why this exists and why it is a meta refresh rather than a 301. */
+const destination = localePath("en", "help/02-desktop/");
+---
+<BaseLayout
+  title="Page moved — OneAgent help"
+  description="This article now lives at /en/help/02-desktop/."
+  canonicalPath="/en/help/02-desktop/"
+  noindex
+>
+  <Fragment slot="head">
+    <meta http-equiv="refresh" content={`0; url=${destination}`} />
+  </Fragment>
+  <section class="section-compact">
+    <div class="shell">
+      <article class="prose">
+        <h1 class="page-title">This page has moved</h1>
+        <p>“Configuring desktop agents” is now at <a href={destination}>/en/help/02-desktop/</a>. Your browser should follow automatically; if it does not, use the link above.</p>
+        <p>The old path was <code>02-chatgpt-desktop</code>, but the article covers both ChatGPT Desktop and WorkBuddy, so it was renamed to something that does not favour one of them.</p>
+      </article>
+    </div>
+  </section>
+</BaseLayout>
