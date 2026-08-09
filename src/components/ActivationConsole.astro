@@ -600,22 +600,31 @@ const copy = locale === "en"
     },
   } as const;
 
-  /* The unattended walkthrough. Selection steps get a beat long enough to read
-     the panel that just appeared; the two probe steps reuse the timings the
-     manual path already uses, so an autoplayed run and a clicked one look the
-     same rather than one feeling rushed. */
+  /* The unattended walkthrough.
+   *
+   * Every delay is the time the *previous* panel stays on screen, so each one has
+   * to cover reading what appeared plus noticing what changed. The earlier timings
+   * were tuned by someone who already knew the flow: 900ms is enough to see a panel
+   * swap but not enough to read a provider name, a protocol and a compatibility
+   * verdict, so the demo advanced past its own evidence.
+   *
+   * Roughly doubled, and no longer uniform — a step's beat now follows how much it
+   * puts on screen. The two probe steps still reuse the manual path's timings so an
+   * autoplayed run and a clicked one look the same. */
   type AutoplayStep = { delay: number; run: (element: ActivationConsoleElement) => void };
   const AUTOPLAY_SCRIPT: AutoplayStep[] = [
-    { delay: 420, run: (element) => element.start() },
-    { delay: 1500, run: (element) => element.selectAgent("claude-code") },
-    { delay: 900, run: (element) => element.selectMode("provider") },
-    { delay: 900, run: (element) => element.selectProvider("ppio") },
-    { delay: 900, run: (element) => element.verify() },
-    { delay: 1100, run: (element) => element.selectModel(element.models[0] ?? "", false) },
-    /* The review screen is a step the visitor is meant to read, so autoplay pauses
-       on it longer than on the choices it made for them. */
-    { delay: 900, run: (element) => element.review() },
-    { delay: 1600, run: (element) => element.confirm() },
+    { delay: 900, run: (element) => element.start() },
+    /* The agent grid is the first real screen and the densest: seven cards to take
+       in before one of them is chosen for you. */
+    { delay: 2600, run: (element) => element.selectAgent("claude-code") },
+    { delay: 1800, run: (element) => element.selectMode("provider") },
+    { delay: 1900, run: (element) => element.selectProvider("ppio") },
+    { delay: 1800, run: (element) => element.verify() },
+    { delay: 2200, run: (element) => element.selectModel(element.models[0] ?? "", false) },
+    /* The review screen is the one the visitor is actually meant to read — it lists
+       what will be written and where — so it gets the longest pause of the run. */
+    { delay: 2600, run: (element) => element.review() },
+    { delay: 3000, run: (element) => element.confirm() },
   ];
 
   class ActivationConsoleElement extends HTMLElement {
@@ -765,11 +774,14 @@ const copy = locale === "en"
       // asked for nothing.
       if (!this.autoplaying) this.scrollIntoView({ behavior: this.reducedMotion ? "auto" : "smooth", block: "center" });
       this.focusPanel("scanning");
+      /* Long enough for the scanning panel to register as a step rather than a
+         flash. Still zero under reduced motion, where the spinner is replaced by a
+         static mark and a pause would just be dead time. */
       this.timer = window.setTimeout(() => {
         this.dispatch({ type: "scan-complete" });
         this.appendLog(this.copy.log.scanned);
         this.focusPanel("agent");
-      }, this.reducedMotion ? 0 : 650);
+      }, this.reducedMotion ? 0 : 1100);
     }
 
     reset(focus = true) {
@@ -890,7 +902,7 @@ const copy = locale === "en"
         }
         if (this.state.phase === "preview-gate") this.appendLog(this.copy.log.preview);
         this.focusPanel("result");
-      }, this.reducedMotion ? 0 : 700);
+      }, this.reducedMotion ? 0 : 1200);
     }
 
     get models() {
