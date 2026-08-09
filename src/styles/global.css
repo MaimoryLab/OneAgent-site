@@ -95,6 +95,16 @@
   --dur-base: 0.344s;
   --dur-slow: 0.4s;
   --blur-material: 20px;
+  /* Fill for the grouped header controls. Translucent so they sit on the header's
+     material instead of punching opaque holes through it — content keeps blurring
+     behind them. Kept lighter than the header itself: Apple's guidance is that
+     lighter materials draw attention to interactive elements while heavier ones
+     separate structural regions. */
+  --control-fill: rgba(255, 255, 255, 0.5);
+  /* The header's own height, named because the scroll edge has to stick exactly to
+     its bottom edge and .side-index already offsets from it. A literal repeated in
+     three places is one that eventually disagrees with itself. */
+  --header-height: 68px;
 }
 
 * { box-sizing: border-box; }
@@ -139,11 +149,40 @@ button, select { color: inherit; }
   position: sticky;
   top: 0;
   z-index: 50;
-  border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--paper) 82%, transparent);
   backdrop-filter: blur(var(--blur-material)) saturate(180%);
+  transition: background-color var(--dur-base) var(--ease-apple);
 }
-.header-inner { min-height: 68px; display: flex; align-items: center; gap: 34px; }
+/* Scroll edge, not a hard divider.
+ *
+ * At the top of a page the header has nothing to separate itself from, so a 1px
+ * line there is a border drawn around nothing — and it stayed identical whether
+ * the reader was at scroll 0 or scroll 2000. Now the separation appears only once
+ * content is actually passing underneath, and it appears as a short gradient
+ * falling away from the chrome rather than a rule.
+ *
+ * Carried by a real element rather than `.site-header::after`. axe reports
+ * `pseudoContent` for any text node whose ancestor has a pseudo-element, so an
+ * `::after` on the header made every header link's background unresolvable and
+ * turned the contrast gate's results into "incomplete" — the gate treats that as
+ * a failure, correctly, since an unproven colour is not a passing one. */
+.scroll-edge {
+  height: 18px;
+  /* Sticks to the header's bottom edge. The offset has to be the header's own
+     height, so it reads the same token the header's min-height does rather than
+     repeating a literal that could drift out of step with it. */
+  position: sticky;
+  top: var(--header-height);
+  z-index: 49;
+  margin-bottom: -18px;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--paper) 62%, transparent), transparent);
+  transition: opacity var(--dur-base) var(--ease-apple);
+}
+.site-header[data-scrolled] { background: color-mix(in srgb, var(--paper) 92%, transparent); }
+.site-header[data-scrolled] + .scroll-edge { opacity: 1; }
+.header-inner { min-height: var(--header-height); display: flex; align-items: center; gap: 34px; }
 .wordmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -0.01em; }
 .wordmark-mark { transition: border-color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple); }
 .wordmark:hover .wordmark-mark { border-color: var(--blue); background: var(--blue-soft); }
@@ -187,6 +226,39 @@ button, select { color: inherit; }
   white-space: nowrap;
 }
 .header-actions { margin-left: auto; display: flex; align-items: center; gap: 7px; }
+/* The three settings-and-source controls read as one group.
+ *
+ * Not by drawing a container around them — the grouping comes from giving all
+ * three the same height, radius and translucent fill, so they read as one
+ * material against the header. That is how ccswitch.io does it too: three
+ * separate rounded rects with a consistent muted fill and no shared border.
+ *
+ * The download CTA stays outside the group. It is the primary action, not a
+ * setting, and it carries its own solid treatment.
+ *
+ * `--control-fill` is translucent so these sit *on* the header material rather
+ * than punching an opaque hole through it. Content still blurs behind them. */
+.header-control {
+  min-height: 34px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  background: var(--control-fill);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 560;
+  transition: color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple);
+}
+.header-control:hover { color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+.header-control:active { background: var(--surface-pressed); transition-duration: 100ms; }
+/* Square controls: the icon is the whole content, so horizontal padding would
+   make them lopsided. `grid` rather than the group's `flex` so a control with two
+   stacked glyphs — the theme toggle's sun and moon — can overlay them in one cell
+   and keep its width fixed across the swap. */
+.header-control-square { width: 34px; padding: 0; display: grid; place-items: center; }
 .mobile-menu { display: none; position: relative; }
 /* The only tap target in the header below 920px, and it had no feedback of any
    kind — the menu simply appeared with nothing acknowledging the touch. */
@@ -530,7 +602,10 @@ button, select { color: inherit; }
 @media (max-width: 680px) {
   .shell, .narrow, .wide-narrow, .product-shot { width: min(100% - 28px, 1180px); }
   .site-header .button { display: none; }
-  .header-inner { min-height: 60px; gap: 12px; }
+  /* Overriding the token rather than the property keeps the scroll edge stuck to
+     the header's real bottom edge — it offsets from the same value. */
+  :root { --header-height: 60px; }
+  .header-inner { gap: 12px; }
   .hero { padding-top: 58px; }
   .display { font-size: clamp(43px, 14vw, 63px); }
   .product-shot { margin-top: 50px; padding: 5px; border-radius: var(--radius-panel); }
@@ -678,6 +753,9 @@ button, select { color: inherit; }
   --ink-faint: #9aa1a8;
   --line: rgba(233, 238, 243, 0.16);
   --line-strong: rgba(233, 238, 243, 0.28);
+  /* A white wash would read as haze on a dark ground, so the dark fill lifts with
+     a light tint at low alpha instead — same idea, inverted. */
+  --control-fill: rgba(233, 238, 243, 0.07);
 
   --blue: #3d9bff;
   --blue-deep: #6bb4ff;
@@ -731,12 +809,25 @@ button, select { color: inherit; }
 /* Translucent chrome has to become a real surface when the reader has asked for
    less transparency, and gain a defined edge when they ask for more contrast. */
 @media (prefers-reduced-transparency: reduce) {
-  .site-header { background: var(--surface); backdrop-filter: none; }
+  /* The scroll edge is a translucent gradient, so it goes with the material. The
+     separation it provided comes back as the border it replaced — a reader who
+     asked for less transparency still needs to see where the chrome ends. */
+  .site-header { background: var(--surface); backdrop-filter: none; border-bottom: 1px solid var(--line); }
+  .scroll-edge { display: none; }
+  /* Grouped controls become solid, keeping the group legible without the fill
+     resolving against whatever is behind it. */
+  .header-control { background: var(--surface); }
 }
 
 @media (prefers-contrast: more) {
   :root { --line: rgba(60, 60, 67, 0.5); --line-strong: rgba(60, 60, 67, 0.7); --ink-soft: #4a4a4f; --ink-faint: #4a4a4f; }
-  .site-header { background: var(--surface); backdrop-filter: none; }
+  /* These were light-scheme literals only, so a dark-theme reader asking for more
+     contrast got nothing. Same intent, inverted: firmer lines, and the soft inks
+     pulled toward the foreground rather than toward the page. */
+  .theme-dark { --line: rgba(233, 238, 243, 0.46); --line-strong: rgba(233, 238, 243, 0.66); --ink-soft: #d8dde2; --ink-faint: #d8dde2; }
+  .site-header { background: var(--surface); backdrop-filter: none; border-bottom: 1px solid var(--line-strong); }
+  .scroll-edge { display: none; }
+  .header-control { background: var(--surface); border-color: var(--line-strong); }
   .chip { border-color: var(--line-strong); }
 }
 

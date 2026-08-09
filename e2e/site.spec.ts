@@ -720,6 +720,108 @@ test("the header's GitHub link needs no third-party request", async ({ page }) =
   expect(external, "rendering the header must not call out to a third party").toEqual([]);
 });
 
+/* The three settings-and-source controls read as one group by sharing a height,
+   radius and translucent fill — not by having a container drawn around them. The
+   assertion is the sharing, because that is the whole mechanism: if one of them
+   drifts to a different height or radius the group silently stops reading as one. */
+test("the header's settings controls read as one group", async ({ page, viewport }) => {
+  test.skip((viewport?.width ?? 0) <= 920, "the grouped controls are hidden below this width by design");
+
+  await page.goto("/");
+  const controls = page.locator(".site-header .header-control");
+  await expect(controls).toHaveCount(3);
+
+  const shapes = await controls.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const style = getComputedStyle(node);
+      return {
+        height: Math.round(node.getBoundingClientRect().height),
+        radius: style.borderRadius,
+        background: style.backgroundColor,
+      };
+    }),
+  );
+  const [first] = shapes;
+  for (const shape of shapes) {
+    expect(shape.height, "grouped controls must share a height").toBe(first.height);
+    expect(shape.radius, "grouped controls must share a radius").toBe(first.radius);
+    expect(shape.background, "grouped controls must share a fill").toBe(first.background);
+  }
+  /* Translucent on purpose: the controls sit on the header's material rather than
+     punching opaque holes through it. A solid fill here would mean the grouping
+     was achieved by covering the blur instead of layering on it. */
+  expect(first.background, "the group's fill should be translucent").toMatch(/rgba|\/\s*0?\.\d/);
+});
+
+/* A scroll edge, not a hard divider. At the top of a page the header has nothing
+   to separate itself from, so the old 1px border was a rule drawn around nothing —
+   and it looked identical at scroll 0 and scroll 2000. The separation now appears
+   only when content is actually passing underneath. */
+test("the header separates itself from content only once content passes under it", async ({ page }) => {
+  await page.goto("/");
+  const header = page.locator(".site-header");
+  const edge = page.locator(".scroll-edge");
+
+  await expect(header).not.toHaveAttribute("data-scrolled", /.*/);
+  await expect(edge).toHaveCSS("opacity", "0");
+
+  await page.evaluate(() => window.scrollTo(0, 900));
+  await expect(header).toHaveAttribute("data-scrolled", "");
+  await expect(edge).toHaveCSS("opacity", "1");
+
+  /* Flush against the header's bottom edge, or the gradient reads as a detached
+     band with a gap above it. The offset comes from --header-height, which the
+     narrow breakpoint overrides — so this is asserted at whatever width the
+     project runs, not just the wide one. */
+  const [headerBottom, edgeTop] = await Promise.all([
+    header.evaluate((node) => Math.round(node.getBoundingClientRect().bottom)),
+    edge.evaluate((node) => Math.round(node.getBoundingClientRect().top)),
+  ]);
+  expect(edgeTop, "the scroll edge must sit flush under the header").toBe(headerBottom);
+
+  // Returning to the top puts it back, rather than latching on first scroll.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(header).not.toHaveAttribute("data-scrolled", /.*/);
+  await expect(edge).toHaveCSS("opacity", "0");
+});
+
+/* The scroll edge and the group's fill are both translucent, so both have to
+   answer `prefers-reduced-transparency`. The separation the gradient provided
+   comes back as the border it replaced — a reader who asked for less transparency
+   still needs to see where the chrome ends, and dropping the gradient without
+   restoring the border would leave them with neither. */
+test("the header's material degrades for a reader who asks for less transparency", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const page = await context.newPage();
+  try {
+    /* Playwright has no reducedTransparency option, so the media feature is
+       emulated over CDP directly. */
+    const session = await context.newCDPSession(page);
+    await session.send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-reduced-transparency", value: "reduce" }],
+    });
+    await page.goto("/");
+
+    const state = await page.evaluate(() => {
+      const header = document.querySelector(".site-header")!;
+      const control = document.querySelector(".header-control")!;
+      return {
+        blur: getComputedStyle(header).backdropFilter,
+        border: getComputedStyle(header).borderBottomWidth,
+        edge: getComputedStyle(document.querySelector(".scroll-edge")!).display,
+        controlFill: getComputedStyle(control).backgroundColor,
+      };
+    });
+
+    expect(state.blur, "the material should stop blurring").toBe("none");
+    expect(state.edge, "the translucent gradient should be gone").toBe("none");
+    expect(state.border, "and the border it replaced should come back").not.toBe("0px");
+    expect(state.controlFill, "the grouped controls should become solid").not.toMatch(/rgba\([^)]*0?\.\d+\)/);
+  } finally {
+    await context.close();
+  }
+});
+
 test("serves its own stylesheet and Agent marks rather than 404ing on them", async ({ page }) => {
   // A base path build (SITE_URL/BASE_PATH, as the Pages job uses) emits an
   // absolute <base href>, and the CSP declares base-uri 'self'. Serving such a

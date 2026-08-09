@@ -26,6 +26,11 @@ const active = (path: string) =>
   route === path ||
   (path === "explore/" && (route === "agents/" || route.startsWith("agents/") || route === "providers/" || route.startsWith("providers/")));
 ---
+{/* Watched by the script below to tell "at the top" from "content is passing
+    underneath". A zero-height element before the header costs no layout and lets
+    an IntersectionObserver answer the question without a scroll listener firing
+    on every frame. */}
+<div data-scroll-sentinel aria-hidden="true"></div>
 <header class="site-header">
   <div class="shell header-inner">
     <a class="wordmark" href={href("")} aria-label={t("nav.home")}>
@@ -66,3 +71,28 @@ const active = (path: string) =>
     </div>
   </div>
 </header>
+{/* The scroll edge lives outside the header rather than as its ::after: axe cannot
+    resolve the background of a text node whose ancestor has a pseudo-element, so an
+    ::after here made every header link's contrast unprovable. */}
+<div class="scroll-edge" aria-hidden="true"></div>
+
+<script>
+  /* Flags the header once content is scrolling underneath it, so the scroll edge
+     in global.css can appear only when there is something to separate from.
+     Purely presentational: with no JS the header keeps its resting state, which is
+     the correct-looking one at the top of every page.
+
+     An IntersectionObserver on a sentinel rather than a scroll listener — the
+     browser reports the two states directly instead of us recomputing a threshold
+     on every frame. */
+  const sentinel = document.querySelector("[data-scroll-sentinel]");
+  const header = document.querySelector(".site-header");
+  if (sentinel && header) {
+    new IntersectionObserver(
+      ([entry]) => {
+        header.toggleAttribute("data-scrolled", !entry.isIntersecting);
+      },
+      { threshold: 0 },
+    ).observe(sentinel);
+  }
+</script>
