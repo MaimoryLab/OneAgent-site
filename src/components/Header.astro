@@ -2,6 +2,8 @@
 import BrandMark from "./BrandMark.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import LocaleSwitch from "./LocaleSwitch.astro";
+import GitHubStars from "./GitHubStars.astro";
+import { repositoryUrl } from "../lib/downloads";
 import { bestLocaleFor, localeFromPath, localePath, routeWithoutLocale, switchesLanguage } from "../i18n";
 import { useTranslations } from "../i18n/ui";
 
@@ -39,6 +41,10 @@ const active = (path: string) =>
       ))}
     </nav>
     <div class="header-actions">
+      {/* Before the locale and theme controls: it is a destination, where those
+          two are settings for the current page. Carries .header-link, so it hides
+          with the desktop nav below 920px and reappears in the mobile menu. */}
+      <GitHubStars />
       <LocaleSwitch />
       <ThemeToggle />
       <a class:list={["button", "button-small", route === "" ? "button-secondary" : "button-primary"]} href={href("downloads/")}>{t("cta.download")}</a>
@@ -51,6 +57,10 @@ const active = (path: string) =>
               {switchesLanguage(locale, item.path) && <span class="lang-hint">{t("nav.chineseOnly")}</span>}
             </a>
           ))}
+          {/* The header copy is hidden at this width, so the repository would be
+              unreachable from the chrome on a phone without this. Text rather than
+              a count: the menu is a list of destinations. */}
+          <a href={repositoryUrl} rel="noopener">GitHub</a>
         </nav>
       </details>
     </div>

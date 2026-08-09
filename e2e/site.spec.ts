@@ -671,6 +671,55 @@ test("the sitemap lists the live help URL and not the retired one", async ({ pag
   expect(xml, "a noindex stub must not be advertised to crawlers").not.toContain("02-chatgpt-desktop");
 });
 
+/* The header's GitHub link points at the product repository, MaimoryLab/OneAgent —
+   not at this site's own repository. Getting that wrong is both easy and quiet:
+   both URLs resolve, so nothing 404s and a reader is simply sent to the wrong
+   place. downloads.ts already had exactly this bug with GITHUB_REPOSITORY.
+ *
+ * The count itself is deliberately not asserted. It is fetched at build time and
+ * changes on its own, so pinning a number would make this fail for a reason
+ * unrelated to the code — and it is omitted entirely when the API is rate
+ * limited, which is a normal state for a local run. */
+test("the header links the product repository and stays keyboard reachable", async ({ page, viewport }) => {
+  await page.goto("/");
+  const isNarrow = (viewport?.width ?? 1280) <= 920;
+
+  const link = page.locator(".site-header a.github-stars");
+  if (isNarrow) {
+    /* .header-link is display:none below 920px, so the mobile menu is the only
+       route to the repository at this width — an entry that has to exist, or the
+       chrome loses the link entirely on a phone. */
+    await expect(link).toBeHidden();
+    await page.locator(".mobile-menu summary").click();
+    const menuLink = page.locator(".mobile-menu nav a", { hasText: "GitHub" });
+    await expect(menuLink).toHaveAttribute("href", "https://github.com/MaimoryLab/OneAgent");
+    return;
+  }
+
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute("href", "https://github.com/MaimoryLab/OneAgent");
+  /* The visible text is a bare number when present, so the accessible name has to
+     come from aria-label — "3" alone tells a screen-reader user nothing. */
+  await expect(link).toHaveAttribute("aria-label", /GitHub/);
+  await expect(link).not.toHaveAttribute("aria-label", /^\s*$/);
+});
+
+test("the header's GitHub link needs no third-party request", async ({ page }) => {
+  const external: string[] = [];
+  page.on("request", (request) => {
+    const url = request.url();
+    if (!url.startsWith("http://127.0.0.1") && !url.startsWith("http://localhost")) external.push(url);
+  });
+  await page.goto("/");
+  await expect(page.locator(".site-header")).toBeVisible();
+
+  /* The count is baked in at build time on purpose: the CSP is default-src 'self'
+     with no connect-src exception, so a client-side call to api.github.com would
+     be blocked, and a third-party badge image would report every visitor to that
+     host. Both would show up here. */
+  expect(external, "rendering the header must not call out to a third party").toEqual([]);
+});
+
 test("serves its own stylesheet and Agent marks rather than 404ing on them", async ({ page }) => {
   // A base path build (SITE_URL/BASE_PATH, as the Pages job uses) emits an
   // absolute <base href>, and the CSP declares base-uri 'self'. Serving such a

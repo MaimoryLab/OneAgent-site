@@ -206,3 +206,78 @@ describe("release asset naming", () => {
     expect(releaseTargets(release).some((target) => target.file === "SHA256SUMS")).toBe(false);
   });
 });
+
+/**
+ * The star count is decoration, so every failure has to end in null rather than a
+ * thrown error or a zero.
+ *
+ * Zero is the case worth pinning: "0 stars" is a claim, and a rate-limited API is
+ * not evidence for it. Returning 0 on failure would put a wrong number in the
+ * header of every page, and it is the obvious shape for a later refactor to
+ * introduce (`?? 0`), which is why it is asserted rather than assumed.
+ */
+describe("repository stars", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  const respond = (value: unknown, init: { status?: number; ok?: boolean } = {}) => {
+    const status = init.status ?? 200;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        status,
+        statusText: "",
+        ok: init.ok ?? (status >= 200 && status < 300),
+        json: async () => value,
+      }),
+    );
+  };
+
+  it("reads the count from the repository payload", async () => {
+    respond({ stargazers_count: 128 });
+    const { getRepositoryStars } = await import("./downloads");
+
+    await expect(getRepositoryStars()).resolves.toBe(128);
+  });
+
+  it("returns null rather than zero when rate limited", async () => {
+    respond({ message: "rate limit exceeded" }, { status: 403 });
+    const { getRepositoryStars } = await import("./downloads");
+
+    await expect(getRepositoryStars()).resolves.toBeNull();
+  });
+
+  it("returns null when the request never reaches GitHub", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("fetch failed")));
+    const { getRepositoryStars } = await import("./downloads");
+
+    await expect(getRepositoryStars()).resolves.toBeNull();
+  });
+
+  // A changed payload shape must not surface as NaN in the header.
+  it("returns null when the count is missing or not a number", async () => {
+    respond({ stargazers_count: "many" });
+    const { getRepositoryStars } = await import("./downloads");
+
+    await expect(getRepositoryStars()).resolves.toBeNull();
+  });
+
+  it("points at the product repository, not the site's own", async () => {
+    const { repositoryUrl } = await import("./downloads");
+
+    expect(repositoryUrl).toBe("https://github.com/MaimoryLab/OneAgent");
+  });
+
+  /* Every page renders the header, so a per-page request would be dozens of calls
+     against a 60-per-hour unauthenticated budget. */
+  it("requests the repository once however many pages ask for it", async () => {
+    respond({ stargazers_count: 7 });
+    const { getRepositoryStars } = await import("./downloads");
+
+    await Promise.all([getRepositoryStars(), getRepositoryStars(), getRepositoryStars()]);
+
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+  });
+});
