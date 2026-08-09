@@ -831,7 +831,37 @@ button, select { color: inherit; }
   .chip { border-color: var(--line-strong); }
 }
 
+/* Windows High Contrast replaces the whole palette with the user's own colours and
+   discards background and box-shadow entirely. Anything that carried meaning
+   through a fill or a shadow alone therefore disappears, so each of those needs a
+   border — the one property forced-colors keeps.
+ *
+ * `Highlight` and `CanvasText` are system colour keywords, so they follow whatever
+ * scheme the reader has chosen rather than reintroducing our own values. */
+@media (forced-colors: active) {
+  /* The row's selected/hover marker was an inset shadow, which is dropped. */
+  .agent-row:hover, .agent-row:focus-within { outline: 2px solid Highlight; outline-offset: -2px; }
+  /* Chips keep their border but lose the tint that distinguished the four kinds,
+     so the border does the separating instead of the fill. */
+  .chip { border-color: CanvasText; }
+  /* The scroll edge is a gradient; it cannot survive and does not need to, since
+     the border below takes over the separation. */
+  .scroll-edge { display: none; }
+  .site-header { border-bottom: 1px solid CanvasText; }
+  .header-control { border-color: CanvasText; }
+  /* Selected states across the demo and explorer are background changes. */
+  .platform-option:has(input:checked),
+  .explorer-card.is-selected,
+  [aria-pressed="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
+}
+
 :focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+/* forced-colors discards our ring colour, so the indicator is re-stated in a
+   system keyword that survives. Without this a keyboard user in High Contrast
+   loses the focus ring entirely. */
+@media (forced-colors: active) {
+  :focus-visible { outline: 3px solid Highlight; outline-offset: 3px; }
+}
 
 /* Homepage activation entry refinements. */
 .section-actions { margin-top: 28px; }
