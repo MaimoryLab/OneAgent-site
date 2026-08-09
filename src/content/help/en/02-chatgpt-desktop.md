@@ -1,37 +1,37 @@
 ---
-title: Recommending ChatGPT Desktop
-description: The desktop app is steadier than a CLI for colleagues who would rather not use a terminal, and it shares one config file with Codex.
+title: Configuring desktop agents
+description: Where ChatGPT Desktop and WorkBuddy are installed from, which config file each one owns, and why desktop apps have no pinned version.
 order: 2
-summary: Install the desktop app from the vendor; configure once and the CLI works too.
+summary: Install sources and config locations for both desktop apps; ChatGPT Desktop shares one file with Codex.
 ---
 
-If a colleague is not comfortable in a terminal, a desktop application is the better starting point: it works once installed, there is no launch command to remember, and it will not break because of a difference in their shell environment.
+Alongside the command-line agents, OneAgent supports two desktop applications: **ChatGPT Desktop** and **WorkBuddy**. Both open from the Dock or Start menu and have no launch command.
 
-OneAgent supports two desktop applications today: **ChatGPT Desktop** and **WorkBuddy**.
+## Install sources
 
-## Installing
+Select the desktop agent in the environment overview and click install. OneAgent fetches whatever version the vendor currently serves:
 
-Pick the desktop agent in the environment overview and click install. OneAgent fetches whatever version the vendor currently serves:
-
-- ChatGPT Desktop: the official `.dmg` on macOS, the Microsoft Store on Windows
-- WorkBuddy: the official `.zip` on macOS, the vendor's installer on Windows
+| Agent | macOS | Windows |
+| --- | --- | --- |
+| ChatGPT Desktop | official `.dmg` | Microsoft Store |
+| WorkBuddy | official `.zip` | vendor installer |
 
 Neither runs on Linux. OneAgent does not repackage or redistribute either one, so what you install is what the vendor published.
 
-## One benefit worth stating on its own
+## Where the configuration lives
 
-**ChatGPT Desktop and the Codex CLI share the same configuration file**, `~/.codex/config.toml`.
+`ChatGPT Desktop` shares a configuration file with the Codex CLI: `~/.codex/config.toml`. Configure it once in OneAgent and both read the same result — there is no need to do it twice.
 
-Configure it once in OneAgent and both the desktop app and the CLI work. For anyone who uses both, this saves more trouble than it appears to: maintaining two separate configs is how you end up with "it works in the terminal but not in the app", which is a tedious thing to diagnose.
+The converse also holds: a change affects both. If you mean to adjust only one of them, check that the other accepts the change too, because there is no separate configuration layer between them.
 
-WorkBuddy is different — it owns `~/.workbuddy/models.json` and does not interact with any other agent's configuration.
+WorkBuddy uses its own `~/.workbuddy/models.json` and does not interact with any other agent's configuration.
 
 ## There is no version to pin
 
-This is where desktop applications differ from command-line agents: OneAgent installs whatever the vendor's endpoint currently serves, so the environment overview shows no pinned version.
+This is one real difference from command-line agents: OneAgent installs whatever the vendor's endpoint currently serves, so the environment overview shows no pinned version.
 
-That is not a missing feature. It follows from how these products are distributed — there is no package-manager entry point where a version could be requested.
+The reason is distribution. Neither product has a package-manager entry point where a version could be requested, so there is nothing to pin against. Command-line agents do, and the overview shows their pinned versions.
 
-## After it is configured
+## Changing the model or provider
 
-A desktop application opens from the Dock or Start menu; there is no launch command. If you want to change its model or provider, the flow is identical to a command-line agent — see [Switching models and providers](/en/help/03-models/).
+The flow is identical to a command-line agent — see [Switching models and providers](/en/help/03-models/).

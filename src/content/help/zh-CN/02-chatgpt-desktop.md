@@ -1,35 +1,37 @@
 ---
-title: 推荐同事用 ChatGPT 桌面版
-description: 桌面版比命令行稳定，适合不想折腾终端的同事；它和 Codex CLI 共用同一份配置。
+title: 配置桌面端 Agent
+description: ChatGPT Desktop 与 WorkBuddy 的安装来源、各自写哪份配置文件，以及桌面应用为什么没有锁定版本号。
 order: 2
-summary: 从官方渠道装桌面版，配一次配置命令行也能用。
+summary: 两个桌面应用的安装来源与配置位置；ChatGPT Desktop 与 Codex 共用一份配置。
 ---
 
-如果同事不熟悉终端，桌面应用是更好的起点：装完就能用，不需要记启动命令，也不会因为 shell 环境的差异出问题。
+除命令行 Agent 之外，OneAgent 支持两个桌面应用：**ChatGPT Desktop** 和 **WorkBuddy**。它们从 Dock 或开始菜单打开，没有启动命令。
 
-OneAgent 目前支持两个桌面应用：**ChatGPT Desktop** 和 **WorkBuddy**。
+## 安装来源
 
-## 怎么装
+在环境总览里选择桌面端 Agent 并点击安装。OneAgent 从厂商自己的分发渠道获取当前版本：
 
-在环境总览里选桌面端 Agent，点安装。OneAgent 从厂商自己的渠道取当前版本：
+| Agent | macOS | Windows |
+| --- | --- | --- |
+| ChatGPT Desktop | 官方 `.dmg` | 微软商店 |
+| WorkBuddy | 官方 `.zip` | 厂商安装器 |
 
-- ChatGPT Desktop：macOS 走官方 `.dmg`，Windows 走微软商店
-- WorkBuddy：macOS 走官方 `.zip`，Windows 走厂商安装器
+两者都不支持 Linux。OneAgent 不重新打包、不做二次分发，你安装到的就是厂商发布的那一份。
 
-两个都不支持 Linux。OneAgent 不重新打包、也不做二次分发，所以你装到的就是厂商发布的那一份。
+## 配置文件位置
 
-## 一个值得单独说的好处
+`ChatGPT Desktop` 与 Codex 命令行共用同一份配置：`~/.codex/config.toml`。在 OneAgent 里配置一次，两者都会读到同一份结果，不需要配置两遍。
 
-**ChatGPT Desktop 和 Codex 命令行共用同一份配置文件**，都是 `~/.codex/config.toml`。
+反过来说，改动会同时影响两者。如果你只想调整其中一个，先确认另一个也接受这次改动——它们之间没有独立的配置层。
 
-这意味着在 OneAgent 里配一次，桌面版和命令行两边都能用，不用配两遍。对同时用两者的同事，这一点省下的麻烦比看起来多——两份配置分别维护时，很容易出现"命令行能用桌面版不能用"这类难查的问题。
-
-WorkBuddy 不一样，它有自己的配置文件 `~/.workbuddy/models.json`，与其他 Agent 互不影响。
+WorkBuddy 使用自己的 `~/.workbuddy/models.json`，与其他 Agent 互不影响。
 
 ## 没有可锁定的版本号
 
-桌面应用和命令行 Agent 在这一点上不同：OneAgent 取的是厂商端点当前提供的版本，所以环境总览里不会显示"锁定版本"。这不是缺功能，是厂商的分发方式决定的——它们没有像 npm 那样可以指定版本的包管理入口。
+这是桌面应用与命令行 Agent 的一处实际差异：OneAgent 取的是厂商端点当前提供的版本，因此环境总览里不显示锁定版本。
 
-## 配好之后
+原因在分发方式——这两个产品没有 npm 那样可以指定版本的包管理入口，所以没有可锁定的目标。命令行 Agent 有，环境总览会显示它们的锁定版本。
 
-桌面应用从 Dock 或开始菜单打开，没有启动命令。如果你要给它换模型或换 Provider，流程和命令行 Agent 完全一样，见[切换模型与 Provider](/help/03-models/)。
+## 修改模型或 Provider
+
+流程与命令行 Agent 完全一致，见[切换模型与 Provider](/help/03-models/)。
