@@ -43,4 +43,4 @@ Packages and runtimes go through the npmmirror (Aliyun) registry by default, so 
 
 The first screen is an environment overview: for every agent on this machine, whether it is installed, configured, or absent. Those three are listed separately on purpose — installed and configured are different states, and collapsing them into one checkmark hides what to do next.
 
-From here you can [recommend ChatGPT Desktop to a colleague](/en/help/02-chatgpt-desktop/), or go straight to [switching an agent's model](/en/help/03-models/).
+Next you can [configure a desktop agent](/en/help/02-chatgpt-desktop/), or go straight to [switching an agent's model](/en/help/03-models/).
