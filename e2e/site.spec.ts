@@ -32,7 +32,7 @@ test("home presents one activation entry without claiming a real scan", async ({
   await console.scrollIntoViewIfNeeded();
   await expect(console).toHaveAttribute("data-screen", "agents");
   await expect(console).toHaveAttribute("data-route", "/setup/agents");
-  await expect(console).toHaveAttribute("data-source-release", "v0.4.0");
+  await expect(console).toHaveAttribute("data-source-release", "v0.5.0");
   await expect(console).toHaveAttribute("data-autoplaying", "true");
   await expect(page.getByText("示例环境", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("不访问设备", { exact: true })).toBeVisible();
@@ -40,7 +40,7 @@ test("home presents one activation entry without claiming a real scan", async ({
   await expect(page.locator(".hero-note")).toContainText("未签名技术预览版");
 });
 
-test("activation demo uses the v0.4.0 English product vocabulary", async ({ page }) => {
+test("activation demo uses the v0.5.0 English product vocabulary", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/en/");
   const console = page.locator("#activation-console");
@@ -53,7 +53,7 @@ test("activation demo uses the v0.4.0 English product vocabulary", async ({ page
   await expect(console.locator('[data-step-id="review"]')).toContainText("Review");
 });
 
-test("activation demo follows the v0.4.0 new-profile path through Overview", async ({ page }) => {
+test("activation demo follows the v0.5.0 new-profile path through Overview", async ({ page }) => {
   const fetches: string[] = [];
   page.on("request", (request) => {
     if (["fetch", "xhr"].includes(request.resourceType())) fetches.push(request.url());

@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source": {
-    "release": "v0.4.0",
-    "commit": "ff81ee81df8a5d9bf91be336d5df280fe20736d8",
-    "published_at": "2026-08-09",
+    "release": "v0.5.0",
+    "commit": "0fbbe9402a50bb5e711275f369d1485efea272e0",
+    "published_at": "2026-08-10",
     "verified_at": "2026-08-10"
   },
   "navigation": [
