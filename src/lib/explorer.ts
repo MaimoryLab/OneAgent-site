@@ -39,6 +39,8 @@ export interface SiteAgent {
   rank: number;
   command: string | null;
   configPath: string | null;
+  packageManager: string | null;
+  packageName: string | null;
   platforms: PlatformId[];
   lockedVersion: string | null;
   source: string | null;
@@ -58,6 +60,11 @@ export interface SiteProvider {
   id: string;
   name: string;
   home: string;
+  keyManagementUrl: string;
+  baseUrl: string;
+  anthropicBaseUrl: string;
+  defaultModel: string;
+  fallbackProbeModel: string;
   relationship: "none" | "referral" | "sponsor";
   disclosure: string;
   referralUrl: string;

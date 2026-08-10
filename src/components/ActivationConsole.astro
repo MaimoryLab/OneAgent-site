@@ -1,715 +1,898 @@
 ---
 import AgentMark from "./AgentMark.astro";
 import BrandMark from "./BrandMark.astro";
-import { catalog } from "../lib/catalog";
 import { bestLocaleFor, localeFromPath, localePath, switchesLanguage } from "../i18n";
-import { DEMO_CUSTOM_MODEL_HINT, demoStateFor, featuredDemoAgents } from "../lib/demo-environment";
-import { recommendedCombination } from "../lib/explorer";
+import { useCatalogLabels } from "../i18n/catalog";
+import { catalog } from "../lib/catalog";
+import { protocolLabels } from "../lib/content";
+import {
+  activationDemo,
+  demoAgentStateFor,
+  demoAgentsForTab,
+  demoModelsFor,
+  localizedDemoLabel,
+  type DemoLocale,
+} from "../lib/demo-environment";
 
 interface Props {
   id?: string;
 }
 
 const { id = "activation-console" } = Astro.props;
-const locale = localeFromPath(Astro.url.pathname);
-const featuredAgents = featuredDemoAgents(catalog);
-const recommendation = recommendedCombination(catalog);
+const locale = localeFromPath(Astro.url.pathname) as DemoLocale;
+const scenario = activationDemo.scenario;
+const desktopAgents = demoAgentsForTab("desktop");
+const cliAgents = demoAgentsForTab("cli");
+const models = demoModelsFor(scenario);
+const providerOptions = catalog.providers.filter((provider) =>
+  scenario.selectedAgent.protocol === "anthropic" ? Boolean(provider.anthropicBaseUrl) : Boolean(provider.baseUrl),
+);
+const navItems = activationDemo.navigation.map((item) => ({ ...item, label: localizedDemoLabel(item, locale) }));
+const utilityItems = activationDemo.utilityNavigation.map((item) => ({ ...item, label: localizedDemoLabel(item, locale) }));
+const steps = activationDemo.steps.map((step) => ({ ...step, label: localizedDemoLabel(step, locale) }));
+const existingProfileLabel = localizedDemoLabel({ labels: scenario.existingProfile.labels }, locale);
+const newProfileLabel = localizedDemoLabel({ labels: scenario.newProfileLabels }, locale);
 const href = (path: string) => localePath(bestLocaleFor(locale, path), path);
+const providerCatalogSwitchesLanguage = switchesLanguage(locale, "providers/");
+const providerCatalogLanguageLabel = locale === "en" ? "Chinese catalogue" : "中文目录";
+const { agentDescriptions, agentFallbackDescription } = useCatalogLabels(locale);
+const selectedProtocol = scenario.selectedAgent.protocol ? protocolLabels[scenario.selectedAgent.protocol] : "";
+const installCommand = scenario.selectedAgent.packageManager && scenario.selectedAgent.packageName
+  ? `$ ${scenario.selectedAgent.packageManager} install -g --registry=${scenario.registry} ${scenario.selectedAgent.packageName}`
+  : `$ ${scenario.selectedAgent.command ?? scenario.selectedAgent.id} --version`;
+const versionCommand = `$ ${scenario.selectedAgent.command ?? scenario.selectedAgent.id} --version`;
+
 const copy = locale === "en"
   ? {
-      label: "Interactive product evidence",
       sample: "Demo environment",
-      title: "Activation console",
-      subtitle: "A guided example. This page never scans your device or asks for an API key.",
-      idleTitle: "Ready when you are.",
-      idleBody: "Start from the hero action. OneAgent will walk through an example environment without touching this computer.",
-      scanningTitle: "Scanning the example environment",
-      scanningBody: "Reading a deterministic demo scenario — not your browser, files or local services.",
-      agentTitle: "Choose an agent",
-      agentBody: "Capabilities and package sources come from the repository catalog. Machine state is explicitly illustrative.",
-      providerTitle: "Choose a provider",
-      providerBody: "Compatibility is calculated from the protocol registry. A preview gate never becomes Ready.",
-      verify: "Verify sample connection",
-      verifyingTitle: "Verifying the sample protocol",
-      verifyingBody: "No credential is submitted. The outcome follows the selected catalog compatibility level.",
-      resultLabel: "Example outcome",
-      reset: "Reset demo",
-      download: "Download OneAgent",
-      explore: "Open full Explorer",
-      security: "Release policy",
+      source: `UI path pinned to ${activationDemo.source.release}`,
+      brandSubtitle: "Agent Manager",
+      workspace: "Workspace",
+      noDevice: "No device access",
+      noKey: "No API key field",
+      noNetwork: "No activation request",
+      replay: "Replay demo",
+      releaseNote: "Deterministic example · no local scan",
+      agentTitle: "Select agents",
+      agentDescription: "Choose the development tool to install and configure. One per run",
+      agentBodyTitle: "Select agents",
+      desktopTab: "Desktop Agent",
+      cliTab: "Command-line Agent",
+      desktopBody: "Install the official desktop application",
+      cliBody: "Detection, installation and initial configuration",
       installed: "Installed",
       notInstalled: "Not installed",
-      configured: "Configured",
-      needsSetup: "Needs setup",
-      officialGuide: "Official guide",
-      recommended: "Recommended path",
-      locked: "Version",
-      noLockedVersion: "Latest official",
-      command: "Launch",
-      managed: "Managed config",
-      guide: "Official setup",
-      facts: ["No device access", "No API key field", "Registry-derived compatibility"],
-      /* Mirrors SetupStepper.tsx upstream, which is the single source of truth
-         for the onboarding order and labels. */
-      steps: ["Agent", "Template", "Model service", "Model", "Confirm", "Install"],
-      modeTitle: "Choose a configuration template",
-      modeBody: "Pick a saved template, or create a new one.",
-      modeProvider: "Create a new template",
-      modeProviderHint: "Choose a provider or your own endpoint, then verify the protocol before anything is written.",
-      modeExisting: "Apply a saved template",
-      modeExistingHint: "A provider and model combination you saved earlier applies directly; both steps are skipped.",
+      mirror: "Agent install source",
+      mirrorBody: "A mirror is the default here based on the example system region. You can switch back to the official source",
+      chooseAgent: "Select one agent",
+      continue: "Continue",
+      back: "Back",
+      profileTitle: "Select a profile",
+      profileDescription: "Choose an existing profile, or create a new profile",
+      newProfile: "Create new profile",
+      providerTitle: "Connect a Provider",
+      providerDescription: "The Provider's saved key will be used",
+      providerLabel: "Provider",
+      addProvider: "Add Provider",
+      getKey: "Get API key",
+      modelsFound: `Found ${models.length} models`,
+      probeModel: "Test model (optional)",
+      probePlaceholder: "Search models",
+      probeHint: "Only tests whether this Provider is reachable. It does not configure anything. Choose the real model on the next step",
+      testConnection: "Test connection",
+      connectionIdle: "Connection not tested",
+      connectionLoading: "Validating endpoint and key",
+      connectionSuccess: `${selectedProtocol} connection test passed.`,
+      connectionError: "The example connection failed. You can still continue or retry.",
+      optionalProbe: "Connection testing is optional. You can continue directly to model selection",
+      continueModels: "Continue to model selection",
+      modelTitle: "Select a model",
+      modelDescription: "Choose from models available to the current key, or type a model ID when discovery is unavailable",
+      modelNotice: `Found ${models.length} models`,
+      modelInput: "Enter model ID manually",
+      refresh: "Refresh list",
       reviewTitle: "Review activation",
-      reviewBody: "Check what will be installed, configured and backed up. Your API key is never shown on this page.",
-      reviewAgent: "Agent",
-      reviewService: "Model service",
-      reviewModel: "Model",
-      reviewWrite: "Local write",
-      reviewBackup: "A timestamped backup is created before anything is overwritten.",
-      reviewTemplate: "This run is saved as a configuration template you can apply later.",
-      reviewStart: "Start installing",
-      customName: "Custom endpoint",
-      customVerdict: "Your own OpenAI-compatible URL",
-      customLabel: "Base URL",
-      customPlaceholder: "https://api.example.com/openai",
-      customHint: "Any OpenAI-compatible endpoint. Validated the same way the app validates it.",
-      register: "Need a key? Open PPIO",
-      registerNote: "Opens ppio.com in a new tab. OneAgent has no account of its own.",
-      urlRequired: "Enter a base URL.",
-      urlScheme: "Must start with http:// or https://",
-      urlCredentials: "Remove the username or password from the URL.",
-      urlControl: "Remove control characters from the URL.",
-      urlOk: "Endpoint accepted",
-      modelTitle: "Choose a model",
-      modelBody: "The app reads this list from the endpoint itself. Pick one, or type an id if discovery comes back empty.",
-      modelManual: "Discovery empty? Enter an id",
-      modelManualLabel: "Model id",
-      /* Opens the review screen rather than finishing the run; the final
-         go-ahead is the button on that screen. */
-      confirm: "Review activation",
-      skipped: "Skipped",
-      /* The real window's sidebar is a workspace nav, not a progress list — the
-         stepper lives in the page header. These are its actual four entries. */
-      navItems: ["Activate", "Overview", "Providers", "Templates"],
-      sidebarNote: "Configuration stays on this machine",
-      footerIdle: "The demo never touches this device",
-      chineseOnly: "in Chinese",
+      reviewDescription: "Review install, configuration and backup scope. The API key is not shown here",
+      willProcess: "Will process",
+      installAndConfigure: "Install and configure",
+      detectAndConfigure: "Detect and configure",
+      providerGroup: "Provider",
+      providerRow: "Provider",
+      modelRow: "Model",
+      localWrites: "Local writes",
+      environmentSummary: "Environment summary",
+      profileName: "Profile name",
+      profileHint: "This installation will be saved as a profile that can be applied later",
+      backup: "A timestamped backup is created before overwrite",
+      startInstall: "Start installing",
+      installing: "Installing",
+      installComplete: "Installation complete",
+      installCancelled: "Cancelled",
+      installFailure: "Some items need attention",
+      installDescription: "Each Agent has an independent result. Failed items can be handled separately",
+      keepOpen: "Keep this window open",
+      installLog: "View install log",
+      cancelTask: "Cancel task",
+      closeTask: "Close task",
+      enterOverview: "Open overview",
+      taskStatusRunning: "In progress",
+      taskStatusSuccess: "Complete · Installation complete",
+      taskStatusCancelled: "Cancelled",
+      taskStatusFailure: "Failed",
+      overviewTitle: "Environment overview",
+      overviewDescription: "Installed Agents and their current configuration on this machine",
+      cliSection: "Command-line Agent",
+      desktopSection: "Desktop Agent",
+      countOne: "1 total",
+      countZero: "0 total",
+      details: "Details",
+      update: "Update",
+      configure: "Configure",
+      launch: "Launch",
+      installAgent: "Install Agent",
+      refreshStatus: "Refresh status",
+      emptyDesktop: "Install a desktop Agent from the guided flow",
+      launchNote: "The website demo does not open a local terminal.",
+      taskReturn: "Return to task page",
+      dismiss: "Dismiss",
     }
   : {
-      label: "可操作的产品证据",
       sample: "示例环境",
-      title: "激活控制台",
-      subtitle: "这是引导演示。页面不会扫描你的设备，也不会要求输入 API Key。",
-      idleTitle: "等待你启动演示。",
-      idleBody: "从首屏主按钮开始，OneAgent 将演示一次完整激活路径，但不会访问这台电脑。",
-      scanningTitle: "正在扫描示例环境",
-      scanningBody: "读取确定性的演示场景，不读取浏览器、本机文件或本地服务。",
-      agentTitle: "选择一个 Agent",
-      agentBody: "能力与包来源来自仓库目录；安装和配置状态明确属于示例。",
-      providerTitle: "选择一个 Provider",
-      providerBody: "兼容结果来自协议注册表；预览门禁不会被升级成 Ready。",
-      verify: "验证示例连接",
-      verifyingTitle: "正在验证示例协议",
-      verifyingBody: "不会提交任何凭证；结果严格跟随所选组合的兼容等级。",
-      resultLabel: "示例结果",
-      reset: "重置演示",
-      download: "下载 OneAgent",
-      explore: "打开完整配置目录",
-      security: "发行政策",
+      source: `界面路径固定为 ${activationDemo.source.release}`,
+      brandSubtitle: "Agent 管家",
+      workspace: "工作区",
+      noDevice: "不访问设备",
+      noKey: "不提供 Key 输入框",
+      noNetwork: "不发送激活请求",
+      replay: "重放演示",
+      releaseNote: "确定性示例 · 不扫描本机",
+      agentTitle: "选择 Agent",
+      agentDescription: "选择这次要安装并配置的开发工具，每次安装一个",
+      agentBodyTitle: "选择 Agent",
+      desktopTab: "桌面 Agent",
+      cliTab: "命令行 Agent",
+      desktopBody: "安装官方桌面应用",
+      cliBody: "支持检测、安装与初始化配置",
       installed: "已安装",
-      notInstalled: "未安装",
-      configured: "已配置",
-      needsSetup: "待配置",
-      officialGuide: "官方引导",
-      recommended: "推荐路径",
-      locked: "版本",
-      noLockedVersion: "官方最新版本",
-      command: "启动命令",
-      managed: "托管配置",
-      guide: "官方设置",
-      facts: ["不访问设备", "不提供 Key 输入框", "兼容结论来自注册表"],
-      /* Mirrors SetupStepper.tsx upstream, which is the single source of truth
-         for the onboarding order and labels. */
-      steps: ["Agent", "选择配置模版", "模型服务", "模型", "确认", "安装"],
-      modeTitle: "选择配置模版",
-      modeBody: "选择一个已有配置模版，或新建配置模版。",
-      modeProvider: "新建配置模版",
-      modeProviderHint: "选择 Provider 或你自己的端点，写入前先验证协议。",
-      modeExisting: "套用已有配置模版",
-      modeExistingHint: "之前存过的 Provider 与模型组合可以直接应用，两步都会跳过。",
-      reviewTitle: "确认激活",
-      reviewBody: "核对安装、配置和备份范围。API Key 不会显示在此页。",
-      reviewAgent: "Agent",
-      reviewService: "模型服务",
-      reviewModel: "模型",
-      reviewWrite: "本地写入",
-      reviewBackup: "覆盖前会自动创建时间戳备份。",
-      reviewTemplate: "这次安装会保存为一个配置模版，之后可以直接应用。",
-      reviewStart: "开始安装",
-      customName: "自定义端点",
-      customVerdict: "你自己的 OpenAI 兼容地址",
-      customLabel: "Base URL",
-      customPlaceholder: "https://api.example.com/openai",
-      customHint: "任何 OpenAI 兼容端点。校验规则与应用内一致。",
-      register: "还没有 Key？打开 PPIO",
-      registerNote: "在新标签页打开 ppio.com。OneAgent 自身没有账号体系。",
-      urlRequired: "请填写 Base URL。",
-      urlScheme: "需要以 http:// 或 https:// 开头。",
-      urlCredentials: "请从地址中去掉用户名或密码。",
-      urlControl: "请去掉地址中的控制字符。",
-      urlOk: "端点可用",
+      notInstalled: "待安装",
+      mirror: "Agent 安装源",
+      mirrorBody: "已根据示例系统地区设置默认使用镜像。可以改回官方源",
+      chooseAgent: "选择一个 Agent",
+      continue: "继续",
+      back: "返回",
+      profileTitle: "选择配置模版",
+      profileDescription: "选择一个已有配置模版，或新建配置模版",
+      newProfile: "新建配置模版",
+      providerTitle: "连接模型服务",
+      providerDescription: "将使用模型服务已保存的 Key",
+      providerLabel: "模型服务",
+      addProvider: "新增模型服务",
+      getKey: "获取 API Key",
+      modelsFound: `找到 ${models.length} 个模型`,
+      probeModel: "测试用模型（可选）",
+      probePlaceholder: "搜索模型",
+      probeHint: "仅用于测试这个模型服务是否连得通，不会写入任何配置。真正使用的模型在下一步选择",
+      testConnection: "测试连接",
+      connectionIdle: "尚未测试连接",
+      connectionLoading: "正在验证端点和 Key",
+      connectionSuccess: `${selectedProtocol} connection test passed.`,
+      connectionError: "示例连接失败，可以直接继续或重新测试。",
+      optionalProbe: "连接测试是可选的，可以直接继续选择模型",
+      continueModels: "继续选择模型",
       modelTitle: "选择模型",
-      modelBody: "应用会从端点自身读取这个列表。选一个，或在发现结果为空时手动输入 ID。",
-      modelManual: "列表为空？手动输入 ID",
-      modelManualLabel: "模型 ID",
-      /* 进入确认步骤，真正的「开始安装」在那一屏。 */
-      confirm: "下一步：确认",
-      skipped: "已跳过",
-      /* The real window's sidebar is a workspace nav, not a progress list — the
-         stepper lives in the page header. These are its actual four entries. */
-      navItems: ["激活环境", "环境总览", "Provider", "配置模板"],
-      sidebarNote: "配置只保存在本机",
-      footerIdle: "演示不会访问这台设备",
-      chineseOnly: "仅中文",
+      modelDescription: "从当前 Key 可访问的模型中选择，接口不支持时可直接输入模型 ID",
+      modelNotice: `找到 ${models.length} 个模型`,
+      modelInput: "手动输入模型 ID",
+      refresh: "刷新列表",
+      reviewTitle: "确认激活",
+      reviewDescription: "核对安装、配置和备份范围。API Key 不会显示在此页",
+      willProcess: "将处理",
+      installAndConfigure: "安装并配置",
+      detectAndConfigure: "检测并配置",
+      providerGroup: "模型服务",
+      providerRow: "模型服务",
+      modelRow: "模型",
+      localWrites: "本地写入",
+      environmentSummary: "环境摘要",
+      profileName: "配置模版名称",
+      profileHint: "这次安装会保存为一个配置模版，之后可以直接应用",
+      backup: "覆盖前会自动创建时间戳备份",
+      startInstall: "开始安装",
+      installing: "正在安装",
+      installComplete: "安装完成",
+      installCancelled: "已取消",
+      installFailure: "需要处理部分问题",
+      installDescription: "每个 Agent 的结果彼此独立，失败项可以单独处理",
+      keepOpen: "请保持此窗口打开",
+      installLog: "查看安装日志",
+      cancelTask: "取消任务",
+      closeTask: "关闭任务",
+      enterOverview: "进入总览",
+      taskStatusRunning: "进行中",
+      taskStatusSuccess: "已完成 · 安装完成",
+      taskStatusCancelled: "已取消",
+      taskStatusFailure: "失败",
+      overviewTitle: "环境总览",
+      overviewDescription: "本机已安装 Agent 及其当前配置",
+      cliSection: "命令行 Agent",
+      desktopSection: "桌面 Agent",
+      countOne: "共 1 个",
+      countZero: "共 0 个",
+      details: "详情",
+      update: "更新",
+      configure: "配置",
+      launch: "启动",
+      installAgent: "安装 Agent",
+      refreshStatus: "刷新状态",
+      emptyDesktop: "按引导安装桌面 Agent",
+      launchNote: "网站演示不会打开本机终端。",
+      taskReturn: "返回任务页面",
+      dismiss: "关闭",
     };
 ---
 <div class="product-shot activation-shell">
-  <activation-console id={id} data-locale={locale} data-phase="idle">
-    <div class="activation-window" tabindex="-1" data-console-window>
-      <header class="activation-topbar">
-        <div>
-          <span class="activation-kicker">{copy.label}</span>
-          <strong>{copy.title}</strong>
+  <div class="activation-demo-caption" aria-label={copy.sample}>
+    <span><i aria-hidden="true"></i>{copy.sample}</span>
+    <span>{copy.source} · {activationDemo.source.commit.slice(0, 7)}</span>
+  </div>
+
+  <activation-console
+    id={id}
+    data-locale={locale}
+    data-screen="agents"
+    data-phase="agents"
+    data-route="/setup/agents"
+    data-source-release={activationDemo.source.release}
+  >
+    <div class="activation-window" data-console-window tabindex="-1">
+      <aside class="activation-sidebar" aria-label={copy.workspace}>
+        <div class="activation-brand">
+          <span class="activation-brand-mark" aria-hidden="true"><BrandMark size={28} /></span>
+          <span><strong>OneAgent</strong><small>{copy.brandSubtitle}</small></span>
         </div>
-        <span class="activation-sample"><span aria-hidden="true"></span>{copy.sample}</span>
-      </header>
+        <p class="activation-nav-label">{copy.workspace}</p>
+        <nav class="activation-nav" aria-label={copy.workspace}>
+          {navItems.map((item) => (
+            <span class="activation-nav-item" data-nav-id={item.id}>
+              <span aria-hidden="true" class={`nav-icon nav-icon-${item.id}`}></span>
+              {item.label}
+            </span>
+          ))}
+        </nav>
+        <div class="activation-sidebar-bottom">
+          <button class="activation-task-trigger" type="button" data-task-trigger data-utility-id="tasks" aria-expanded="false">
+            <span aria-hidden="true" class="nav-icon nav-icon-tasks"></span>
+            <span>{utilityItems.find((item) => item.id === "tasks")?.label}</span>
+            <span class="activation-disclosure-icon" aria-hidden="true"></span>
+          </button>
+          <span class="activation-settings-row" data-utility-id="settings">
+            <span aria-hidden="true" class="nav-icon nav-icon-settings"></span>
+            {utilityItems.find((item) => item.id === "settings")?.label}
+          </span>
+        </div>
+      </aside>
 
-      <div class="activation-body">
-        <aside class="activation-rail" aria-label={locale === "en" ? "Workspace" : "工作区"}>
-          {/* The real mark rather than an "OA" monogram: this sidebar stands in
-              for the product's own, which shows the logo. */}
-          <div class="activation-rail-brand">
-            <span class="activation-rail-mark" aria-hidden="true"><BrandMark size={26} /></span>
-            <div><strong>OneAgent</strong><span>{copy.sample}</span></div>
-          </div>
-          {/* Presentational: the real sidebar navigates a workspace, but nothing
-              here is navigable, so these are not links or buttons. */}
-          <div class="activation-nav" aria-hidden="true">
-            {copy.navItems.map((item, index) => (
-              <span class:list={["activation-nav-item", { "is-active": index === 0 }]}>{item}</span>
-            ))}
-          </div>
-          <p class="activation-rail-note">{copy.sidebarNote}</p>
-        </aside>
-
-        <div class="activation-main">
-          <div class="activation-heading">
-            <div>
-              <span class="activation-state-label" data-state-label>{copy.sample}</span>
-              <h2>{copy.title}</h2>
-              <p class="activation-subtitle">{copy.subtitle}</p>
+      <div class="activation-workspace">
+        <main class="activation-main">
+          <header class="activation-page-header">
+            <div class="activation-page-heading">
+              <h2 data-page-title>{copy.agentTitle}</h2>
+              <p data-page-description>{copy.agentDescription}</p>
             </div>
-            <span class="activation-status" data-status><span aria-hidden="true"></span><b>Idle</b></span>
-          </div>
-          <ol class="activation-steps">
-            {copy.steps.map((step, index) => (
-              <li data-step={index + 1}>
-                <span class="activation-step-marker">{index + 1}</span>
-                <strong>{step}</strong>
-              </li>
-            ))}
-          </ol>
-
-          <section class="activation-panel" data-panel="idle" tabindex="-1">
-            <div class="activation-empty-mark" aria-hidden="true"><span></span><span></span><span></span></div>
-            <div>
-              <h3>{copy.idleTitle}</h3>
-              <p>{copy.idleBody}</p>
-            </div>
-          </section>
-
-          <section class="activation-panel activation-progress" data-panel="scanning" tabindex="-1" hidden>
-            <div class="activation-scan" aria-hidden="true"><span></span></div>
-            <div>
-              <h3>{copy.scanningTitle}</h3>
-              <p>{copy.scanningBody}</p>
-            </div>
-          </section>
-
-          <section class="activation-panel activation-choice-panel" data-panel="agent" tabindex="-1" hidden>
-            <div class="activation-panel-copy">
-              <h3>{copy.agentTitle}</h3>
-              <p>{copy.agentBody}</p>
-            </div>
-            <div class="activation-agent-grid" role="group" aria-label={copy.agentTitle}>
-              {featuredAgents.map((agent) => {
-                const demo = demoStateFor(agent);
-                return (
-                  <button
-                    type="button"
-                    class="activation-agent"
-                    data-agent-id={agent.id}
-                    aria-pressed="false"
-                  >
-                    <AgentMark id={agent.id} name={agent.name} size={28} />
-                    <span class="activation-agent-copy">
-                      <strong>{agent.name}</strong>
-                      <small>
-                        {demo.installed ? copy.installed : copy.notInstalled}
-                        {agent.lockedVersion ? ` · ${copy.locked} ${agent.lockedVersion}` : ` · ${copy.noLockedVersion}`}
-                      </small>
-                    </span>
-                    <span class:list={["activation-agent-state", `is-${demo.status}`]}>
-                      {agent.support.officialInstallGuide ? copy.officialGuide : demo.configured ? copy.configured : copy.needsSetup}
-                    </span>
-                    {recommendation?.agentId === agent.id && <span class="activation-recommended">{copy.recommended}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          <section class="activation-panel activation-choice-panel" data-panel="mode" tabindex="-1" hidden>
-            <div class="activation-panel-copy">
-              <h3>{copy.modeTitle}</h3>
-              <p>{copy.modeBody}</p>
-            </div>
-            <div class="activation-mode-grid" role="group" aria-label={copy.modeTitle}>
-              <button type="button" class="activation-mode" data-mode="provider" aria-pressed="false">
-                <strong>{copy.modeProvider}</strong>
-                <small>{copy.modeProviderHint}</small>
-              </button>
-              <button type="button" class="activation-mode" data-mode="existing-account" aria-pressed="false">
-                <strong>{copy.modeExisting}</strong>
-                <small>{copy.modeExistingHint}</small>
-              </button>
-            </div>
-          </section>
-
-          <section class="activation-panel activation-choice-panel" data-panel="provider" tabindex="-1" hidden>
-            <div class="activation-panel-copy">
-              <h3>{copy.providerTitle}</h3>
-              <p>{copy.providerBody}</p>
-            </div>
-            <div class="activation-selection-line">
-              <span data-selected-agent>—</span>
-              <span aria-hidden="true">→</span>
-              <span data-selected-protocol>—</span>
-            </div>
-            <div class="activation-provider-grid" role="group" aria-label={copy.providerTitle}>
-              {catalog.providers.map((provider) => (
-                <button type="button" class="activation-provider" data-provider-id={provider.id} aria-pressed="false">
-                  <span><strong>{provider.name}</strong><small data-provider-verdict>—</small></span>
-                  <span class="activation-provider-arrow" aria-hidden="true">↗</span>
-                </button>
+            <ol class="activation-stepper" data-stepper aria-label={locale === "en" ? "Activation steps" : "激活步骤"}>
+              {steps.map((step, index) => (
+                <li data-step-id={step.id} data-presentation={index === 0 ? "current" : "upcoming"}>
+                  <span class="activation-step-marker"><span data-step-number>{index + 1}</span><span data-step-check aria-hidden="true"></span></span>
+                  <span class="activation-step-label">{step.label}</span>
+                  <span class="activation-step-line" aria-hidden="true"></span>
+                </li>
               ))}
-              <button type="button" class="activation-provider is-custom" data-provider-id="custom" aria-pressed="false">
-                <span><strong>{copy.customName}</strong><small>{copy.customVerdict}</small></span>
-                <span class="activation-provider-arrow" aria-hidden="true">+</span>
-              </button>
-            </div>
-            <div class="activation-custom" data-custom-field hidden>
-              <label for={`${id}-base-url`}>{copy.customLabel}</label>
-              <input
-                id={`${id}-base-url`}
-                type="url"
-                inputmode="url"
-                autocomplete="off"
-                spellcheck="false"
-                placeholder={copy.customPlaceholder}
-                data-custom-input
-                aria-describedby={`${id}-base-url-hint`}
-              />
-              <p class="activation-custom-hint" id={`${id}-base-url-hint`} data-custom-hint data-idle={copy.customHint} data-kind="idle">{copy.customHint}</p>
-              <a class="activation-register" href="https://ppio.com/" target="_blank" rel="noopener noreferrer">
-                {copy.register}
-                <small>{copy.registerNote}</small>
-              </a>
-            </div>
-          </section>
-
-          <section class="activation-panel activation-choice-panel" data-panel="model" tabindex="-1" hidden>
-            <div class="activation-panel-copy">
-              <h3>{copy.modelTitle}</h3>
-              <p>{copy.modelBody}</p>
-            </div>
-            <div class="activation-model-grid" role="group" aria-label={copy.modelTitle} data-model-grid></div>
-            <details class="activation-manual">
-              <summary>{copy.modelManual}</summary>
-              <label for={`${id}-model-id`}>{copy.modelManualLabel}</label>
-              <input
-                id={`${id}-model-id`}
-                type="text"
-                autocomplete="off"
-                spellcheck="false"
-                placeholder={DEMO_CUSTOM_MODEL_HINT}
-                data-model-input
-              />
-            </details>
-          </section>
-
-          <section class="activation-panel activation-progress" data-panel="verifying" tabindex="-1" hidden>
-            <div class="activation-scan is-verify" aria-hidden="true"><span></span></div>
-            <div>
-              <h3>{copy.verifyingTitle}</h3>
-              <p>{copy.verifyingBody}</p>
-              <div class="activation-verifying-pair"><strong data-verifying-agent>—</strong><span>×</span><strong data-verifying-provider>—</strong></div>
-            </div>
-          </section>
-
-          {/* The product's /setup/review. Its job is to state what is about to be
-              written before anything is, which is the step a visitor afraid of
-              breaking a working config most needs to see. The backup line is not
-              decoration: securefs.AtomicWrite takes a timestamped copy before
-              every managed write. */}
-          <section class="activation-panel activation-review" data-panel="review" tabindex="-1" hidden>
-            <div class="activation-panel-copy">
-              <h3>{copy.reviewTitle}</h3>
-              <p>{copy.reviewBody}</p>
-            </div>
-            <dl class="activation-review-grid">
-              <div><dt>{copy.reviewAgent}</dt><dd data-review-agent>—</dd></div>
-              <div><dt>{copy.reviewService}</dt><dd data-review-provider>—</dd></div>
-              <div><dt>{copy.reviewModel}</dt><dd data-review-model>—</dd></div>
-              <div><dt>{copy.reviewWrite}</dt><dd><code data-review-path>—</code></dd></div>
-            </dl>
-            <p class="activation-review-note">{copy.reviewBackup}</p>
-            <p class="activation-review-note">{copy.reviewTemplate}</p>
-            <div class="activation-review-actions">
-              <button class="button button-primary" type="button" data-start-install>{copy.reviewStart}</button>
-            </div>
-          </section>
-
-          <section class="activation-panel activation-result" data-panel="result" tabindex="-1" hidden>
-            <div class="activation-result-icon" aria-hidden="true" data-result-icon><svg viewBox="0 0 32 32"><path data-result-path d="M7 17l6 6L26 9"></path></svg></div>
-            <div>
-              <span class="activation-state-label">{copy.resultLabel}</span>
-              <h3 data-result-title>—</h3>
-              <p data-result-body>—</p>
-              <div class="activation-result-meta"><strong data-result-agent>—</strong><span>→</span><strong data-result-provider>—</strong></div>
-              <div class="activation-result-actions">
-                <a class="button button-primary" href={href("downloads/")} data-ready-action hidden>{copy.download}</a>
-                <a class="button button-secondary" href={href("explore/")} data-explore-action>{copy.explore}</a>
-                <a class="button button-text" href={href("security/")} data-security-action hidden>
-                  {copy.security}
-                  {switchesLanguage(locale, "security/") && <span class="lang-hint">{copy.chineseOnly}</span>}
-                </a>
-              </div>
-            </div>
-          </section>
-
-          <div class="activation-log-wrap">
-            <span>{locale === "en" ? "EVENT LOG" : "事件日志"}</span>
-            <ol class="activation-log" data-log aria-live="polite" aria-relevant="additions" tabindex="0" aria-label={locale === "en" ? "Activation demo event log" : "激活演示事件日志"}>
-              <li>{locale === "en" ? "Demo idle. No device access requested." : "演示待机，未请求设备访问。"}</li>
             </ol>
-          </div>
-        </div>
+          </header>
 
-        {/* The real window keeps its primary action in a fixed footer bar rather
-            than inside the scrolling body, so the next step is always in the same
-            place. The note on the left is where the app puts its own context. */}
-        <footer class="activation-footer">
-          <p class="activation-footer-note" data-footer-note>{copy.footerIdle}</p>
-          <div class="activation-footer-actions">
-            <button class="activation-reset" type="button" data-reset hidden>{copy.reset}</button>
-            <button class="button button-small button-primary" type="button" data-verify hidden disabled>{copy.verify}</button>
-            <button class="button button-small button-primary" type="button" data-confirm hidden disabled>{copy.confirm}</button>
+          <div class="activation-page-body">
+            <section
+              class="activation-panel activation-agent-panel"
+              data-panel="agents"
+              data-page-title={copy.agentTitle}
+              data-page-description={copy.agentDescription}
+              tabindex="-1"
+            >
+              <div class="activation-body-heading">
+                <h3>{copy.agentBodyTitle}</h3>
+                <p>{copy.agentDescription}</p>
+              </div>
+              <div class="activation-agent-tabs" role="tablist" aria-label={locale === "en" ? "Agent type" : "Agent 类型"}>
+                <button type="button" role="tab" data-agent-tab="desktop" aria-selected="true">{copy.desktopTab}</button>
+                <button type="button" role="tab" data-agent-tab="cli" aria-selected="false">{copy.cliTab}</button>
+              </div>
+              <div class="activation-agent-list" data-agent-list="desktop" role="tabpanel">
+                {desktopAgents.map((agent) => {
+                  const state = demoAgentStateFor(agent.id);
+                  return (
+                    <label class="activation-agent-row" data-agent-id={agent.id} data-agent-kind="desktop">
+                      <input type="radio" name={`${id}-agent`} value={agent.id} aria-label={`${locale === "en" ? "Select" : "选择"} ${agent.name}`} />
+                      <AgentMark id={agent.id} name={agent.name} size={27} />
+                      <span class="activation-agent-copy">
+                        <strong>{agent.name}</strong>
+                        <small title={agentDescriptions[agent.id] ?? agentFallbackDescription}>{copy.desktopBody}</small>
+                      </span>
+                      <span class:list={["activation-status-badge", { "is-installed": state.installed }]}>{state.installed ? copy.installed : copy.notInstalled}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div class="activation-agent-list" data-agent-list="cli" role="tabpanel" hidden>
+                {cliAgents.map((agent) => {
+                  const state = demoAgentStateFor(agent.id);
+                  return (
+                    <label class="activation-agent-row" data-agent-id={agent.id} data-agent-kind="cli">
+                      <input type="radio" name={`${id}-agent`} value={agent.id} aria-label={`${locale === "en" ? "Select" : "选择"} ${agent.name}`} />
+                      <AgentMark id={agent.id} name={agent.name} size={27} />
+                      <span class="activation-agent-copy">
+                        <strong>{agent.name}</strong>
+                        <small title={agentDescriptions[agent.id] ?? agentFallbackDescription}>{copy.cliBody}</small>
+                      </span>
+                      <span class:list={["activation-status-badge", { "is-installed": state.installed }]}>{state.installed ? copy.installed : copy.notInstalled}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <details class="activation-mirror">
+                <summary>{copy.mirror}</summary>
+                <p>{copy.mirrorBody}</p>
+              </details>
+            </section>
+
+            <section
+              class="activation-panel activation-profile-panel"
+              data-panel="profile"
+              data-page-title={copy.profileTitle}
+              data-page-description={copy.profileDescription}
+              tabindex="-1"
+              hidden
+            >
+              <article class="activation-profile-card is-selected">
+                <label>
+                  <input type="radio" name={`${id}-profile`} checked aria-label={`${locale === "en" ? "Select" : "选择"} ${existingProfileLabel}`} />
+                  <span><strong>{existingProfileLabel}</strong><small>{scenario.existingProfile.id}</small></span>
+                  <span aria-hidden="true">✓</span>
+                </label>
+                <p>{scenario.provider.name} · {scenario.existingProfile.model}</p>
+              </article>
+            </section>
+
+            <section
+              class="activation-panel activation-provider-panel"
+              data-panel="provider"
+              data-page-title={copy.providerTitle}
+              data-page-description={copy.providerDescription}
+              tabindex="-1"
+              hidden
+            >
+              <div class="activation-field-stack">
+                <label id={`${id}-provider-label`}>{copy.providerLabel}</label>
+                <div class="activation-provider-picker">
+                  <button
+                    class="activation-select-trigger"
+                    type="button"
+                    role="combobox"
+                    aria-labelledby={`${id}-provider-label`}
+                    aria-controls={`${id}-provider-options`}
+                    aria-expanded="false"
+                    data-provider-trigger
+                  >
+                    <span data-provider-name>{scenario.provider.name}</span><span class="activation-disclosure-icon" aria-hidden="true"></span>
+                  </button>
+                  <div class="activation-select-options" id={`${id}-provider-options`} role="listbox" aria-label={copy.providerLabel} data-provider-options hidden>
+                    {providerOptions.map((provider) => (
+                      <button type="button" role="option" data-provider-id={provider.id} aria-selected={provider.id === scenario.provider.id}>{provider.name}</button>
+                    ))}
+                  </div>
+                  <a
+                    class="activation-icon-link"
+                    href={href("providers/")}
+                    aria-label={`${copy.addProvider}${providerCatalogSwitchesLanguage ? ` · ${providerCatalogLanguageLabel}` : ""}`}
+                    title={`${copy.addProvider}${providerCatalogSwitchesLanguage ? ` · ${providerCatalogLanguageLabel}` : ""}`}
+                  >
+                    +
+                    {providerCatalogSwitchesLanguage && <span class="lang-hint activation-language-hint" aria-hidden="true">中</span>}
+                  </a>
+                </div>
+              </div>
+
+              <div class="activation-provider-summary">
+                <div><strong data-provider-summary-name>{scenario.provider.name}</strong><span data-provider-summary-url>{scenario.provider.baseUrl}</span></div>
+                <a href={scenario.provider.keyManagementUrl} target="_blank" rel="noopener noreferrer">↗ {copy.getKey}</a>
+              </div>
+
+              <div class="activation-notice is-success" data-model-count>{copy.modelsFound}</div>
+
+              <div class="activation-field-stack">
+                <label for={`${id}-probe-model`}>{copy.probeModel}</label>
+                <input id={`${id}-probe-model`} type="text" data-probe-input placeholder={copy.probePlaceholder} autocomplete="off" spellcheck="false" />
+                <small>{copy.probeHint}</small>
+              </div>
+
+              <div class="activation-connection-row">
+                <button class="activation-button is-secondary" type="button" data-test-connection>{copy.testConnection}</button>
+                <div class="activation-inline-status" data-probe-status="idle" aria-live="polite">
+                  <span data-probe-copy="idle">◉ {copy.connectionIdle}</span>
+                  <span data-probe-copy="loading" hidden>◌ {copy.connectionLoading}</span>
+                  <span data-probe-copy="success" hidden>✓ {copy.connectionSuccess}</span>
+                  <span data-probe-copy="error" hidden>! {copy.connectionError}</span>
+                </div>
+              </div>
+              <p class="activation-optional-note">{copy.optionalProbe}</p>
+            </section>
+
+            <section
+              class="activation-panel activation-model-panel"
+              data-panel="model"
+              data-page-title={copy.modelTitle}
+              data-page-description={copy.modelDescription}
+              tabindex="-1"
+              hidden
+            >
+              <div class="activation-notice is-success">{copy.modelNotice}</div>
+              <div class="activation-field-stack">
+                <label for={`${id}-model-id`}>{copy.modelInput}</label>
+                <input id={`${id}-model-id`} type="text" data-model-input value={scenario.provider.defaultModel} autocomplete="off" spellcheck="false" />
+              </div>
+              <div class="activation-model-list" role="radiogroup" aria-label={copy.modelTitle}>
+                {models.map((model) => (
+                  <button type="button" role="radio" aria-checked={model === scenario.provider.defaultModel} data-model-id={model}>
+                    <strong>{model}</strong><small>OpenAI-compatible model</small>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section
+              class="activation-panel activation-review-panel"
+              data-panel="review"
+              data-page-title={copy.reviewTitle}
+              data-page-description={copy.reviewDescription}
+              tabindex="-1"
+              hidden
+            >
+              <div class="activation-review-group">
+                <h3>{copy.willProcess}</h3>
+                <div class="activation-review-row"><span>✓</span><span>{scenario.selectedAgent.name}</span><strong>{copy.installAndConfigure}</strong></div>
+              </div>
+              <div class="activation-review-group">
+                <h3>{copy.providerGroup}</h3>
+                <div class="activation-review-row"><span>✓</span><span>{copy.providerRow}</span><strong data-review-provider>{scenario.provider.name}</strong></div>
+                <div class="activation-review-row"><span>✓</span><span>{copy.modelRow}</span><strong data-review-model>{scenario.provider.defaultModel}</strong></div>
+                <div class="activation-review-row"><span>✓</span><span>Base URL</span><strong data-review-base>{scenario.provider.baseUrl}</strong></div>
+              </div>
+              <div class="activation-review-group">
+                <h3>{copy.localWrites}</h3>
+                <div class="activation-review-row"><span>✓</span><span>{scenario.selectedAgent.name}</span><strong>{scenario.paths.agentConfig}</strong></div>
+                <div class="activation-review-row"><span>✓</span><span>{copy.environmentSummary}</span><strong>{scenario.paths.environmentSummary}</strong></div>
+              </div>
+              <div class="activation-field-stack activation-profile-name" data-new-profile-field>
+                <label for={`${id}-profile-label`}>{copy.profileName}</label>
+                <input id={`${id}-profile-label`} type="text" data-profile-label value={newProfileLabel} autocomplete="off" spellcheck="false" />
+                <small>{copy.profileHint}</small>
+              </div>
+            </section>
+
+            <section
+              class="activation-panel activation-install-panel"
+              data-panel="install"
+              data-page-title-running={copy.installing}
+              data-page-title-success={copy.installComplete}
+              data-page-title-cancelled={copy.installCancelled}
+              data-page-title-failure={copy.installFailure}
+              data-page-description={copy.installDescription}
+              tabindex="-1"
+              hidden
+            >
+              <div class="activation-download-progress" data-install-progress>
+                <div><span>{scenario.selectedAgent.name}</span><strong data-progress-percent>68%</strong></div>
+                <span class="activation-progress-track"><span></span></span>
+              </div>
+              <details class="activation-install-log" open>
+                <summary>{copy.installLog}</summary>
+                <pre>{`${installCommand}\n${versionCommand}`}</pre>
+              </details>
+              <button class="activation-button is-secondary" type="button" data-cancel-task>{copy.cancelTask}</button>
+              <button class="activation-button is-secondary" type="button" data-close-task hidden>{copy.closeTask}</button>
+            </section>
+
+            <section
+              class="activation-panel activation-overview-panel"
+              data-panel="overview"
+              data-page-title={copy.overviewTitle}
+              data-page-description={copy.overviewDescription}
+              tabindex="-1"
+              hidden
+            >
+              <section class="activation-overview-section">
+                <header><div><h3>{copy.cliSection}</h3><span>{copy.countOne}</span></div></header>
+                <article class="activation-managed-agent">
+                  <div class="activation-managed-heading">
+                    <AgentMark id={scenario.selectedAgent.id} name={scenario.selectedAgent.name} size={25} />
+                    <strong>{scenario.selectedAgent.name}</strong>
+                    <div class="activation-managed-tags">
+                      <span data-overview-profile>{newProfileLabel}</span>
+                      <span>● {scenario.provider.name}</span>
+                      <span data-overview-model>{scenario.provider.defaultModel}</span>
+                      <span>{scenario.installedVersion}</span>
+                    </div>
+                  </div>
+                  <div class="activation-managed-actions">
+                    <button type="button" class="activation-detail-button">{copy.details} ＋</button>
+                    <span>
+                      <button type="button" class="activation-button is-secondary">↻ {copy.update}</button>
+                      <button type="button" class="activation-button is-secondary">☷ {copy.configure}</button>
+                      <button type="button" class="activation-button is-primary" data-launch-agent>▷ {copy.launch}</button>
+                    </span>
+                  </div>
+                </article>
+              </section>
+              <section class="activation-overview-section activation-empty-desktop">
+                <header><div><h3>{copy.desktopSection}</h3><span>{copy.countZero}</span></div></header>
+                <div><span aria-hidden="true">▢</span><p>{copy.emptyDesktop}</p></div>
+              </section>
+              <p class="activation-launch-note" data-launch-note hidden>{copy.launchNote}</p>
+            </section>
+          </div>
+        </main>
+
+        <footer class="activation-page-footer">
+          <div class="activation-footer-screen" data-footer-screen="agents">
+            <span data-agent-footer-note data-idle={copy.chooseAgent}>{copy.chooseAgent}</span>
+            <button class="activation-button is-primary" type="button" data-action="continue-agents" disabled>{copy.continue} →</button>
+          </div>
+          <div class="activation-footer-screen" data-footer-screen="profile" hidden>
+            <button class="activation-button is-secondary" type="button" data-action="back">← {copy.back}</button>
+            <span class="activation-footer-spacer"></span>
+            <button class="activation-button is-secondary" type="button" data-action="start-new-profile">＋ {copy.newProfile}</button>
+            <button class="activation-button is-primary" type="button" data-action="reuse-profile">{copy.continue} →</button>
+          </div>
+          <div class="activation-footer-screen" data-footer-screen="provider" hidden>
+            <button class="activation-button is-secondary" type="button" data-action="back">← {copy.back}</button>
+            <span class="activation-route-note"><span aria-hidden="true">↗</span><span data-provider-footer>{scenario.provider.baseUrl} · {selectedProtocol}</span></span>
+            <button class="activation-button is-primary" type="button" data-action="continue-provider">{copy.continueModels} →</button>
+          </div>
+          <div class="activation-footer-screen" data-footer-screen="model" hidden>
+            <button class="activation-button is-secondary" type="button" data-action="back">← {copy.back}</button>
+            <span class="activation-footer-spacer"></span>
+            <button class="activation-button is-secondary" type="button" data-action="refresh-models">↻ {copy.refresh}</button>
+            <button class="activation-button is-primary" type="button" data-action="continue-model">{copy.continue} →</button>
+          </div>
+          <div class="activation-footer-screen" data-footer-screen="review" hidden>
+            <button class="activation-button is-secondary" type="button" data-action="back">← {copy.back}</button>
+            <span class="activation-route-note">♢ {copy.backup}</span>
+            <button class="activation-button is-primary" type="button" data-action="start-install">{copy.startInstall} →</button>
+          </div>
+          <div class="activation-footer-screen" data-footer-screen="install" hidden>
+            <span data-install-footer-note>{copy.keepOpen}</span>
+            <span class="activation-footer-spacer"></span>
+            <button class="activation-button is-primary" type="button" data-action="enter-overview">{copy.enterOverview} →</button>
+          </div>
+          <div class="activation-footer-screen" data-footer-screen="overview" hidden>
+            <span class="activation-footer-spacer"></span>
+            <button class="activation-button is-secondary" type="button">↻ {copy.refreshStatus}</button>
+            <button class="activation-button is-primary" type="button" data-action="replay">＋ {copy.installAgent}</button>
           </div>
         </footer>
       </div>
 
-      <footer class="activation-facts">
-        {copy.facts.map((fact) => <span><i aria-hidden="true"></i>{fact}</span>)}
-      </footer>
+      <aside class="activation-task-popover" data-task-popover hidden aria-live="polite">
+        <article>
+          <span class="activation-task-state" data-task-state>◌</span>
+          <button type="button" data-open-task aria-label={`${copy.taskReturn}: ${scenario.selectedAgent.name}`}>
+            <strong>{locale === "en" ? `Install ${scenario.selectedAgent.name}` : `安装 ${scenario.selectedAgent.name}`}</strong>
+            <small data-task-status>{copy.taskStatusRunning}</small>
+          </button>
+          <button type="button" data-dismiss-task aria-label={copy.dismiss}>×</button>
+        </article>
+      </aside>
     </div>
   </activation-console>
+
+  <div class="activation-demo-footer">
+    <span>{copy.releaseNote}</span>
+    <button type="button" data-reset>{copy.replay}</button>
+  </div>
+  <footer class="activation-facts" aria-label={locale === "en" ? "Demo boundaries" : "演示边界"}>
+    <span><i aria-hidden="true"></i>{copy.noDevice}</span>
+    <span><i aria-hidden="true"></i>{copy.noKey}</span>
+    <span><i aria-hidden="true"></i>{copy.noNetwork}</span>
+  </footer>
 </div>
 
 <script>
   import { catalog } from "../lib/catalog";
   import {
-    CUSTOM_PROVIDER_ID,
     activationReducer,
     initialActivationState,
-    validateDemoBaseUrl,
+    routeForScreen,
+    stepPresentation,
+    type ActivationAction,
     type ActivationState,
-    type ConfigMode,
   } from "../lib/activation";
-  import { demoModelsFor } from "../lib/demo-environment";
-  import { compatibilityFor, recommendedCombination } from "../lib/explorer";
+  import { activationDemo, type DemoLocale } from "../lib/demo-environment";
 
+  const scenario = activationDemo.scenario;
 
-  const messages = {
+  type AutoplayStep = { delay: number; run: (element: ActivationConsoleElement) => void };
+  const AUTOPLAY_SCRIPT: AutoplayStep[] = [
+    { delay: 1000, run: (element) => element.selectAgentTab(scenario.autoplayAgentTab) },
+    { delay: 2300, run: (element) => element.selectAgent(scenario.selectedAgent.id) },
+    { delay: 1700, run: (element) => element.performAction("continue-agents") },
+    { delay: 2200, run: (element) => element.performAction("start-new-profile") },
+    { delay: 2200, run: (element) => element.startProbe() },
+    { delay: 1900, run: (element) => element.performAction("continue-provider") },
+    { delay: 2300, run: (element) => element.selectModel(scenario.provider.defaultModel) },
+    { delay: 1800, run: (element) => element.performAction("continue-model") },
+    { delay: 3000, run: (element) => element.performAction("start-install") },
+    { delay: 3500, run: (element) => element.performAction("enter-overview") },
+  ];
+
+  const runtimeCopy = {
     "zh-CN": {
-      /* The review screen names the provider, and a custom endpoint has no
-         catalog entry to take a name from. */
-      customName: "自定义端点",
-      status: {
-        idle: "待机",
-        scanning: "扫描示例",
-        agent: "选择 Agent",
-        mode: "配置方式",
-        provider: "选择 Provider",
-        model: "选择模型",
-        verifying: "验证示例",
-        review: "确认",
-        ready: "Ready",
-        "guide-only": "官方引导",
-        "preview-gate": "预览门禁",
-        unsupported: "不兼容",
-        error: "演示错误",
-      },
-      log: {
-        scanning: "开始扫描示例环境；未访问本机。",
-        scanned: "示例扫描完成，可以选择 Agent。",
-        agent: (name: string) => `已选择 ${name}。`,
-        guide: (name: string) => `${name} 需要使用官方设置流程。`,
-        modeProvider: "将由 OneAgent 配置模型服务。",
-        modeExisting: "沿用已有账号或配置；Provider 与模型步骤已跳过。",
-        provider: (name: string, verdict: string) => `已选择 ${name}：${verdict}。`,
-        custom: "已选择自定义端点；地址通过与应用一致的校验后才能验证。",
-        customRejected: (reason: string) => `端点未通过校验：${reason}`,
-        customAccepted: (url: string) => `端点校验通过：${url}`,
-        verifying: "开始验证示例连接；未提交任何凭证。",
-        verified: "示例协议验证完成，可以选择模型。",
-        models: (count: number) => `端点返回 ${count} 个示例模型。`,
-        model: (id: string) => `已选择模型 ${id}。`,
-        review: "进入确认步骤，写入范围与备份策略已列出。",
-        ready: "示例环境可进入 Ready。",
-        preview: "连接路径可演示，但公开状态仍要求发布候选验证。",
-        unsupported: "所选 Provider 不支持该 Agent 所需协议。",
-        error: "演示状态无效，请重置后重试。",
-      },
-      compatibility: {
-        verified: "注册表已验证",
-        supported: "实现支持",
-        "preview-gate": "需要发布候选验证",
-        unsupported: "协议不兼容",
-      },
-      result: {
-        ready: ["示例环境已 Ready", "所选组合可按当前实现路径完成配置与协议验证。真实激活将在本地 OneAgent 中完成。"],
-        existing: ["保留现有账号", "OneAgent 只把这个 Agent 标记为已就绪，不改动它现有的登录状态，也不写入新的凭证。"],
-        guide: ["转入官方设置", "这个 Agent 不由 OneAgent 写入私有配置。请按官方方式安装或登录，再回到 OneAgent 查看环境。"],
-        preview: ["仍需通过发布门禁", "示例连接可以继续，但该协议组合仍标记为需要发布候选验证，因此不会被宣称为 Ready。"],
-        unsupported: ["协议组合不兼容", "请返回并选择支持该 Agent 协议的 Provider。OneAgent 不会静默降级到其他协议。"],
-        error: ["演示无法继续", "状态不完整或目录发生变化。请重置演示后重新选择。"],
-      },
-      protocol: { openai: "Chat Completions", anthropic: "Anthropic Messages", responses: "OpenAI Responses" },
-      url: {
-        required: "请填写 Base URL。",
-        scheme: "需要以 http:// 或 https:// 开头。",
-        credentials: "请从地址中去掉用户名或密码。",
-        "control-characters": "请去掉地址中的控制字符。",
-        ok: "端点可用",
-      },
-      skipped: "已跳过",
-      /* The app puts step context in the footer bar next to the action. */
-      footer: {
-        idle: "演示不会访问这台设备",
-        scanning: "正在读取示例环境",
-        agent: "从上面选一个 Agent",
-        mode: "选择配置方式",
-        provider: "选择 Provider 或填入你自己的端点",
-        model: "选择一个模型后确认",
-        verifying: "正在验证，未提交凭证",
-        review: "核对写入范围后开始安装",
-        ready: "示例流程已完成",
-        "guide-only": "这个 Agent 走官方流程",
-        "preview-gate": "组合可演示，但未通过发布门禁",
-        unsupported: "请换一个支持该协议的 Provider",
-        error: "请重置演示后重试",
-      },
+      taskRunning: "进行中",
+      taskSuccess: "已完成 · 安装完成",
+      taskCancelled: "已取消",
+      taskFailure: "失败",
+      installing: "正在安装",
+      success: "安装完成",
+      cancelled: "已取消",
+      failure: "需要处理部分问题",
+      installDescription: "每个 Agent 的结果彼此独立，失败项可以单独处理",
+      keepOpen: "请保持此窗口打开",
+      finished: "安装完成",
     },
     en: {
-      customName: "Custom endpoint",
-      status: {
-        idle: "Idle",
-        scanning: "Scanning demo",
-        agent: "Choose agent",
-        mode: "Setup",
-        provider: "Choose provider",
-        model: "Choose model",
-        verifying: "Verifying demo",
-        review: "Review",
-        ready: "Ready",
-        "guide-only": "Official guide",
-        "preview-gate": "Preview gate",
-        unsupported: "Unsupported",
-        error: "Demo error",
-      },
-      log: {
-        scanning: "Started scanning the example environment; no device access requested.",
-        scanned: "Example scan complete. Choose an agent.",
-        agent: (name: string) => `Selected ${name}.`,
-        guide: (name: string) => `${name} uses its official setup flow.`,
-        modeProvider: "OneAgent will configure a model service.",
-        modeExisting: "Keeping the existing account or config; provider and model steps skipped.",
-        provider: (name: string, verdict: string) => `Selected ${name}: ${verdict}.`,
-        custom: "Selected a custom endpoint. The URL is validated the same way the app validates it.",
-        customRejected: (reason: string) => `Endpoint rejected: ${reason}`,
-        customAccepted: (url: string) => `Endpoint accepted: ${url}`,
-        verifying: "Started sample verification; no credential was submitted.",
-        verified: "Sample protocol verification completed. Choose a model.",
-        models: (count: number) => `The endpoint returned ${count} example models.`,
-        model: (id: string) => `Selected model ${id}.`,
-        review: "Reached the review step; the write scope and backup policy are listed.",
-        ready: "The example environment may reach Ready.",
-        preview: "The path can be demonstrated, but the public status still requires release-candidate verification.",
-        unsupported: "The selected provider does not support the protocol this agent requires.",
-        error: "The demo state is invalid. Reset and try again.",
-      },
-      compatibility: {
-        verified: "Registry verified",
-        supported: "Implementation supported",
-        "preview-gate": "Release candidate required",
-        unsupported: "Protocol incompatible",
-      },
-      result: {
-        ready: ["Example environment is Ready", "This combination can follow the current configuration and protocol-verification path. Real activation happens in the local OneAgent app."],
-        existing: ["Existing account kept", "OneAgent marks this agent ready without touching its current sign-in or writing a new credential."],
-        guide: ["Continue with official setup", "OneAgent does not write private configuration for this agent. Install or sign in through the official flow, then return to review the environment."],
-        preview: ["A release gate remains", "The sample path can continue, but this protocol combination still requires release-candidate verification and is not presented as Ready."],
-        unsupported: ["Protocol combination unsupported", "Go back and choose a provider that supports the agent protocol. OneAgent never silently falls back to another protocol."],
-        error: ["The demo cannot continue", "The selection is incomplete or the catalog changed. Reset the demo and choose again."],
-      },
-      protocol: { openai: "Chat Completions", anthropic: "Anthropic Messages", responses: "OpenAI Responses" },
-      url: {
-        required: "Enter a base URL.",
-        scheme: "Must start with http:// or https://",
-        credentials: "Remove the username or password from the URL.",
-        "control-characters": "Remove control characters from the URL.",
-        ok: "Endpoint accepted",
-      },
-      skipped: "Skipped",
-      /* The app puts step context in the footer bar next to the action. */
-      footer: {
-        idle: "The demo never touches this device",
-        scanning: "Reading the example environment",
-        agent: "Choose an agent above",
-        mode: "Choose how to configure it",
-        provider: "Choose a provider, or enter your own endpoint",
-        model: "Choose a model, then confirm",
-        verifying: "Verifying — no credential submitted",
-        review: "Check the write scope, then start installing",
-        ready: "The example flow is complete",
-        "guide-only": "This agent uses its official flow",
-        "preview-gate": "Demonstrable, but the release gate remains",
-        unsupported: "Choose a provider that supports this protocol",
-        error: "Reset the demo and try again",
-      },
+      taskRunning: "In progress",
+      taskSuccess: "Complete · Installation complete",
+      taskCancelled: "Cancelled",
+      taskFailure: "Failed",
+      installing: "Installing",
+      success: "Installation complete",
+      cancelled: "Cancelled",
+      failure: "Some items need attention",
+      installDescription: "Each Agent has an independent result. Failed items can be handled separately",
+      keepOpen: "Keep this window open",
+      finished: "Installation complete",
     },
   } as const;
 
-  /* The unattended walkthrough.
-   *
-   * Every delay is the time the *previous* panel stays on screen, so each one has
-   * to cover reading what appeared plus noticing what changed. The earlier timings
-   * were tuned by someone who already knew the flow: 900ms is enough to see a panel
-   * swap but not enough to read a provider name, a protocol and a compatibility
-   * verdict, so the demo advanced past its own evidence.
-   *
-   * Roughly doubled, and no longer uniform — a step's beat now follows how much it
-   * puts on screen. The two probe steps still reuse the manual path's timings so an
-   * autoplayed run and a clicked one look the same. */
-  type AutoplayStep = { delay: number; run: (element: ActivationConsoleElement) => void };
-  const AUTOPLAY_SCRIPT: AutoplayStep[] = [
-    { delay: 900, run: (element) => element.start() },
-    /* The agent grid is the first real screen and the densest: seven cards to take
-       in before one of them is chosen for you. */
-    { delay: 2600, run: (element) => element.selectAgent("claude-code") },
-    { delay: 1800, run: (element) => element.selectMode("provider") },
-    { delay: 1900, run: (element) => element.selectProvider("ppio") },
-    { delay: 1800, run: (element) => element.verify() },
-    { delay: 2200, run: (element) => element.selectModel(element.models[0] ?? "", false) },
-    /* The review screen is the one the visitor is actually meant to read — it lists
-       what will be written and where — so it gets the longest pause of the run. */
-    { delay: 2600, run: (element) => element.review() },
-    { delay: 3000, run: (element) => element.confirm() },
-  ];
-
   class ActivationConsoleElement extends HTMLElement {
-    state: ActivationState = initialActivationState();
-    timer: number | null = null;
-    abort = new AbortController();
-    /* Autoplay owns the state machine only until the visitor touches it. Both
-       flags are one-way: `autoplaying` suppresses the focus and scroll side
-       effects that would hijack the page, and `autoplayDone` makes takeover and
-       completion permanent so nothing re-arms behind the visitor's back. */
+    state: ActivationState = initialActivationState(scenario);
     autoplaying = false;
     autoplayDone = false;
     autoplayTimer: number | null = null;
+    operationTimer: number | null = null;
     observer: IntersectionObserver | null = null;
+    abort = new AbortController();
 
     connectedCallback() {
       if (this.dataset.initialized === "true") return;
       this.dataset.initialized = "true";
+      this.state = this.localizedInitialState();
       const signal = this.abort.signal;
-      this.querySelectorAll<HTMLButtonElement>("[data-agent-id]").forEach((button) => {
-        button.addEventListener("click", () => this.selectAgent(button.dataset.agentId || ""), { signal });
+
+      this.querySelectorAll<HTMLButtonElement>("[data-agent-tab]").forEach((button) => {
+        button.addEventListener("click", () => this.selectAgentTab(button.dataset.agentTab === "cli" ? "cli" : "desktop"), { signal });
       });
-      this.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach((button) => {
-        button.addEventListener("click", () => this.selectMode(button.dataset.mode as ConfigMode), { signal });
+      this.querySelectorAll<HTMLInputElement>("[data-agent-id] input[type=radio]").forEach((input) => {
+        input.addEventListener("change", () => this.selectAgent(input.value), { signal });
       });
+      this.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
+        button.addEventListener("click", () => this.performAction(button.dataset.action || ""), { signal });
+      });
+      this.querySelector<HTMLButtonElement>("[data-provider-trigger]")?.addEventListener("click", () => this.toggleProviderOptions(), { signal });
       this.querySelectorAll<HTMLButtonElement>("[data-provider-id]").forEach((button) => {
         button.addEventListener("click", () => this.selectProvider(button.dataset.providerId || ""), { signal });
       });
-      this.querySelector<HTMLInputElement>("[data-custom-input]")?.addEventListener("input", (event) => {
-        this.setCustomBaseUrl((event.currentTarget as HTMLInputElement).value);
+      this.querySelector<HTMLInputElement>("[data-probe-input]")?.addEventListener("input", (event) => {
+        this.dispatch({ type: "set-probe-model", value: (event.currentTarget as HTMLInputElement).value });
       }, { signal });
+      this.querySelector<HTMLButtonElement>("[data-test-connection]")?.addEventListener("click", () => this.startProbe(), { signal });
       this.querySelector<HTMLInputElement>("[data-model-input]")?.addEventListener("input", (event) => {
-        this.selectModel((event.currentTarget as HTMLInputElement).value.trim(), false);
+        this.selectModel((event.currentTarget as HTMLInputElement).value, false);
       }, { signal });
-      this.querySelector<HTMLButtonElement>("[data-confirm]")?.addEventListener("click", () => this.review(), { signal });
-      this.querySelector<HTMLButtonElement>("[data-start-install]")?.addEventListener("click", () => this.confirm(), { signal });
-      this.querySelector<HTMLButtonElement>("[data-verify]")?.addEventListener("click", () => this.verify(), { signal });
-      this.querySelector<HTMLButtonElement>("[data-reset]")?.addEventListener("click", () => this.reset(), { signal });
+      this.querySelectorAll<HTMLButtonElement>("[data-model-id]").forEach((button) => {
+        button.addEventListener("click", () => this.selectModel(button.dataset.modelId || ""), { signal });
+      });
+      this.querySelector<HTMLInputElement>("[data-profile-label]")?.addEventListener("input", (event) => {
+        this.dispatch({ type: "set-profile-label", value: (event.currentTarget as HTMLInputElement).value });
+      }, { signal });
+      this.querySelector<HTMLButtonElement>("[data-cancel-task]")?.addEventListener("click", () => this.cancelInstall(), { signal });
+      this.querySelector<HTMLButtonElement>("[data-close-task]")?.addEventListener("click", () => this.performAction("enter-overview"), { signal });
+      this.querySelector<HTMLButtonElement>("[data-task-trigger]")?.addEventListener("click", () => this.dispatch({ type: "toggle-task-center" }), { signal });
+      this.querySelector<HTMLButtonElement>("[data-dismiss-task]")?.addEventListener("click", () => this.dispatch({ type: "dismiss-task" }), { signal });
+      this.querySelector<HTMLButtonElement>("[data-open-task]")?.addEventListener("click", () => {
+        if (this.state.screen !== "install") this.state = { ...this.state, screen: "install", taskCenterOpen: true };
+        this.render(true);
+      }, { signal });
+      this.querySelector<HTMLButtonElement>("[data-launch-agent]")?.addEventListener("click", () => {
+        const note = this.querySelector<HTMLElement>("[data-launch-note]");
+        if (note) note.hidden = false;
+      }, { signal });
+      this.querySelector<HTMLButtonElement>("[data-reset]")?.addEventListener("click", () => this.replay(), { signal });
       document.querySelectorAll<HTMLButtonElement>(`[data-activation-trigger="${this.id}"]`).forEach((button) => {
-        // The trigger sits in the hero, outside this element, so it misses the
-        // takeover listeners below. Pressing it is the clearest takeover there
-        // is: after autoplay has run it is the replay entry.
         button.addEventListener("click", () => {
           this.cancelAutoplay();
-          this.start();
+          this.replay();
         }, { signal });
       });
-      /* Any of the three means the visitor is driving. They are captured on the
-         way down so takeover is recorded before the click handler above runs its
-         own step, and they cover the keyboard and screen-reader paths that never
-         produce a pointer event. */
+
       for (const type of ["pointerdown", "keydown", "focusin"] as const) {
         this.addEventListener(type, () => this.cancelAutoplay(), { signal, capture: true });
       }
-      this.render();
+
+      this.render(false);
       this.armAutoplay();
     }
 
     disconnectedCallback() {
-      if (this.timer !== null) window.clearTimeout(this.timer);
-      if (this.autoplayTimer !== null) window.clearTimeout(this.autoplayTimer);
+      this.clearTimers();
       this.observer?.disconnect();
       this.abort.abort();
     }
 
-    /* Autoplay waits for the console to be half on screen: running it on load
-       would finish before a visitor scrolling down ever saw it. Reduced motion
-       opts out entirely — advancing the interface on its own is motion, and the
-       manual trigger still works.  */
+    get locale(): DemoLocale {
+      return this.dataset.locale === "en" ? "en" : "zh-CN";
+    }
+
+    get reducedMotion(): boolean {
+      return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    }
+
+    localizedInitialState(): ActivationState {
+      return {
+        ...initialActivationState(scenario),
+        profileLabel: scenario.newProfileLabels[this.locale],
+      };
+    }
+
+    dispatch(action: ActivationAction, focus = true) {
+      const previous = this.state.screen;
+      this.state = activationReducer(this.state, action, scenario);
+      if (action.type === "reset" || action.type === "start-new-profile") {
+        this.state = { ...this.state, profileLabel: scenario.newProfileLabels[this.locale] };
+      }
+      if (action.type === "reuse-profile") {
+        this.state = { ...this.state, profileLabel: scenario.existingProfile.labels[this.locale] };
+      }
+      this.render(focus && previous !== this.state.screen && !this.autoplaying);
+    }
+
+    selectAgentTab(tab: "cli" | "desktop") {
+      this.dispatch({ type: "select-agent-tab", tab });
+    }
+
+    selectAgent(agentId: string) {
+      this.dispatch({ type: "select-agent", agentId });
+    }
+
+    selectProvider(providerId: string) {
+      const provider = catalog.providers.find((candidate) => candidate.id === providerId);
+      this.dispatch({ type: "select-provider", providerId, defaultModel: provider?.defaultModel ?? "" });
+      this.closeProviderOptions();
+    }
+
+    selectModel(model: string, focus = true) {
+      this.dispatch({ type: "set-model", value: model.trim() }, false);
+      this.render(focus && !this.autoplaying);
+    }
+
+    performAction(action: string) {
+      switch (action) {
+        case "continue-agents":
+        case "reuse-profile":
+        case "start-new-profile":
+        case "continue-provider":
+        case "continue-model":
+        case "back":
+          this.dispatch({ type: action });
+          break;
+        case "start-install":
+          this.startInstall();
+          break;
+        case "enter-overview":
+          this.enterOverview();
+          break;
+        case "refresh-models":
+          this.flashModelNotice();
+          break;
+        case "replay":
+          this.replay();
+          break;
+      }
+    }
+
+    startProbe() {
+      if (this.state.screen !== "provider" || this.state.probeState === "loading") return;
+      if (this.operationTimer !== null) window.clearTimeout(this.operationTimer);
+      this.dispatch({ type: "start-probe" }, false);
+      this.operationTimer = window.setTimeout(() => {
+        this.operationTimer = null;
+        this.dispatch({ type: "finish-probe", ok: true }, false);
+      }, 850);
+    }
+
+    startInstall() {
+      if (this.state.screen !== "review") return;
+      if (this.operationTimer !== null) window.clearTimeout(this.operationTimer);
+      this.dispatch({ type: "start-install" });
+      this.operationTimer = window.setTimeout(() => {
+        this.operationTimer = null;
+        this.dispatch({ type: "finish-install" }, false);
+      }, 2100);
+    }
+
+    cancelInstall() {
+      if (this.operationTimer !== null) {
+        window.clearTimeout(this.operationTimer);
+        this.operationTimer = null;
+      }
+      this.dispatch({ type: "cancel-install" });
+    }
+
+    enterOverview() {
+      if (this.state.screen !== "install") return;
+      if (this.state.installState === "running") {
+        if (this.operationTimer !== null) window.clearTimeout(this.operationTimer);
+        this.operationTimer = null;
+        this.dispatch({ type: "finish-install" }, false);
+      }
+      this.dispatch({ type: "enter-overview" });
+      this.finishAutoplay();
+    }
+
+    replay() {
+      this.clearOperationTimer();
+      this.state = this.localizedInitialState();
+      this.render(!this.reducedMotion);
+      if (!this.reducedMotion) {
+        const windowElement = this.querySelector<HTMLElement>("[data-console-window]");
+        windowElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    flashModelNotice() {
+      const notice = this.querySelector<HTMLElement>('[data-panel="model"] .activation-notice');
+      if (!notice) return;
+      notice.dataset.flash = "true";
+      window.setTimeout(() => delete notice.dataset.flash, 500);
+    }
+
+    toggleProviderOptions() {
+      const trigger = this.querySelector<HTMLButtonElement>("[data-provider-trigger]");
+      const options = this.querySelector<HTMLElement>("[data-provider-options]");
+      if (!trigger || !options) return;
+      const open = trigger.getAttribute("aria-expanded") === "true";
+      trigger.setAttribute("aria-expanded", String(!open));
+      options.hidden = open;
+    }
+
+    closeProviderOptions() {
+      const trigger = this.querySelector<HTMLButtonElement>("[data-provider-trigger]");
+      const options = this.querySelector<HTMLElement>("[data-provider-options]");
+      trigger?.setAttribute("aria-expanded", "false");
+      if (options) options.hidden = true;
+    }
+
     armAutoplay() {
-      if (this.reducedMotion || this.dataset.autoplay === "off") return;
-      if (typeof IntersectionObserver !== "function") return;
+      if (this.reducedMotion || this.dataset.autoplay === "off" || typeof IntersectionObserver !== "function") return;
       this.observer = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          this.observer?.disconnect();
-          this.observer = null;
-          this.startAutoplay();
-        }
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        this.observer?.disconnect();
+        this.observer = null;
+        this.startAutoplay();
       }, { threshold: 0.5 });
       this.observer.observe(this);
     }
 
     startAutoplay() {
-      if (this.autoplayDone || this.state.phase !== "idle") return;
+      if (this.autoplayDone || this.state.screen !== "agents") return;
       this.autoplaying = true;
       this.dataset.autoplaying = "true";
       this.queueAutoplay(0);
@@ -722,25 +905,12 @@ const copy = locale === "en"
         this.autoplayTimer = null;
         if (!this.autoplaying) return;
         step.run(this);
-        // A step that lands somewhere the script did not plan for — a catalog
-        // change turning the combination into a gate — stops here rather than
-        // dispatching actions the reducer would reject.
-        if (!this.autoplaying) return;
         this.queueAutoplay(index + 1);
       }, step.delay);
     }
 
-    /** Autoplay reached the end on its own: stop, and never re-arm. */
-    finishAutoplay() {
-      this.autoplaying = false;
-      this.autoplayDone = true;
-      delete this.dataset.autoplaying;
-    }
-
-    /** The visitor took over. Whatever step is showing is where it stays. */
     cancelAutoplay() {
-      this.observer?.disconnect();
-      this.observer = null;
+      if (!this.autoplaying && this.autoplayDone) return;
       if (this.autoplayTimer !== null) window.clearTimeout(this.autoplayTimer);
       this.autoplayTimer = null;
       this.autoplaying = false;
@@ -748,408 +918,211 @@ const copy = locale === "en"
       delete this.dataset.autoplaying;
     }
 
-    get locale() {
-      return this.dataset.locale === "en" ? "en" : "zh-CN";
+    finishAutoplay() {
+      if (this.autoplayTimer !== null) window.clearTimeout(this.autoplayTimer);
+      this.autoplayTimer = null;
+      this.autoplaying = false;
+      this.autoplayDone = true;
+      delete this.dataset.autoplaying;
     }
 
-    get copy() {
-      return messages[this.locale];
+    clearOperationTimer() {
+      if (this.operationTimer !== null) window.clearTimeout(this.operationTimer);
+      this.operationTimer = null;
     }
 
-    get reducedMotion() {
-      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    clearTimers() {
+      if (this.autoplayTimer !== null) window.clearTimeout(this.autoplayTimer);
+      this.autoplayTimer = null;
+      this.clearOperationTimer();
     }
 
-    dispatch(action: Parameters<typeof activationReducer>[1]) {
-      this.state = activationReducer(this.state, action, catalog);
-      this.render();
-    }
+    render(focusPanel = false) {
+      this.dataset.screen = this.state.screen;
+      this.dataset.phase = this.state.screen;
+      this.dataset.route = routeForScreen(this.state.screen, this.state.agentId ?? scenario.selectedAgent.id);
+      this.dataset.installState = this.state.installState;
+      this.dataset.probeState = this.state.probeState;
 
-    start() {
-      if (this.state.phase !== "idle") this.reset(false);
-      this.dispatch({ type: "start" });
-      this.replaceLog(this.copy.log.scanning);
-      // Autoplay only begins once the console is already half on screen, so
-      // scrolling it to centre would move the page out from under a reader who
-      // asked for nothing.
-      if (!this.autoplaying) this.scrollIntoView({ behavior: this.reducedMotion ? "auto" : "smooth", block: "center" });
-      this.focusPanel("scanning");
-      /* Long enough for the scanning panel to register as a step rather than a
-         flash. Still zero under reduced motion, where the spinner is replaced by a
-         static mark and a pause would just be dead time. */
-      this.timer = window.setTimeout(() => {
-        this.dispatch({ type: "scan-complete" });
-        this.appendLog(this.copy.log.scanned);
-        this.focusPanel("agent");
-      }, this.reducedMotion ? 0 : 1100);
-    }
-
-    reset(focus = true) {
-      if (this.timer !== null) window.clearTimeout(this.timer);
-      this.timer = null;
-      this.dispatch({ type: "reset" });
-      this.replaceLog(this.locale === "en" ? "Demo idle. No device access requested." : "演示待机，未请求设备访问。");
-      if (focus) this.focusPanel("idle");
-    }
-
-    selectAgent(agentId: string) {
-      const agent = catalog.agents.find((candidate) => candidate.id === agentId);
-      if (!agent) return this.fail();
-      this.dispatch({ type: "select-agent", agentId });
-      this.appendLog(this.copy.log.agent(agent.name));
-      if (this.state.phase === "guide-only") {
-        this.appendLog(this.copy.log.guide(agent.name));
-        this.focusPanel("result");
-      } else {
-        this.updateProviders(agentId);
-        this.focusPanel("mode");
-      }
-    }
-
-    selectMode(mode: ConfigMode) {
-      if (mode !== "provider" && mode !== "existing-account") return this.fail();
-      this.dispatch({ type: "select-mode", mode });
-      if (this.state.phase === "ready") {
-        this.appendLog(this.copy.log.modeExisting);
-        this.focusPanel("result");
-        return;
-      }
-      this.appendLog(this.copy.log.modeProvider);
-      this.focusPanel("provider");
-    }
-
-    selectProvider(providerId: string) {
-      if (providerId === CUSTOM_PROVIDER_ID) {
-        this.dispatch({ type: "select-provider", providerId });
-        this.appendLog(this.copy.log.custom);
-        this.querySelector<HTMLInputElement>("[data-custom-input]")?.focus();
-        return;
-      }
-      const provider = catalog.providers.find((candidate) => candidate.id === providerId);
-      if (!provider) return this.fail();
-      this.dispatch({ type: "select-provider", providerId });
-      const verdict = this.state.compatibility ? this.copy.compatibility[this.state.compatibility] : this.copy.compatibility.unsupported;
-      this.appendLog(this.copy.log.provider(provider.name, verdict));
-      if (this.state.phase === "unsupported") {
-        this.appendLog(this.copy.log.unsupported);
-        this.focusPanel("result");
-      }
-    }
-
-    setCustomBaseUrl(value: string) {
-      this.dispatch({ type: "set-custom-base-url", value });
-    }
-
-    selectModel(model: string, fromList = true) {
-      if (!model) return;
-      this.dispatch({ type: "select-model", model });
-      if (this.state.model === model) this.appendLog(this.copy.log.model(model));
-      if (fromList) this.querySelector<HTMLButtonElement>("[data-confirm]")?.focus();
-    }
-
-    /* The footer button now opens the review screen rather than finishing the
-       run, matching the product: choosing a model is not the last decision. */
-    review() {
-      this.dispatch({ type: "review" });
-      if (this.state.phase !== "review") return;
+      const activePanel = this.querySelector<HTMLElement>(`[data-panel="${this.state.screen}"]`);
+      this.querySelectorAll<HTMLElement>("[data-panel]").forEach((panel) => {
+        panel.hidden = panel !== activePanel;
+      });
+      this.renderHeader(activePanel);
+      this.renderStepper();
+      this.renderFooter();
+      this.renderAgents();
+      this.renderProvider();
+      this.renderProbe();
+      this.renderModel();
       this.renderReview();
-      this.appendLog(this.copy.log.review);
-      this.focusPanel("review");
+      this.renderInstall();
+      this.renderOverview();
+      this.renderTaskCenter();
+
+      if (focusPanel) activePanel?.focus({ preventScroll: true });
+    }
+
+    renderHeader(panel: HTMLElement | null) {
+      const title = this.querySelector<HTMLElement>("[data-page-title]");
+      const description = this.querySelector<HTMLElement>("[data-page-description]");
+      if (!title || !description || !panel) return;
+      if (this.state.screen === "install") {
+        const copy = runtimeCopy[this.locale];
+        const statusTitle = this.state.installState === "success"
+          ? copy.success
+          : this.state.installState === "cancelled"
+            ? copy.cancelled
+            : this.state.installState === "failure"
+              ? copy.failure
+              : copy.installing;
+        title.textContent = `${statusTitle} · ${scenario.selectedAgent.name}`;
+        description.textContent = copy.installDescription;
+        return;
+      }
+      title.textContent = panel.dataset.pageTitle || "";
+      description.textContent = panel.dataset.pageDescription || "";
+    }
+
+    renderStepper() {
+      const stepper = this.querySelector<HTMLElement>("[data-stepper]");
+      if (!stepper) return;
+      stepper.hidden = this.state.screen === "install" || this.state.screen === "overview";
+      this.querySelectorAll<HTMLElement>("[data-step-id]").forEach((item) => {
+        const id = item.dataset.stepId as Parameters<typeof stepPresentation>[1];
+        const presentation = stepPresentation(this.state, id);
+        item.dataset.presentation = presentation;
+        if (presentation === "current") item.setAttribute("aria-current", "step");
+        else item.removeAttribute("aria-current");
+      });
+    }
+
+    renderFooter() {
+      this.querySelectorAll<HTMLElement>("[data-footer-screen]").forEach((footer) => {
+        footer.hidden = footer.dataset.footerScreen !== this.state.screen;
+      });
+      const continueAgent = this.querySelector<HTMLButtonElement>('[data-action="continue-agents"]');
+      if (continueAgent) continueAgent.disabled = !this.state.agentId;
+      const continueProvider = this.querySelector<HTMLButtonElement>('[data-action="continue-provider"]');
+      if (continueProvider) continueProvider.disabled = !this.state.providerId;
+      const continueModel = this.querySelector<HTMLButtonElement>('[data-action="continue-model"]');
+      if (continueModel) continueModel.disabled = !this.state.model.trim();
+      const startInstall = this.querySelector<HTMLButtonElement>('[data-action="start-install"]');
+      if (startInstall) startInstall.disabled = this.state.profileMode === "new" && !this.state.profileLabel.trim();
+      const installNote = this.querySelector<HTMLElement>("[data-install-footer-note]");
+      if (installNote) installNote.textContent = this.state.installState === "running" ? runtimeCopy[this.locale].keepOpen : runtimeCopy[this.locale].finished;
+    }
+
+    renderAgents() {
+      this.querySelectorAll<HTMLButtonElement>("[data-agent-tab]").forEach((button) => {
+        const active = button.dataset.agentTab === this.state.agentTab;
+        button.setAttribute("aria-selected", String(active));
+        button.classList.toggle("is-active", active);
+      });
+      this.querySelectorAll<HTMLElement>("[data-agent-list]").forEach((list) => {
+        list.hidden = list.dataset.agentList !== this.state.agentTab;
+      });
+      this.querySelectorAll<HTMLElement>("[data-agent-id]").forEach((row) => {
+        const selected = row.dataset.agentId === this.state.agentId;
+        row.classList.toggle("is-selected", selected);
+        const input = row.querySelector<HTMLInputElement>('input[type="radio"]');
+        if (input) input.checked = selected;
+      });
+      const note = this.querySelector<HTMLElement>("[data-agent-footer-note]");
+      if (note) {
+        const agent = catalog.agents.find((candidate) => candidate.id === this.state.agentId);
+        note.textContent = agent?.name || note.dataset.idle || (this.locale === "en" ? "Select one agent" : "选择一个 Agent");
+      }
+    }
+
+    renderProvider() {
+      const provider = catalog.providers.find((candidate) => candidate.id === this.state.providerId) ?? scenario.provider;
+      this.querySelector<HTMLElement>("[data-provider-name]")!.textContent = provider.name;
+      this.querySelector<HTMLElement>("[data-provider-summary-name]")!.textContent = provider.name;
+      this.querySelector<HTMLElement>("[data-provider-summary-url]")!.textContent = provider.baseUrl;
+      const footer = this.querySelector<HTMLElement>("[data-provider-footer]");
+      if (footer) footer.textContent = `${provider.baseUrl} · ${scenario.selectedAgent.protocol === "anthropic" ? "Anthropic Messages" : "OpenAI-compatible"}`;
+      this.querySelectorAll<HTMLButtonElement>("[data-provider-id]").forEach((option) => {
+        option.setAttribute("aria-selected", String(option.dataset.providerId === provider.id));
+      });
+    }
+
+    renderProbe() {
+      const status = this.querySelector<HTMLElement>("[data-probe-status]");
+      if (status) status.dataset.probeStatus = this.state.probeState;
+      this.querySelectorAll<HTMLElement>("[data-probe-copy]").forEach((copy) => {
+        copy.hidden = copy.dataset.probeCopy !== this.state.probeState;
+      });
+      const input = this.querySelector<HTMLInputElement>("[data-probe-input]");
+      if (input && input.value !== this.state.probeModel) input.value = this.state.probeModel;
+      const button = this.querySelector<HTMLButtonElement>("[data-test-connection]");
+      if (button) button.disabled = this.state.probeState === "loading";
+    }
+
+    renderModel() {
+      const input = this.querySelector<HTMLInputElement>("[data-model-input]");
+      if (input && input.value !== this.state.model) input.value = this.state.model;
+      this.querySelectorAll<HTMLButtonElement>("[data-model-id]").forEach((button) => {
+        const selected = button.dataset.modelId === this.state.model;
+        button.setAttribute("aria-checked", String(selected));
+        button.classList.toggle("is-selected", selected);
+      });
     }
 
     renderReview() {
-      const agent = catalog.agents.find((candidate) => candidate.id === this.state.agentId) ?? null;
-      const provider = catalog.providers.find((candidate) => candidate.id === this.state.providerId) ?? null;
-      const set = (selector: string, value: string) => {
-        const node = this.querySelector<HTMLElement>(selector);
-        if (node) node.textContent = value;
-      };
-      set("[data-review-agent]", agent?.name ?? "—");
-      set(
-        "[data-review-provider]",
-        this.state.providerId === CUSTOM_PROVIDER_ID ? this.copy.customName : provider?.name ?? "—",
-      );
-      set("[data-review-model]", this.state.model ?? "—");
-      /* The real path the product writes, read from the catalog rather than
-         invented — a demo naming the wrong file would be worse than naming none. */
-      set("[data-review-path]", agent?.configPath ? `~/${agent.configPath}` : "—");
+      const provider = catalog.providers.find((candidate) => candidate.id === this.state.providerId) ?? scenario.provider;
+      this.querySelector<HTMLElement>("[data-review-provider]")!.textContent = provider.name;
+      this.querySelector<HTMLElement>("[data-review-model]")!.textContent = this.state.model || provider.defaultModel;
+      this.querySelector<HTMLElement>("[data-review-base]")!.textContent = provider.baseUrl;
+      const newProfileField = this.querySelector<HTMLElement>("[data-new-profile-field]");
+      if (newProfileField) newProfileField.hidden = this.state.profileMode === "reuse";
+      const label = this.querySelector<HTMLInputElement>("[data-profile-label]");
+      if (label && label.value !== this.state.profileLabel) label.value = this.state.profileLabel;
     }
 
-    confirm() {
-      this.dispatch({ type: "confirm" });
-      if (this.state.phase !== "ready") return;
-      this.appendLog(this.copy.log.ready);
-      this.focusPanel("result");
+    renderInstall() {
+      const panel = this.querySelector<HTMLElement>('[data-panel="install"]');
+      if (panel) panel.dataset.state = this.state.installState;
+      const progress = this.querySelector<HTMLElement>("[data-install-progress]");
+      if (progress) progress.hidden = this.state.installState !== "running";
+      const cancel = this.querySelector<HTMLButtonElement>("[data-cancel-task]");
+      if (cancel) cancel.hidden = this.state.installState !== "running";
+      const close = this.querySelector<HTMLButtonElement>("[data-close-task]");
+      if (close) close.hidden = this.state.installState === "running";
     }
 
-    verify() {
-      const before = this.state.phase;
-      this.dispatch({ type: "verify" });
-      if (this.state.phase === "error") return this.fail(false);
-      // A rejected endpoint leaves the phase untouched rather than erroring, the
-      // same non-event as the product's disabled probe button.
-      if (this.state.phase === before) return;
-      this.appendLog(this.copy.log.verifying);
-      this.focusPanel("verifying");
-      this.timer = window.setTimeout(() => {
-        this.dispatch({ type: "verify-complete" });
-        if (this.state.phase === "model") {
-          this.appendLog(this.copy.log.verified);
-          this.renderModels();
-          this.appendLog(this.copy.log.models(this.models.length));
-          this.focusPanel("model");
-          return;
-        }
-        if (this.state.phase === "preview-gate") this.appendLog(this.copy.log.preview);
-        this.focusPanel("result");
-      }, this.reducedMotion ? 0 : 1200);
+    renderOverview() {
+      const profile = this.querySelector<HTMLElement>("[data-overview-profile]");
+      const model = this.querySelector<HTMLElement>("[data-overview-model]");
+      if (profile) profile.textContent = this.state.profileLabel || scenario.newProfileLabels[this.locale];
+      if (model) model.textContent = this.state.model || scenario.provider.defaultModel;
+      this.querySelectorAll<HTMLElement>("[data-nav-id]").forEach((item) => {
+        item.classList.toggle("is-active", this.state.screen === "overview" && item.dataset.navId === "overview");
+      });
     }
 
-    get models() {
-      return this.state.providerId === CUSTOM_PROVIDER_ID ? [] : demoModelsFor(this.state.providerId);
-    }
-
-    footerNoteFor(phase: ActivationState["phase"]) {
-      return this.copy.footer[phase];
-    }
-
-    customHost() {
-      const check = validateDemoBaseUrl(this.state.customBaseUrl);
-      if (!check.ok) return "";
-      try {
-        return new URL(check.value).host;
-      } catch {
-        return "";
+    renderTaskCenter() {
+      const popover = this.querySelector<HTMLElement>("[data-task-popover]");
+      if (popover) popover.hidden = !this.state.taskCenterOpen;
+      const trigger = this.querySelector<HTMLButtonElement>("[data-task-trigger]");
+      trigger?.setAttribute("aria-expanded", String(this.state.taskCenterOpen));
+      const status = this.querySelector<HTMLElement>("[data-task-status]");
+      const icon = this.querySelector<HTMLElement>("[data-task-state]");
+      if (!status || !icon) return;
+      const copy = runtimeCopy[this.locale];
+      if (this.state.installState === "success") {
+        status.textContent = copy.taskSuccess;
+        icon.textContent = "✓";
+      } else if (this.state.installState === "cancelled") {
+        status.textContent = copy.taskCancelled;
+        icon.textContent = "⊘";
+      } else if (this.state.installState === "failure") {
+        status.textContent = copy.taskFailure;
+        icon.textContent = "!";
+      } else {
+        status.textContent = copy.taskRunning;
+        icon.textContent = "◌";
       }
-    }
-
-    renderModels() {
-      const grid = this.querySelector<HTMLElement>("[data-model-grid]");
-      if (!grid) return;
-      grid.replaceChildren();
-      for (const model of this.models) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "activation-model";
-        button.dataset.model = model;
-        button.setAttribute("aria-pressed", "false");
-        button.textContent = model;
-        button.addEventListener("click", () => this.selectModel(model), { signal: this.abort.signal });
-        grid.append(button);
-      }
-      // A custom endpoint publishes no list, so the manual entry is the path
-      // rather than a fallback — open it instead of showing an empty group.
-      const manual = this.querySelector<HTMLDetailsElement>(".activation-manual");
-      if (manual) manual.open = this.models.length === 0;
-      grid.hidden = this.models.length === 0;
-    }
-
-    fail(dispatch = true) {
-      if (dispatch) this.dispatch({ type: "fail" });
-      this.appendLog(this.copy.log.error);
-      this.focusPanel("result");
-    }
-
-    updateProviders(agentId: string) {
-      const agent = catalog.agents.find((candidate) => candidate.id === agentId);
-      if (!agent) return;
-      const recommendation = recommendedCombination(catalog);
-      this.querySelectorAll<HTMLButtonElement>("[data-provider-id]").forEach((button) => {
-        const provider = catalog.providers.find((candidate) => candidate.id === button.dataset.providerId);
-        if (!provider) return;
-        const compatibility = compatibilityFor(agent, provider);
-        button.dataset.compatibility = compatibility;
-        button.classList.toggle("is-recommended", recommendation?.agentId === agent.id && recommendation.providerId === provider.id);
-        const verdict = button.querySelector<HTMLElement>("[data-provider-verdict]");
-        if (verdict) verdict.textContent = this.copy.compatibility[compatibility];
-        button.setAttribute("aria-label", `${provider.name}: ${this.copy.compatibility[compatibility]}`);
-      });
-    }
-
-    replaceLog(message: string) {
-      const log = this.querySelector<HTMLOListElement>("[data-log]");
-      if (!log) return;
-      log.replaceChildren();
-      this.appendLog(message);
-    }
-
-    appendLog(message: string) {
-      const log = this.querySelector<HTMLOListElement>("[data-log]");
-      if (!log) return;
-      const item = document.createElement("li");
-      item.textContent = message;
-      log.append(item);
-      log.scrollTop = log.scrollHeight;
-    }
-
-    /* Moving focus is right when the visitor asked for the step — it carries a
-       keyboard user forward. During autoplay nobody asked, so taking focus would
-       pull it out of whatever they were reading or tabbing through. The panels
-       stay an aria-live region either way, so the steps are still announced. */
-    focusPanel(name: string) {
-      if (this.autoplaying) return;
-      window.requestAnimationFrame(() => this.querySelector<HTMLElement>(`[data-panel="${name}"]`)?.focus({ preventScroll: true }));
-    }
-
-    render() {
-      const phase = this.state.phase;
-      this.dataset.phase = phase;
-      /* Everything not named here falls through to the result panel, so a new
-         phase must be added or its screen is silently unreachable. */
-      const panel = ["idle", "scanning", "agent", "mode", "provider", "model", "verifying", "review"].includes(phase)
-        ? phase
-        : "result";
-      this.querySelectorAll<HTMLElement>("[data-panel]").forEach((element) => {
-        element.hidden = element.dataset.panel !== panel;
-      });
-
-      const status = this.querySelector<HTMLElement>("[data-status]");
-      if (status) {
-        status.dataset.kind = phase;
-        const label = status.querySelector("b");
-        if (label) label.textContent = this.copy.status[phase];
-      }
-      const reset = this.querySelector<HTMLButtonElement>("[data-reset]");
-      if (reset) reset.hidden = phase === "idle";
-
-      /* Steps mirror the product's stepper: Agent, Setup, Provider, Model, Confirm.
-         Choosing an existing account skips 3 and 4, so those are marked skipped
-         rather than done — the product labels them the same way. */
-      const stepOf: Partial<Record<typeof phase, number>> = {
-        idle: 0,
-        scanning: 1,
-        agent: 1,
-        "guide-only": 1,
-        mode: 2,
-        provider: 3,
-        verifying: 3,
-        unsupported: 3,
-        "preview-gate": 3,
-        model: 4,
-        ready: 5,
-      };
-      const current = stepOf[phase] ?? 5;
-      const skipped = this.state.configMode === "existing-account";
-      this.querySelectorAll<HTMLElement>("[data-step]").forEach((step) => {
-        const index = Number(step.dataset.step || 0);
-        const isSkipped = skipped && (index === 3 || index === 4);
-        step.classList.toggle("is-current", index === current && !isSkipped);
-        step.classList.toggle("is-done", !isSkipped && (current > index || phase === "ready"));
-        step.classList.toggle("is-skipped", isSkipped);
-        if (index === current && !isSkipped) step.setAttribute("aria-current", "step");
-        else step.removeAttribute("aria-current");
-      });
-
-      this.querySelectorAll<HTMLButtonElement>("[data-agent-id]").forEach((button) => {
-        button.setAttribute("aria-pressed", String(button.dataset.agentId === this.state.agentId));
-      });
-      this.querySelectorAll<HTMLButtonElement>("[data-provider-id]").forEach((button) => {
-        button.setAttribute("aria-pressed", String(button.dataset.providerId === this.state.providerId));
-      });
-
-      const agent = catalog.agents.find((candidate) => candidate.id === this.state.agentId) ?? null;
-      const provider = catalog.providers.find((candidate) => candidate.id === this.state.providerId) ?? null;
-      this.querySelectorAll<HTMLElement>("[data-selected-agent], [data-verifying-agent], [data-result-agent]").forEach((element) => {
-        element.textContent = agent?.name ?? "—";
-      });
-      /* A custom endpoint has no catalog name, so it shows the host the visitor
-         typed — the specific thing they chose. An existing account has no
-         provider at all, which is the point, so it says so. */
-      const providerLabel = provider?.name
-        ?? (this.state.providerId === CUSTOM_PROVIDER_ID
-          ? this.customHost() || this.copy.status.provider
-          : this.state.configMode === "existing-account"
-            ? this.copy.skipped
-            : "—");
-      this.querySelectorAll<HTMLElement>("[data-verifying-provider], [data-result-provider]").forEach((element) => {
-        element.textContent = providerLabel;
-      });
-      const selectedProtocol = this.querySelector<HTMLElement>("[data-selected-protocol]");
-      if (selectedProtocol) selectedProtocol.textContent = agent?.protocol ? this.copy.protocol[agent.protocol] : "—";
-
-      this.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach((button) => {
-        button.setAttribute("aria-pressed", String(button.dataset.mode === this.state.configMode));
-      });
-      this.querySelectorAll<HTMLButtonElement>("[data-model]").forEach((button) => {
-        button.setAttribute("aria-pressed", String(button.dataset.model === this.state.model));
-      });
-
-      const isCustom = this.state.providerId === CUSTOM_PROVIDER_ID;
-      const customField = this.querySelector<HTMLElement>("[data-custom-field]");
-      if (customField) customField.hidden = !isCustom;
-      const check = isCustom ? validateDemoBaseUrl(this.state.customBaseUrl) : null;
-      const customHint = this.querySelector<HTMLElement>("[data-custom-hint]");
-      const customInput = this.querySelector<HTMLInputElement>("[data-custom-input]");
-      if (customHint && customInput && check) {
-        // An empty field is the resting state, not an error to shout about.
-        const untouched = this.state.customBaseUrl === "";
-        customHint.textContent = untouched
-          ? customHint.dataset.idle || customHint.textContent
-          : check.ok
-            ? this.copy.url.ok
-            : this.copy.url[check.reason];
-        customHint.dataset.kind = untouched ? "idle" : check.ok ? "ok" : "error";
-        customInput.setAttribute("aria-invalid", String(!untouched && !check.ok));
-      }
-
-      /* Both primary actions live in the footer bar, so each is shown only on the
-         step it belongs to rather than moved between panels. */
-      const verify = this.querySelector<HTMLButtonElement>("[data-verify]");
-      if (verify) {
-        verify.hidden = phase !== "provider";
-        verify.disabled =
-          !this.state.providerId ||
-          this.state.compatibility === "unsupported" ||
-          (isCustom && !(check && check.ok));
-      }
-      const confirm = this.querySelector<HTMLButtonElement>("[data-confirm]");
-      if (confirm) {
-        confirm.hidden = phase !== "model";
-        confirm.disabled = !this.state.model;
-      }
-      const footerNote = this.querySelector<HTMLElement>("[data-footer-note]");
-      if (footerNote) footerNote.textContent = this.footerNoteFor(phase);
-
-      if (panel === "result") this.renderResult(phase);
-    }
-
-    renderResult(phase: ActivationState["phase"]) {
-      const title = this.querySelector<HTMLElement>("[data-result-title]");
-      const body = this.querySelector<HTMLElement>("[data-result-body]");
-      const icon = this.querySelector<HTMLElement>("[data-result-icon]");
-      const readyAction = this.querySelector<HTMLElement>("[data-ready-action]");
-      const securityAction = this.querySelector<HTMLElement>("[data-security-action]");
-      if (!title || !body || !icon || !readyAction || !securityAction) return;
-
-      const result = phase === "ready"
-        ? this.state.configMode === "existing-account"
-          ? this.copy.result.existing
-          : this.copy.result.ready
-        : phase === "guide-only"
-          ? this.copy.result.guide
-          : phase === "preview-gate"
-            ? this.copy.result.preview
-            : phase === "unsupported"
-              ? this.copy.result.unsupported
-              : this.copy.result.error;
-      title.textContent = result[0];
-      body.textContent = result[1];
-      const path = icon.querySelector<SVGPathElement>("[data-result-path]");
-      if (path) {
-        path.setAttribute(
-          "d",
-          phase === "ready"
-            ? "M7 17l6 6L26 9"
-            : phase === "guide-only"
-              ? "M8 24L24 8M13 8h11v11"
-              : phase === "preview-gate"
-                ? "M16 7v12M16 24v1"
-                : "M9 9l14 14M23 9L9 23",
-        );
-      }
-      icon.dataset.kind = phase;
-      readyAction.hidden = phase !== "ready";
-      securityAction.hidden = phase !== "preview-gate";
     }
   }
 
@@ -1160,423 +1133,567 @@ const copy = locale === "en"
 
 <style>
   activation-console { display: block; }
-  .activation-shell { position: relative; z-index: 1; }
-  /* Geometry and colour measured off the running app (frontend/src/styles):
-     12px window radius, 52px title bar, 232px sidebar, 68px footer, and the
-     --shadow-window value verbatim. The app is light-only, so these use this
-     page's tokens rather than its hex values — that is the one difference. */
-  .activation-window {
-    overflow: hidden;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-window);
-    background: var(--surface);
-    color: var(--ink);
-    box-shadow: 0 22px 55px rgba(42, 42, 46, .16), 0 2px 8px rgba(42, 42, 46, .08);
+  .activation-shell {
+    position: relative;
+    z-index: 1;
+    width: min(1180px, calc(100% - 48px));
+    margin: 28px auto 0;
   }
-  .activation-topbar {
-    min-height: 52px;
-    padding: 0 18px;
+  .activation-demo-caption,
+  .activation-demo-footer {
+    min-height: 38px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+  .activation-demo-caption span:first-child,
+  .activation-facts span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .activation-demo-caption i {
+    width: 7px;
+    height: 7px;
+    display: inline-block;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--orange) 14%, transparent);
+  }
+  .activation-demo-footer button {
+    padding: 6px 0;
+    color: var(--ink-soft);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .activation-demo-footer button:hover { color: var(--ink); }
+
+  .activation-window {
+    height: min(700px, calc(100vh - var(--header-height) - 48px));
+    min-height: 620px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 204px minmax(0, 1fr);
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    box-shadow: var(--shadow-float);
+  }
+  .activation-sidebar {
+    min-width: 0;
+    padding: 20px 12px 14px;
+    display: flex;
+    flex-direction: column;
+    background: color-mix(in srgb, var(--surface-muted) 92%, var(--paper));
+    border-right: 1px solid var(--line);
+  }
+  .activation-brand {
+    padding: 0 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+  .activation-brand-mark {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .activation-brand > span:last-child { min-width: 0; display: grid; gap: 1px; }
+  .activation-brand strong { font-size: 14px; line-height: 1.15; }
+  .activation-brand small { color: var(--ink-faint); font-size: 11px; }
+  .activation-nav-label {
+    margin: 0 10px 8px;
+    color: var(--ink-faint);
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .activation-nav { display: grid; gap: 4px; }
+  .activation-nav-item,
+  .activation-settings-row,
+  .activation-task-trigger {
+    min-height: 38px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 0;
+    border-radius: 7px;
+    font-size: 13px;
+    text-align: left;
+  }
+  .activation-task-trigger { width: 100%; cursor: pointer; }
+  .activation-task-trigger span:nth-child(2) { flex: 1; }
+  .activation-task-trigger:hover { color: var(--ink); background: var(--surface-pressed); }
+  .activation-nav-item.is-active { color: var(--ink); background: var(--surface-pressed); }
+  .activation-disclosure-icon {
+    width: 7px;
+    height: 7px;
+    display: inline-block;
+    flex: 0 0 auto;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+  }
+  .activation-sidebar-bottom {
+    margin-top: auto;
+    padding-top: 14px;
+    display: grid;
+    gap: 4px;
+    border-top: 1px solid var(--line);
+  }
+  .nav-icon {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    display: inline-block;
+    flex: 0 0 auto;
+    border: 1.5px solid currentColor;
+  }
+  .nav-icon-overview { border-radius: 50%; border-bottom-color: transparent; transform: rotate(-45deg); }
+  .nav-icon-providers { border-radius: 2px; box-shadow: 0 4px 0 -2px var(--surface-muted), 0 5px 0 -3px currentColor; }
+  .nav-icon-profiles { border-radius: 2px; }
+  .nav-icon-profiles::after { content: ""; width: 5px; height: 5px; position: absolute; right: -3px; bottom: -3px; border: 1px solid currentColor; border-radius: 50%; background: var(--surface-muted); }
+  .nav-icon-tasks { border: 0; }
+  .nav-icon-tasks::before { content: "✓\A✓"; white-space: pre; position: absolute; inset: -4px 0 0; font-size: 10px; line-height: 9px; }
+  .nav-icon-settings { border-radius: 50%; }
+  .nav-icon-settings::after { content: ""; position: absolute; inset: 4px; border: 1px solid currentColor; border-radius: 50%; }
+
+  .activation-workspace { min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) 64px; }
+  .activation-main { min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .activation-page-header {
+    min-height: 118px;
+    padding: 18px 42px 14px;
+    flex: 0 0 auto;
+    border-bottom: 1px solid var(--line);
+  }
+  .activation-page-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 28px;
+  }
+  .activation-page-heading h2 { margin: 0; font-size: 25px; line-height: 1.15; letter-spacing: -0.025em; }
+  .activation-page-heading p { max-width: 480px; margin: 0; color: var(--ink-soft); font-size: 13px; text-align: right; }
+  .activation-stepper {
+    margin: 17px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    list-style: none;
+  }
+  .activation-stepper li {
+    min-width: 0;
+    position: relative;
+    display: grid;
+    justify-items: start;
+    gap: 4px;
+    color: var(--ink-faint);
+    font-size: 10px;
+  }
+  .activation-step-line {
+    height: 1px;
+    position: absolute;
+    top: 13px;
+    left: 31px;
+    right: 8px;
+    background: var(--line-strong);
+  }
+  .activation-stepper li:last-child .activation-step-line { display: none; }
+  .activation-step-marker {
+    width: 27px;
+    height: 27px;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--surface);
+    font-size: 11px;
+  }
+  [data-step-check] {
+    width: 6px;
+    height: 10px;
+    display: none;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+  .activation-stepper li[data-presentation="current"] { color: var(--ink); }
+  .activation-stepper li[data-presentation="current"] .activation-step-marker {
+    color: var(--on-accent);
+    background: var(--blue-deep);
+    border-color: var(--blue-deep);
+  }
+  .activation-stepper li[data-presentation="complete"] { color: var(--ink); }
+  .activation-stepper li[data-presentation="complete"] .activation-step-marker {
+    color: var(--on-accent);
+    background: var(--blue-deep);
+    border-color: var(--blue-deep);
+  }
+  .activation-stepper li[data-presentation="complete"] [data-step-number] { display: none; }
+  .activation-stepper li[data-presentation="complete"] [data-step-check] { display: block; }
+  .activation-stepper li[data-presentation="skipped"] { opacity: .45; }
+
+  .activation-page-body { min-height: 0; flex: 1; overflow: auto; }
+  .activation-panel {
+    min-height: 100%;
+    padding: 20px 42px 30px;
+    outline: 0;
+  }
+  .activation-body-heading { margin-bottom: 12px; }
+  .activation-body-heading h3,
+  .activation-overview-section h3,
+  .activation-review-group h3 { margin: 0; font-size: 14px; }
+  .activation-body-heading p { margin: 3px 0 0; color: var(--ink-soft); font-size: 12px; }
+
+  .activation-agent-tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .activation-agent-tabs button {
+    min-height: 40px;
+    padding: 0 12px;
+    position: relative;
+    color: var(--ink-soft);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-weight: 620;
+    font-size: 13px;
+  }
+  .activation-agent-tabs button::after {
+    content: "";
+    height: 2px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    background: transparent;
+  }
+  .activation-agent-tabs button.is-active { color: var(--blue-deep); }
+  .activation-agent-tabs button.is-active::after { background: var(--blue); }
+  .activation-agent-list {
+    max-height: 300px;
+    margin-top: 14px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .activation-agent-row {
+    min-height: 68px;
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: 18px 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--line);
+    transition: background-color var(--dur-micro) var(--ease-apple);
+  }
+  .activation-agent-row:last-child { border-bottom: 0; }
+  .activation-agent-row:hover,
+  .activation-agent-row.is-selected { background: var(--blue-soft); }
+  .activation-agent-row:active { transform: scale(.992); }
+  .activation-agent-row input { width: 17px; height: 17px; margin: 0; accent-color: var(--blue); }
+  .activation-agent-copy { min-width: 0; display: grid; gap: 2px; }
+  .activation-agent-copy strong { font-size: 13px; }
+  .activation-agent-copy small { overflow: hidden; color: var(--ink-soft); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+  .activation-status-badge {
+    padding: 3px 8px;
+    color: var(--orange);
+    background: var(--orange-soft);
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 650;
+  }
+  .activation-status-badge.is-installed { color: var(--green); background: var(--green-soft); }
+  .activation-mirror { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .activation-mirror summary { color: var(--ink-soft); cursor: pointer; font-size: 11px; }
+  .activation-mirror p { margin: 7px 0 0; color: var(--ink-faint); font-size: 11px; }
+
+  .activation-profile-card {
+    max-width: 460px;
+    padding: 14px;
+    background: var(--blue-soft);
+    border: 1px solid var(--blue);
+    border-left-width: 3px;
+    border-radius: 8px;
+  }
+  .activation-profile-card label { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+  .activation-profile-card input { margin: 0; accent-color: var(--blue); }
+  .activation-profile-card label > span:nth-of-type(1) { flex: 1; display: flex; align-items: baseline; gap: 8px; }
+  .activation-profile-card strong { font-size: 13px; }
+  .activation-profile-card small { color: var(--ink-faint); font-size: 10px; }
+  .activation-profile-card p { margin: 15px 0 0; font-size: 13px; }
+
+  .activation-field-stack { display: grid; gap: 7px; }
+  .activation-field-stack + .activation-field-stack { margin-top: 18px; }
+  .activation-field-stack label { font-size: 12px; font-weight: 650; }
+  .activation-field-stack input,
+  .activation-select-trigger {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 12px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    outline: 0;
+  }
+  .activation-field-stack input:focus,
+  .activation-select-trigger:focus { border-color: var(--blue); box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring) 28%, transparent); }
+  .activation-field-stack small { color: var(--ink-faint); font-size: 10px; }
+  .activation-provider-picker { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 42px; gap: 9px; }
+  .activation-select-trigger { display: flex; align-items: center; justify-content: space-between; cursor: pointer; text-align: left; }
+  .activation-select-options {
+    position: absolute;
+    z-index: 5;
+    top: 48px;
+    left: 0;
+    right: 51px;
+    padding: 5px;
+    display: grid;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lift);
+  }
+  .activation-select-options button {
+    min-height: 34px;
+    padding: 0 9px;
+    color: var(--ink-soft);
+    background: none;
+    border: 0;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 12px;
+  }
+  .activation-select-options button:hover,
+  .activation-select-options button[aria-selected="true"] { color: var(--ink); background: var(--blue-soft); }
+  .activation-icon-link {
+    min-height: 42px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    color: var(--ink-soft);
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    font-size: 20px;
+  }
+  .activation-icon-link .activation-language-hint {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    display: grid;
+    place-items: center;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border-color: var(--line-strong);
+    border-radius: 50%;
+    font-size: 8px;
+    font-weight: 650;
+    line-height: 1;
+  }
+  .activation-provider-summary {
+    margin: 18px 0;
+    padding-bottom: 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
     border-bottom: 1px solid var(--line);
-    background: var(--surface-muted);
   }
-  .activation-topbar > div { display: grid; gap: 2px; }
-  .activation-topbar strong { font-size: 14px; }
-  .activation-kicker, .activation-state-label {
-    color: var(--ink-faint);
-    font: 700 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    letter-spacing: .12em;
-    text-transform: uppercase;
+  .activation-provider-summary > div { min-width: 0; display: grid; gap: 2px; }
+  .activation-provider-summary strong { font-size: 14px; }
+  .activation-provider-summary span { overflow: hidden; color: var(--ink-soft); font-size: 11px; text-overflow: ellipsis; }
+  .activation-provider-summary a { padding: 8px 11px; border: 1px solid var(--line-strong); border-radius: 7px; font-size: 11px; white-space: nowrap; }
+  .activation-notice {
+    margin-bottom: 16px;
+    padding: 9px 12px;
+    color: var(--green);
+    background: var(--green-soft);
+    border: 1px solid color-mix(in srgb, var(--green) 18%, transparent);
+    border-radius: 6px;
+    font-size: 11px;
   }
-  .activation-sample, .activation-status {
-    display: inline-flex;
+  .activation-notice[data-flash="true"] { outline: 2px solid var(--green); }
+  .activation-connection-row { margin-top: 16px; display: flex; align-items: center; gap: 12px; }
+  .activation-inline-status { color: var(--ink-soft); font-size: 11px; }
+  .activation-inline-status[data-probe-status="loading"] { color: var(--blue); }
+  .activation-inline-status[data-probe-status="success"] { color: var(--green); }
+  .activation-inline-status[data-probe-status="error"] { color: var(--red); }
+  .activation-optional-note { margin: 12px 0 0; font-size: 11px; }
+
+  .activation-model-list { margin-top: 14px; display: grid; gap: 8px; }
+  .activation-model-list button {
+    min-height: 56px;
+    padding: 10px 13px;
+    display: grid;
+    gap: 2px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .activation-model-list button:hover,
+  .activation-model-list button.is-selected { background: var(--blue-soft); border-color: var(--blue); }
+  .activation-model-list strong { font-size: 12px; }
+  .activation-model-list small { color: var(--ink-faint); font-size: 10px; }
+
+  .activation-review-panel { padding-top: 10px; padding-bottom: 18px; }
+  .activation-review-group + .activation-review-group { margin-top: 12px; }
+  .activation-review-group h3 { padding-bottom: 7px; border-bottom: 1px solid var(--line-strong); }
+  .activation-review-row {
+    min-height: 36px;
+    display: grid;
+    grid-template-columns: 18px minmax(110px, 1fr) minmax(0, 2fr);
     align-items: center;
     gap: 8px;
-    color: var(--ink-soft);
-    font-size: 12px;
-    font-weight: 650;
+    border-bottom: 1px solid var(--line);
+    font-size: 11px;
   }
-  .activation-sample > span, .activation-status > span {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--orange);
-    box-shadow: 0 0 0 4px var(--orange-soft);
+  .activation-review-row > span:first-child { color: var(--green); }
+  .activation-review-row > span:nth-child(2) { color: var(--ink-soft); }
+  .activation-review-row strong { overflow-wrap: anywhere; text-align: right; }
+  .activation-profile-name { margin-top: 12px; }
+
+  .activation-install-panel { padding-top: 24px; }
+  .activation-download-progress { margin-bottom: 18px; }
+  .activation-download-progress > div { display: flex; justify-content: space-between; font-size: 11px; }
+  .activation-progress-track { height: 7px; margin-top: 8px; display: block; overflow: hidden; background: var(--surface-pressed); border-radius: 999px; }
+  .activation-progress-track span { width: 68%; height: 100%; display: block; background: var(--blue); border-radius: inherit; }
+  .activation-install-panel[data-state="running"] .activation-progress-track span { animation: activation-progress 1.5s ease-in-out infinite alternate; }
+  .activation-install-log { margin-bottom: 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .activation-install-log summary { padding: 11px 0; cursor: pointer; font-size: 12px; font-weight: 620; }
+  .activation-install-log pre {
+    margin: 0 0 13px;
+    padding: 13px;
+    overflow: auto;
+    color: #f4f4f5;
+    background: #232428;
+    border-radius: 6px;
+    font: 10px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre-wrap;
   }
-  /* Two columns, two rows: the sidebar and body share the first row, and the
-     footer spans both so the primary action stays put while the body scrolls —
-     the same shape as the app's 232px/auto + content/68px grid. */
-  .activation-body {
-    min-height: 560px;
+
+  .activation-overview-section > header { margin-bottom: 10px; }
+  .activation-overview-section > header > div { display: grid; gap: 2px; }
+  .activation-overview-section header span { color: var(--ink-soft); font-size: 11px; }
+  .activation-managed-agent { padding: 13px; border: 1px solid var(--line); border-radius: 8px; }
+  .activation-managed-heading { display: flex; align-items: center; gap: 10px; }
+  .activation-managed-heading > strong { font-size: 14px; }
+  .activation-managed-tags { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+  .activation-managed-tags span { padding: 3px 7px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; font: 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .activation-managed-actions { margin-top: 10px; display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+  .activation-managed-actions > span { display: flex; gap: 6px; }
+  .activation-detail-button { padding: 0; color: var(--ink-faint); background: none; border: 0; cursor: pointer; font-size: 10px; }
+  .activation-empty-desktop { margin-top: 22px; }
+  .activation-empty-desktop > div {
+    min-height: 130px;
     display: grid;
-    grid-template-columns: 232px minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
+    place-items: center;
+    align-content: center;
+    gap: 8px;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--line);
   }
-  .activation-rail {
-    padding: 22px 12px 16px;
-    display: flex;
-    flex-direction: column;
-    color: var(--ink);
-    background: var(--surface-muted);
-    border-right: 1px solid var(--line);
-  }
-  /* Static labels, not controls — the demo has nowhere to navigate to. */
-  .activation-nav { display: grid; gap: 4px; }
-  .activation-nav-item {
-    min-height: 38px;
-    padding: 0 10px;
-    display: flex;
-    align-items: center;
-    border-radius: var(--radius-control);
-    color: var(--ink-soft);
-    font-size: 13px;
-  }
-  .activation-nav-item.is-active { background: var(--blue-deep); color: var(--on-accent); font-weight: 600; }
-  .activation-rail-note { margin-top: auto; padding: 12px 10px 0; color: var(--ink-faint); font-size: 11px; }
-  .activation-footer {
-    min-height: 68px;
+  .activation-empty-desktop > div > span { font-size: 24px; }
+  .activation-empty-desktop p { margin: 0; font-size: 11px; }
+  .activation-launch-note { margin: 12px 0 0; color: var(--blue); font-size: 10px; text-align: right; }
+
+  .activation-page-footer {
+    min-width: 0;
     padding: 0 42px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    grid-column: 1 / -1;
+    background: color-mix(in srgb, var(--surface) 96%, var(--paper));
     border-top: 1px solid var(--line);
-    background: var(--surface-muted);
   }
-  .activation-footer-note { color: var(--ink-soft); font-size: 13px; }
-  .activation-footer-actions { display: flex; align-items: center; gap: 12px; }
-  .activation-rail-brand { padding: 0 10px 18px; display: flex; align-items: center; gap: 11px; }
-  .activation-rail-brand > div { display: grid; gap: 2px; }
-  .activation-rail-brand strong { font-size: 13px; }
-  /* Scoped to the subtitle rather than every span, so it cannot reach the
-     monogram — that one carries white on the accent fill and a broader
-     selector here would win on specificity and make it unreadable. */
-  .activation-rail-brand > div span { color: var(--ink-faint); font-size: 11px; }
-  /* Replaces an "OA" monogram. The mark carries its own colours, so unlike the
-     currentColor agent glyphs it is never inverted for the dark theme. */
-  .activation-rail-mark {
-    width: 26px;
-    height: 26px;
-    display: grid;
-    place-items: center;
-    flex: none;
-  }
-  .activation-rail-mark img { display: block; }
-  /* The app's stepper: a horizontal row in the page header, each step a 27px
-     numbered circle above an 11px label. Nothing is a card and nothing is dark. */
-  .activation-steps {
-    margin: 22px 0 0;
-    padding: 0;
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 124px);
-    justify-content: start;
-    list-style: none;
-  }
-  .activation-steps li { display: grid; gap: 5px; justify-items: start; color: var(--ink-faint); font-size: 11px; }
-  .activation-step-marker {
-    width: 27px;
-    height: 27px;
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--line-strong);
-    border-radius: 50%;
-    color: var(--ink-soft);
-    background: var(--surface);
-    font-size: 13px;
-    font-weight: 600;
-  }
-  /* The app keeps every label at 400 and signals the current step through the
-     marker fill alone, so the row stays even rather than jumping as you advance. */
-  .activation-steps li strong { font-size: 11px; font-weight: 400; }
-  /* The marker fill is the only signal that the step changed, so it is worth
-     easing rather than cutting — it is also what the eye tracks when nobody
-     clicked. Matches the panel's 240ms so the two read as one movement. */
-  @media not (prefers-reduced-motion: reduce) {
-    .activation-steps li { transition: color 240ms ease; }
-    .activation-step-marker {
-      transition: background-color 240ms ease, border-color 240ms ease, color 240ms ease;
-    }
-  }
-  .activation-steps li.is-current { color: var(--ink); }
-  .activation-steps li.is-current .activation-step-marker {
-    border-color: var(--blue-deep);
-    background: var(--blue-deep);
-    color: var(--on-accent);
-  }
-  .activation-steps li.is-done .activation-step-marker {
-    border-color: var(--green);
-    color: var(--green);
-    background: var(--green-soft);
-  }
-  .activation-reset {
-    padding: 8px 2px;
-    border: 0;
-    color: var(--ink-soft);
-    background: transparent;
-    font: 600 12px/1.2 inherit;
-    cursor: pointer;
-  }
-  .activation-reset:hover { color: var(--ink); }
-  /* 42px gutters and a header/body split, matching the app's page-scaffold. */
-  .activation-main { min-width: 0; padding: 26px 42px 24px; display: flex; flex-direction: column; }
-  .activation-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
-  .activation-heading > div { display: grid; gap: 6px; }
-  .activation-heading h2 { margin: 0; font-size: 24px; line-height: 1.15; letter-spacing: -.01em; }
-  .activation-status { padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-muted); }
-  .activation-status > span { width: 7px; height: 7px; background: var(--ink-faint); box-shadow: none; }
-  .activation-status[data-kind="ready"] > span { background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
-  .activation-status[data-kind="preview-gate"] > span,
-  .activation-status[data-kind="guide-only"] > span { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-soft); }
-  .activation-status[data-kind="unsupported"] > span,
-  .activation-status[data-kind="error"] > span { background: var(--red); box-shadow: 0 0 0 4px var(--red-soft); }
-  .activation-subtitle { margin: 10px 0 0; max-width: 720px; color: var(--ink-soft); font-size: 13px; line-height: 1.5; }
-  .activation-panel {
-    min-height: 272px;
-    margin-top: 24px;
-    padding: 24px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-panel);
-    background: var(--paper-strong);
-    outline: none;
-  }
-  /* --focus-ring, not --blue-soft. This panel is a programmatic focus target
-     between steps, so a keyboard user lands here on every advance — and
-     --blue-soft is a pale fill (#e8f0fb light, #14283c dark) that composited far
-     below the 3:1 WCAG 1.4.11 wants for a focus indicator. The comment on
-     --focus-ring in global.css argues exactly that case; this rule was the one
-     place still ignoring it. Kept as a shadow rather than an outline because the
-     panel is clipped by the window frame, where an outline would be cut off. */
-  .activation-panel:focus-visible { box-shadow: 0 0 0 3px var(--focus-ring); }
-  /* forced-colors discards box-shadow, so the ring has to come back as an outline
-     there — inset, because the panel is clipped by the window frame. */
-  @media (forced-colors: active) {
-    .activation-panel:focus-visible { box-shadow: none; outline: 3px solid Highlight; outline-offset: -3px; }
-  }
-  /* Steps replace each other by toggling [hidden], which is a hard cut. Fading
-     the arriving panel up from slightly below and slightly small reads as one
-     step advancing rather than two panels swapping — and the scale is 0.985, not
-     a slide: this is a product window, not a carousel.
-
-     @starting-style is what makes the entry animate at all: the panel goes from
-     display:none straight to its final state, so without a declared starting
-     value there is nothing to transition from.
-
-     Transform only, deliberately — no fade. Text mid-opacity fails the contrast
-     audit for as long as the transition runs, and this page already holds itself
-     to keeping copy readable while the hero entrance plays. Movement carries the
-     step change without ever rendering the panel's own text at low contrast.
-
-     Only the entry is animated. Transitioning `display` on the way out would
-     keep the outgoing panel in flow for the whole 240ms, and since the panels
-     are siblings in normal flow the console would double in height every step. */
-  @media not (prefers-reduced-motion: reduce) {
-    .activation-panel:not([hidden]) {
-      transition: transform 240ms ease;
-      transform: none;
-    }
-  }
-  @starting-style {
-    @media not (prefers-reduced-motion: reduce) {
-      .activation-panel:not([hidden]) {
-        transform: translateY(8px) scale(0.985);
-      }
-    }
-  }
-  .activation-panel[data-panel="idle"], .activation-progress, .activation-result {
-    display: grid;
-    grid-template-columns: 92px minmax(0, 1fr);
+  .activation-footer-screen { width: 100%; display: flex; align-items: center; gap: 10px; color: var(--ink-soft); font-size: 11px; }
+  .activation-footer-spacer { flex: 1; }
+  .activation-route-note { min-width: 0; flex: 1; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .activation-button {
+    min-height: 34px;
+    padding: 0 13px;
+    display: inline-flex;
     align-items: center;
-    gap: 28px;
-  }
-  .activation-panel h3 { margin: 0; font-size: 22px; line-height: 1.18; }
-  .activation-panel p { margin: 9px 0 0; max-width: 640px; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
-  .activation-empty-mark { width: 84px; height: 84px; position: relative; display: grid; place-items: center; }
-  .activation-empty-mark::before, .activation-empty-mark::after, .activation-empty-mark span {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    border: 1px solid var(--line-strong);
-  }
-  .activation-empty-mark::before { inset: 0; }
-  .activation-empty-mark::after { inset: 16px; border-color: var(--blue); }
-  .activation-empty-mark span:nth-child(1) { width: 8px; height: 8px; border: 0; background: var(--blue); }
-  .activation-empty-mark span:nth-child(2) { inset: 7px; border-style: dashed; }
-  .activation-empty-mark span:nth-child(3) { width: 42px; height: 1px; border: 0; border-radius: 0; background: var(--line-strong); transform: rotate(-35deg); }
-  .activation-scan { width: 84px; height: 84px; position: relative; border: 1px solid var(--line-strong); border-radius: 50%; }
-  .activation-scan::before, .activation-scan::after { content: ""; position: absolute; inset: 13px; border: 1px solid var(--line); border-radius: 50%; }
-  .activation-scan::after { inset: 29px; background: var(--blue); border: 0; box-shadow: 0 0 0 8px var(--blue-soft); }
-  .activation-scan span { position: absolute; inset: -1px; border-top: 2px solid var(--blue); border-right: 2px solid transparent; border-radius: 50%; animation: activation-spin 1s linear infinite; }
-  .activation-scan.is-verify::after { background: var(--green); box-shadow: 0 0 0 8px var(--green-soft); }
-  .activation-panel-copy { margin-bottom: 18px; }
-  .activation-choice-panel { padding: 20px; }
-  .activation-agent-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .activation-agent {
-    min-width: 0;
-    min-height: 74px;
-    padding: 11px 12px;
-    position: relative;
-    display: grid;
-    grid-template-columns: 30px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px;
-    text-align: left;
-    color: var(--ink);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: var(--surface);
-    cursor: pointer;
-  }
-  .activation-agent:hover, .activation-agent[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); }
-  .activation-agent-copy { min-width: 0; display: grid; gap: 3px; }
-  .activation-agent-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
-  .activation-agent-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-faint); font-size: 10px; }
-  .activation-agent-state { padding: 5px 7px; border-radius: 999px; color: var(--ink-soft); background: var(--surface-muted); font-size: 9px; font-weight: 700; white-space: nowrap; }
-  .activation-agent-state.is-ready { color: var(--green); background: var(--green-soft); }
-  .activation-agent-state.is-attention, .activation-agent-state.is-guide-only { color: var(--orange); background: var(--orange-soft); }
-  .activation-recommended { position: absolute; top: -7px; right: 9px; padding: 2px 6px; border-radius: 999px; color: var(--on-accent); background: var(--blue-deep); font-size: 8px; font-weight: 750; }
-  .activation-selection-line, .activation-verifying-pair, .activation-result-meta {
-    margin: 14px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--ink-soft);
-    font: 650 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-  .activation-selection-line span:first-child { color: var(--ink); }
-  .activation-provider-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .activation-provider {
-    min-height: 66px;
-    padding: 11px 13px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    color: var(--ink);
-    text-align: left;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: var(--surface);
-    cursor: pointer;
-  }
-  .activation-provider > span:first-child { min-width: 0; display: grid; gap: 4px; }
-  .activation-provider strong { font-size: 13px; }
-  .activation-provider small { color: var(--ink-faint); font-size: 10px; }
-  .activation-provider:hover, .activation-provider[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); }
-  .activation-provider[data-compatibility="preview-gate"] small { color: var(--orange); }
-  .activation-provider[data-compatibility="unsupported"] small { color: var(--red); }
-  .activation-provider.is-recommended::after { content: "★"; color: var(--blue); font-size: 10px; }
-  .activation-provider-arrow { color: var(--ink-faint); }
-  .activation-mode-grid { display: grid; gap: 10px; }
-  .activation-mode {
-    padding: 13px 15px;
-    display: grid;
+    justify-content: center;
     gap: 5px;
-    color: var(--ink);
-    text-align: left;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: var(--surface);
-    cursor: pointer;
-  }
-  .activation-mode strong { font-size: 13px; }
-  .activation-mode small { color: var(--ink-faint); font-size: 11px; line-height: 1.45; }
-  .activation-mode:hover, .activation-mode[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); }
-
-  /* The custom endpoint is the one place the demo takes typed input, so it gets
-     a real label and a live verdict rather than a placeholder-only field. */
-  .activation-custom { margin-top: 12px; display: grid; gap: 6px; }
-  .activation-custom label { font-size: 11px; font-weight: 600; color: var(--ink-soft); }
-  .activation-custom input {
-    padding: 9px 11px;
-    color: var(--ink);
     border: 1px solid var(--line-strong);
-    border-radius: 10px;
-    background: var(--surface);
-    font: 500 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-  .activation-custom input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
-  .activation-custom-hint { font-size: 11px; color: var(--ink-faint); }
-  .activation-custom-hint[data-kind="ok"] { color: var(--green); }
-  .activation-custom-hint[data-kind="error"] { color: var(--red); }
-  .activation-register { display: grid; gap: 2px; font-size: 11px; color: var(--blue); }
-  .activation-register small { color: var(--ink-faint); }
-
-  .activation-model-grid { display: grid; gap: 8px; }
-  .activation-model {
-    padding: 10px 12px;
-    color: var(--ink);
-    text-align: left;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--surface);
+    border-radius: 6px;
     cursor: pointer;
-    font: 500 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 620;
+    white-space: nowrap;
   }
-  .activation-model:hover, .activation-model[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); }
-  .activation-manual { margin-top: 12px; display: grid; gap: 6px; font-size: 11px; }
-  .activation-manual summary { color: var(--ink-soft); cursor: pointer; }
-  .activation-manual label { font-weight: 600; color: var(--ink-soft); }
-  .activation-manual input {
-    padding: 8px 11px;
-    color: var(--ink);
-    border: 1px solid var(--line-strong);
-    border-radius: 10px;
+  .activation-button.is-primary { color: var(--on-accent); background: var(--blue-deep); border-color: var(--blue-deep); }
+  .activation-button.is-secondary { color: var(--ink); background: var(--surface); }
+  .activation-button:hover:not(:disabled) { border-color: var(--blue); }
+  .activation-button.is-primary:hover:not(:disabled) { background: var(--accent-pressed); }
+  .activation-button:disabled { opacity: .46; cursor: not-allowed; }
+
+  .activation-task-popover {
+    width: 340px;
+    position: absolute;
+    z-index: 8;
+    left: 12px;
+    bottom: 72px;
+  }
+  .activation-task-popover article {
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) 22px;
+    align-items: center;
+    gap: 8px;
     background: var(--surface);
-    font: 500 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-  .activation-manual input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
-  .activation-steps li.is-skipped { opacity: 0.55; }
-  .activation-steps li.is-skipped strong::after { content: " ·"; }
-  .activation-verify { margin-top: 14px; }
-  .activation-verifying-pair strong, .activation-result-meta strong { color: var(--ink); }
-  .activation-result-icon {
-    width: 78px;
-    height: 78px;
-    display: grid;
-    place-items: center;
-    border-radius: 22px;
-    color: var(--green);
-    background: var(--green-soft);
-    font-size: 34px;
-    font-weight: 650;
-  }
-  .activation-result-icon svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-  .activation-result-icon[data-kind="preview-gate"], .activation-result-icon[data-kind="guide-only"] { color: var(--orange); background: var(--orange-soft); }
-  .activation-result-icon[data-kind="unsupported"], .activation-result-icon[data-kind="error"] { color: var(--red); background: var(--red-soft); }
-  .activation-result-actions { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
-  /* Review: a plain definition list of what is about to happen. Two columns so
-     four facts read as pairs rather than a long ladder. */
-  .activation-review-grid {
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 18px;
-  }
-  .activation-review-grid > div {
-    padding: 10px 12px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-strong);
     border-radius: 9px;
-    background: var(--paper-strong);
+    box-shadow: var(--shadow-lift);
   }
-  .activation-review-grid dt { color: var(--ink-faint); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
-  .activation-review-grid dd { margin: 3px 0 0; color: var(--ink); font-size: 13px; font-weight: 600; }
-  .activation-review-grid code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 400; overflow-wrap: anywhere; }
-  .activation-review-note { margin: 12px 0 0; color: var(--ink-soft); font-size: 12px; }
-  .activation-review-actions { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 9px; }
-  @media (max-width: 620px) {
-    .activation-review-grid { grid-template-columns: minmax(0, 1fr); }
+  .activation-task-state { color: var(--green); text-align: center; }
+  .activation-task-popover button { color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
+  .activation-task-popover button:nth-of-type(1) { min-width: 0; display: grid; gap: 2px; }
+  .activation-task-popover strong { font-size: 11px; }
+  .activation-task-popover small { overflow: hidden; color: var(--ink-faint); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+
+  .activation-facts {
+    min-height: 48px;
+    padding: 10px 18px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-top: 0;
+    border-radius: 0 0 12px 12px;
+    font-size: 11px;
   }
-  .activation-log-wrap { min-height: 62px; margin-top: 16px; display: grid; grid-template-columns: 82px 1fr; gap: 12px; }
-  .activation-log-wrap > span { padding-top: 4px; color: var(--ink-faint); font: 700 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .1em; }
-  .activation-log { max-height: 58px; margin: 0; padding: 0; overflow: auto; list-style: none; color: var(--ink-soft); font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .activation-log li::before { content: "> "; color: var(--blue); }
-  .activation-facts { min-height: 48px; padding: 10px 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; border-top: 1px solid var(--line); background: var(--paper-strong); }
-  .activation-facts span { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 11px; }
   .activation-facts i {
     width: 10px;
     height: 6px;
@@ -1586,69 +1703,63 @@ const copy = locale === "en"
     transform: rotate(-45deg) translateY(-1px);
   }
 
-  @media not (prefers-reduced-motion: reduce) {
-    /* mode and model are included so the press scale below has something to
-       interpolate — without a transition it snaps, which reads as a glitch
-       rather than as give. */
-    .activation-agent, .activation-provider, .activation-mode, .activation-model { transition: transform var(--dur-micro) var(--ease-apple), border-color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple); }
-    /* Gated on a hover-capable pointer: on touch this fires on tap and then stays
-       lifted until the next tap lands elsewhere, so a chosen card looks stuck. */
-    @media (hover: hover) {
-      .activation-agent:hover, .activation-provider:hover { transform: translateY(-1px); }
-    }
-  }
-
-  /* Press feedback for the four selection grids.
-   *
-   * These are the most-clicked surfaces on the homepage and none of them
-   * acknowledged the press — `aria-pressed` showed the *result* a moment later,
-   * which is not the same thing. Feedback has to land on pointer-down.
-   *
-   * One rule for all four rather than four copies: they already share the same
-   * hover and selected treatment, so the press belongs at the same level. Scale
-   * rather than a background change, because the selected state is itself a
-   * background change and the two would cancel out. */
-  .activation-agent:active,
-  .activation-provider:active,
-  .activation-mode:active,
-  .activation-model:active {
-    transform: scale(0.97);
-    transition-duration: 100ms;
-  }
-  .activation-reset:active { color: var(--ink); transition-duration: 100ms; }
-  .activation-manual summary:active { color: var(--ink); transition-duration: 100ms; }
+  @keyframes activation-progress { from { width: 28%; } to { width: 82%; } }
   @media (prefers-reduced-motion: reduce) {
-    .activation-scan span { animation: none; border: 2px solid var(--blue); }
+    .activation-install-panel[data-state="running"] .activation-progress-track span { animation: none; }
+    .activation-agent-row { transition: none; }
   }
-  @keyframes activation-spin { to { transform: rotate(360deg); } }
-
-  /* The sidebar is the first thing to go: it is workspace chrome, and the demo
-     never navigates. The stepper stays, since it is the actual progress. */
-  @media (max-width: 820px) {
-    .activation-body { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
-    .activation-rail { display: none; }
-    .activation-footer { padding: 0 20px; }
+  @media (forced-colors: active) {
+    .activation-stepper li[data-presentation="current"] .activation-step-marker,
+    .activation-stepper li[data-presentation="complete"] .activation-step-marker { forced-color-adjust: none; }
+  }
+  @media (max-width: 900px) {
+    .activation-window { grid-template-columns: 72px minmax(0, 1fr); }
+    .activation-sidebar { padding-inline: 8px; align-items: center; }
+    .activation-brand { padding-inline: 0; }
+    .activation-brand > span:last-child { display: none; }
+    .activation-nav-label,
+    .activation-nav-item:not(:has(.nav-icon)),
+    .activation-nav-item { font-size: 0; }
+    .activation-nav-item,
+    .activation-settings-row,
+    .activation-task-trigger { width: 42px; padding: 0; justify-content: center; }
+    .activation-task-trigger span:nth-child(2),
+    .activation-task-trigger span:last-child,
+    .activation-settings-row { font-size: 0; }
+    .activation-settings-row .nav-icon { font-size: initial; }
+    .activation-page-header,
+    .activation-panel,
+    .activation-page-footer { padding-inline: 24px; }
   }
   @media (max-width: 680px) {
     .activation-shell { width: min(100% - 28px, 1180px); }
-    .activation-topbar { padding: 10px 12px; }
-    .activation-kicker { display: none; }
-    .activation-body { min-height: 0; }
-    .activation-main { padding: 20px 14px 16px; }
-    .activation-heading h2 { font-size: 20px; }
-    .activation-subtitle { font-size: 12px; }
-    /* Labels drop out and the circles compress to a row of five markers. */
-    .activation-steps { margin-top: 16px; grid-auto-columns: minmax(0, 1fr); }
-    .activation-steps li strong { display: none; }
-    .activation-footer { min-height: 60px; padding: 0 14px; gap: 10px; }
-    .activation-footer-note { font-size: 11px; }
-    .activation-panel { min-height: 250px; margin-top: 18px; padding: 18px; }
-    .activation-panel[data-panel="idle"], .activation-progress, .activation-result { grid-template-columns: 1fr; gap: 16px; }
-    .activation-empty-mark, .activation-scan { width: 62px; height: 62px; }
-    .activation-panel h3 { font-size: 19px; }
-    .activation-agent-grid, .activation-provider-grid { grid-template-columns: 1fr; }
-    .activation-agent { min-height: 68px; }
-    .activation-facts { grid-template-columns: 1fr; gap: 8px; }
-    .activation-log-wrap { grid-template-columns: 1fr; gap: 4px; }
+    .activation-demo-caption { align-items: flex-start; flex-direction: column; gap: 2px; padding-block: 8px; }
+    .activation-window { height: min(680px, calc(100vh - var(--header-height) - 32px)); min-height: 600px; grid-template-columns: 1fr; }
+    .activation-sidebar { display: none; }
+    .activation-workspace { grid-template-rows: minmax(0, 1fr) 70px; }
+    .activation-page-header { min-height: 108px; padding: 16px 14px 12px; }
+    .activation-page-heading { display: grid; gap: 4px; }
+    .activation-page-heading h2 { font-size: 20px; }
+    .activation-page-heading p { font-size: 11px; text-align: left; }
+    .activation-stepper { margin-top: 14px; }
+    .activation-stepper li::after { left: 25px; right: 5px; top: 11px; }
+    .activation-step-marker { width: 23px; height: 23px; }
+    .activation-step-label { display: none; }
+    .activation-panel { padding: 16px 14px 24px; }
+    .activation-review-panel { padding-top: 10px; padding-bottom: 16px; }
+    .activation-agent-list { max-height: 315px; }
+    .activation-agent-row { grid-template-columns: 18px 30px minmax(0, 1fr); }
+    .activation-status-badge { grid-column: 3; justify-self: start; }
+    .activation-provider-summary { align-items: flex-start; flex-direction: column; }
+    .activation-review-row { grid-template-columns: 16px minmax(80px, 1fr) minmax(0, 1.6fr); }
+    .activation-managed-heading { align-items: flex-start; flex-wrap: wrap; }
+    .activation-managed-tags { width: 100%; margin-left: 35px; justify-content: flex-start; }
+    .activation-managed-actions { align-items: flex-start; flex-direction: column; }
+    .activation-managed-actions > span { width: 100%; flex-wrap: wrap; }
+    .activation-page-footer { min-height: 70px; padding: 8px 14px; }
+    .activation-footer-screen { flex-wrap: wrap; }
+    .activation-route-note { order: 3; width: 100%; flex-basis: 100%; }
+    .activation-task-popover { width: calc(100% - 24px); }
+    .activation-facts { grid-template-columns: 1fr; gap: 7px; }
   }
 </style>
