@@ -10,6 +10,18 @@ on:
   # Manual runs are allowed so a Pages configuration change can be published
   # without an empty commit.
   workflow_dispatch:
+  # Twice a day, to refresh what the build reads from GitHub rather than from the
+  # repository: the header's star count and the download page's release assets.
+  # Both are fetched at build time because the site's CSP is `default-src 'self'`
+  # with no connect-src exception, so a browser-side call to api.github.com is
+  # blocked — which means those numbers are only ever as fresh as the last deploy.
+  # Without this they sat at whatever they were when someone last merged; the star
+  # count was showing 3 against an actual 13.
+  #
+  # 07:41/19:41 UTC rather than on the hour: scheduled workflows all queue against
+  # GitHub's shared runner pool, and the top of the hour is the worst time to ask.
+  schedule:
+    - cron: "41 7,19 * * *"
 
 permissions:
   contents: read
@@ -60,9 +72,17 @@ jobs:
     needs: preflight
     # workflow_run fires on failure too, so the conclusion has to be checked
     # explicitly — without this, a red CI run would still publish.
+    #
+    # schedule and workflow_dispatch carry no workflow_run payload, so they are
+    # named rather than falling through to that check: a `github.event.workflow_run`
+    # that does not exist is null, the comparison fails, and the job silently skips.
+    # That is precisely how a scheduled deploy would look like it ran while
+    # publishing nothing.
     if: |
       needs.preflight.outputs.pages_available == 'true'
-      && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+      && (github.event_name == 'workflow_dispatch'
+          || github.event_name == 'schedule'
+          || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
