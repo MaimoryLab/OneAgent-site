@@ -10,6 +10,16 @@ on:
   # Manual runs are allowed so a Pages configuration change can be published
   # without an empty commit.
   workflow_dispatch:
+  # Sent by MaimoryLab/OneAgent's release job once a tag's assets are published, so
+  # the download page stops advertising the previous version. The schedule below
+  # would eventually catch it, but "eventually" is up to twelve hours of the site
+  # naming a release that is no longer current.
+  #
+  # This is the one signal that cannot be derived here: the site can see a new tag
+  # by polling, but not the moment its assets finished uploading — and a build that
+  # reads the feed mid-upload would publish a partial asset list.
+  repository_dispatch:
+    types: [upstream-release]
   # Twice a day, to refresh what the build reads from GitHub rather than from the
   # repository: the header's star count and the download page's release assets.
   # Both are fetched at build time because the site's CSP is `default-src 'self'`
@@ -73,15 +83,16 @@ jobs:
     # workflow_run fires on failure too, so the conclusion has to be checked
     # explicitly — without this, a red CI run would still publish.
     #
-    # schedule and workflow_dispatch carry no workflow_run payload, so they are
-    # named rather than falling through to that check: a `github.event.workflow_run`
-    # that does not exist is null, the comparison fails, and the job silently skips.
-    # That is precisely how a scheduled deploy would look like it ran while
-    # publishing nothing.
+    # Every trigger that carries no workflow_run payload has to be named here
+    # rather than falling through to that check: a `github.event.workflow_run` that
+    # does not exist is null, the comparison fails, and the job silently skips —
+    # a green run that published nothing. That has already happened once on this
+    # repository, so each new trigger gets added to this list in the same commit.
     if: |
       needs.preflight.outputs.pages_available == 'true'
       && (github.event_name == 'workflow_dispatch'
           || github.event_name == 'schedule'
+          || github.event_name == 'repository_dispatch'
           || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment:

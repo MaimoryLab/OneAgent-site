@@ -29,7 +29,7 @@ coupling splitting the repositories was meant to remove.
 Copy both files from a released tag, not from `main`:
 
 ```bash
-tag=v0.4.0   # the release the site should describe
+tag=v0.5.0   # the release the site should describe
 for f in agents.lock.json providers.lock.json; do
   curl -fsSL "https://raw.githubusercontent.com/MaimoryLab/OneAgent/$tag/manifests/$f" -o "data/$f"
 done
@@ -43,13 +43,18 @@ command — which is what the previous copies were fetched with — now 404s.
 `pnpm run build` runs `astro check` and `scripts/validate-build.mjs`, so a shape
 change in either file fails the build rather than rendering a broken page.
 
-Current copies and the activation walkthrough were audited against tag `v0.4.0`
-(commit `ff81ee8`) on 2026-08-10. The lock-file contents did not change from
-`v0.3.0`, but their provenance and the UI flow did, so the source reference still
-advances with the release. Earlier copies tracked a `main` commit because no tag
-existed; that workaround is no longer needed.
+Current copies and the activation walkthrough were audited against tag `v0.5.0`
+(commit `0fbbe94`) on 2026-08-10. Earlier copies tracked a `main` commit because no
+tag existed; that workaround is no longer needed.
 
-The v0.4.0 command-line contract is seven agents, all `config_mode: auto`: `codex`,
+The lock-file contents have not changed since `v0.3.0` — `v0.4.0` and `v0.5.0` both
+left them byte-identical, which is checked rather than assumed each time. What
+advances with the release is the provenance reference and the UI flow the demo
+mirrors. `v0.5.0` changed the provider editor, the settings page and the transfer
+page; none of those sit on the walkthrough's path (`agents → profile → provider →
+model → review → install → overview`), so the demo needed only its baseline updated.
+
+The v0.5.0 command-line contract is seven agents, all `config_mode: auto`: `codex`,
 `claude-code`, `opencode`, `kilo-cli`, `aider`, and — new in `v0.3.0` —
 `openclaw` at rank 6 and `hermes` at rank 7. The history is worth keeping because
 the site followed each pass and the last one reverses a removal:
