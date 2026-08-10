@@ -1,191 +1,217 @@
-import { compatibilityFor, type Compatibility, type SiteCatalogV2 } from "./explorer";
+import type { AgentKind } from "./explorer";
+import type { DemoScenario, DemoStepId } from "./demo-environment";
 
-/* The phases follow the product's own route sequence, which SetupStepper.tsx
-   declares as the single source of truth for order and labels:
-
-     /setup/agents → /setup/profile → /setup/provider → /setup/model
-                   → /setup/review → /setup/activation
-
-   `review` was missing here, so the demo went straight from choosing a model to
-   a finished environment. That skipped the one screen whose entire job is to say
-   what is about to be written and that a timestamped backup is taken first —
-   the step a visitor most needs to see before trusting the tool with a config
-   they are afraid to break. */
-type ActivationPhase =
-  | "idle"
-  | "scanning"
-  | "agent"
-  | "mode"
-  | "provider"
-  | "model"
-  | "verifying"
-  | "review"
-  | "ready"
-  | "guide-only"
-  | "preview-gate"
-  | "unsupported"
-  | "error";
-
-/* The product's profile step: reuse a saved configuration template, or create a
-   new one. "existing-account" is the branch for an agent already carrying a
-   working config — it skips the provider and model steps, as SetupGuard does. */
-export type ConfigMode = "provider" | "existing-account";
-
-export const CUSTOM_PROVIDER_ID = "custom";
+export type ActivationScreen = "agents" | "profile" | "provider" | "model" | "review" | "install" | "overview";
+export type ProbeState = "idle" | "loading" | "success" | "error";
+export type InstallState = "idle" | "running" | "success" | "cancelled" | "failure";
+export type ProfileMode = "new" | "reuse" | null;
+export type StepPresentation = "upcoming" | "current" | "complete" | "skipped";
 
 export interface ActivationState {
-  phase: ActivationPhase;
+  screen: ActivationScreen;
+  agentTab: AgentKind;
   agentId: string | null;
-  configMode: ConfigMode | null;
+  profileMode: ProfileMode;
   providerId: string | null;
-  customBaseUrl: string;
-  model: string | null;
-  compatibility: Compatibility | null;
+  probeModel: string;
+  probeState: ProbeState;
+  model: string;
+  profileLabel: string;
+  installState: InstallState;
+  taskCenterOpen: boolean;
 }
 
 export type ActivationAction =
-  | { type: "start" }
-  | { type: "scan-complete" }
+  | { type: "reset" }
+  | { type: "select-agent-tab"; tab: AgentKind }
   | { type: "select-agent"; agentId: string }
-  | { type: "select-mode"; mode: ConfigMode }
-  | { type: "select-provider"; providerId: string }
-  | { type: "set-custom-base-url"; value: string }
-  | { type: "select-model"; model: string }
-  | { type: "verify" }
-  | { type: "verify-complete" }
-  | { type: "review" }
-  | { type: "confirm" }
-  | { type: "fail" }
-  | { type: "reset" };
+  | { type: "continue-agents" }
+  | { type: "reuse-profile" }
+  | { type: "start-new-profile" }
+  | { type: "select-provider"; providerId: string; defaultModel?: string }
+  | { type: "set-probe-model"; value: string }
+  | { type: "start-probe" }
+  | { type: "finish-probe"; ok: boolean }
+  | { type: "continue-provider" }
+  | { type: "set-model"; value: string }
+  | { type: "continue-model" }
+  | { type: "set-profile-label"; value: string }
+  | { type: "start-install" }
+  | { type: "finish-install" }
+  | { type: "fail-install" }
+  | { type: "cancel-install" }
+  | { type: "enter-overview" }
+  | { type: "dismiss-task" }
+  | { type: "toggle-task-center" }
+  | { type: "back" };
 
-export function initialActivationState(): ActivationState {
+const screenStep: Record<Exclude<ActivationScreen, "overview">, DemoStepId> = {
+  agents: "agent",
+  profile: "profile",
+  provider: "provider",
+  model: "model",
+  review: "review",
+  install: "install",
+};
+
+const stepOrder: DemoStepId[] = ["agent", "profile", "provider", "model", "review", "install"];
+
+export function initialActivationState(scenario: DemoScenario): ActivationState {
   return {
-    phase: "idle",
+    screen: "agents",
+    agentTab: scenario.initialAgentTab,
     agentId: null,
-    configMode: null,
+    profileMode: null,
     providerId: null,
-    customBaseUrl: "",
-    model: null,
-    compatibility: null,
+    probeModel: "",
+    probeState: "idle",
+    model: "",
+    profileLabel: scenario.newProfileLabels["zh-CN"],
+    installState: "idle",
+    taskCenterOpen: false,
   };
 }
 
-type BaseUrlRejection =
-  | "required"
-  | "control-characters"
-  | "scheme"
-  | "credentials";
-
-export type BaseUrlCheck =
-  | { ok: true; value: string }
-  | { ok: false; reason: BaseUrlRejection };
-
-/* A line-for-line port of validate_base_url in oneagent/providers.py, in the
-   same order, so the demo rejects exactly what the kernel would reject. The
-   demo is only worth showing if this agrees with the product; a looser check
-   here would teach visitors an endpoint is acceptable when it is not. */
-export function validateDemoBaseUrl(value: string): BaseUrlCheck {
-  if (!value) return { ok: false, reason: "required" };
-  for (const character of value) {
-    const code = character.codePointAt(0) ?? 0;
-    if (code < 32 || code === 127) return { ok: false, reason: "control-characters" };
-  }
-  let parsed: URL;
-  try {
-    parsed = new URL(value);
-  } catch {
-    return { ok: false, reason: "scheme" };
-  }
-  if ((parsed.protocol !== "http:" && parsed.protocol !== "https:") || !parsed.host) {
-    return { ok: false, reason: "scheme" };
-  }
-  if (parsed.username || parsed.password) return { ok: false, reason: "credentials" };
-  return { ok: true, value: value.replace(/\/+$/, "") };
-}
-
-function errorState(state: ActivationState): ActivationState {
-  return { ...state, phase: "error" };
+function newProfileState(state: ActivationState, scenario: DemoScenario): ActivationState {
+  return {
+    ...state,
+    screen: "provider",
+    profileMode: "new",
+    providerId: scenario.provider.id,
+    probeModel: "",
+    probeState: "idle",
+    model: scenario.provider.defaultModel,
+    profileLabel: scenario.newProfileLabels["zh-CN"],
+    installState: "idle",
+    taskCenterOpen: false,
+  };
 }
 
 export function activationReducer(
   state: ActivationState,
   action: ActivationAction,
-  catalog: SiteCatalogV2,
+  scenario: DemoScenario,
 ): ActivationState {
-  if (action.type === "reset") return initialActivationState();
-
   switch (action.type) {
-    case "start":
-      return state.phase === "idle" ? { ...initialActivationState(), phase: "scanning" } : state;
-    case "scan-complete":
-      return state.phase === "scanning" ? { ...state, phase: "agent" } : state;
-    case "select-agent": {
-      const agent = catalog.agents.find((candidate) => candidate.id === action.agentId);
-      if (!agent) return errorState(state);
-      const base = { ...initialActivationState(), agentId: agent.id };
-      if (agent.support.officialInstallGuide || !agent.support.managedConfig || !agent.protocol) {
-        return { ...base, phase: "guide-only" };
+    case "reset":
+      return initialActivationState(scenario);
+    case "select-agent-tab":
+      if (state.screen !== "agents" || action.tab === state.agentTab) return state;
+      return { ...state, agentTab: action.tab, agentId: null };
+    case "select-agent":
+      return state.screen === "agents" ? { ...state, agentId: action.agentId } : state;
+    case "continue-agents":
+      return state.screen === "agents" && state.agentId ? { ...state, screen: "profile" } : state;
+    case "reuse-profile":
+      if (state.screen !== "profile") return state;
+      return {
+        ...state,
+        screen: "review",
+        profileMode: "reuse",
+        providerId: scenario.existingProfile.providerId,
+        model: scenario.existingProfile.model,
+        profileLabel: scenario.existingProfile.labels["zh-CN"],
+        probeModel: "",
+        probeState: "idle",
+      };
+    case "start-new-profile":
+      return state.screen === "profile" ? newProfileState(state, scenario) : state;
+    case "select-provider":
+      if (state.screen !== "provider") return state;
+      return {
+        ...state,
+        providerId: action.providerId,
+        probeModel: "",
+        probeState: "idle",
+        model: action.defaultModel ?? (action.providerId === scenario.provider.id ? scenario.provider.defaultModel : ""),
+      };
+    case "set-probe-model":
+      return state.screen === "provider" ? { ...state, probeModel: action.value, probeState: "idle" } : state;
+    case "start-probe":
+      return state.screen === "provider" && state.providerId
+        ? { ...state, probeState: "loading" }
+        : state;
+    case "finish-probe":
+      return state.screen === "provider" && state.probeState === "loading"
+        ? { ...state, probeState: action.ok ? "success" : "error" }
+        : state;
+    case "continue-provider":
+      return state.screen === "provider" && state.providerId ? { ...state, screen: "model" } : state;
+    case "set-model":
+      return state.screen === "model" ? { ...state, model: action.value } : state;
+    case "continue-model":
+      return state.screen === "model" && state.model.trim() ? { ...state, screen: "review" } : state;
+    case "set-profile-label":
+      return state.screen === "review" && state.profileMode === "new"
+        ? { ...state, profileLabel: action.value }
+        : state;
+    case "start-install":
+      return state.screen === "review"
+        ? { ...state, screen: "install", installState: "running", taskCenterOpen: true }
+        : state;
+    case "finish-install":
+      return state.screen === "install" && state.installState === "running"
+        ? { ...state, installState: "success" }
+        : state;
+    case "fail-install":
+      return state.screen === "install" && state.installState === "running"
+        ? { ...state, installState: "failure" }
+        : state;
+    case "cancel-install":
+      return state.screen === "install" && state.installState === "running"
+        ? { ...state, installState: "cancelled" }
+        : state;
+    case "enter-overview":
+      return state.screen === "install"
+        ? { ...state, screen: "overview", taskCenterOpen: false }
+        : state;
+    case "dismiss-task":
+      return { ...state, taskCenterOpen: false };
+    case "toggle-task-center":
+      return { ...state, taskCenterOpen: !state.taskCenterOpen };
+    case "back":
+      switch (state.screen) {
+        case "profile":
+          return { ...initialActivationState(scenario), agentTab: state.agentTab, agentId: state.agentId };
+        case "provider":
+          return { ...state, screen: "profile", profileMode: null, providerId: null, probeState: "idle" };
+        case "model":
+          return { ...state, screen: "provider" };
+        case "review":
+          return { ...state, screen: state.profileMode === "reuse" ? "profile" : "model" };
+        default:
+          return state;
       }
-      return { ...base, phase: "mode" };
-    }
-    case "select-mode": {
-      if (state.phase !== "mode" || !state.agentId) return state;
-      /* Picking an existing account ends the demo at the same place the product
-         lands: nothing to verify, because no new credential is being introduced. */
-      if (action.mode === "existing-account") {
-        return { ...state, phase: "ready", configMode: action.mode, providerId: null, model: null, compatibility: null };
-      }
-      return { ...state, phase: "provider", configMode: action.mode };
-    }
-    case "select-provider": {
-      const agent = catalog.agents.find((candidate) => candidate.id === state.agentId);
-      if (!agent) return errorState(state);
-      /* A custom endpoint has no catalog entry, so there is no published
-         protocol status to read. The product treats it as usable-but-unproven:
-         the probe decides, which here means the demo's own verify step. */
-      if (action.providerId === CUSTOM_PROVIDER_ID) {
-        return { ...state, phase: "provider", providerId: CUSTOM_PROVIDER_ID, compatibility: "supported" };
-      }
-      const provider = catalog.providers.find((candidate) => candidate.id === action.providerId);
-      if (!provider) return errorState(state);
-      const compatibility = compatibilityFor(agent, provider);
-      if (compatibility === "unsupported") {
-        return { ...state, phase: "unsupported", providerId: provider.id, customBaseUrl: "", compatibility };
-      }
-      return { ...state, phase: "provider", providerId: provider.id, customBaseUrl: "", compatibility };
-    }
-    case "set-custom-base-url":
-      return state.providerId === CUSTOM_PROVIDER_ID ? { ...state, customBaseUrl: action.value } : state;
-    case "select-model":
-      return state.phase === "model" && action.model ? { ...state, model: action.model } : state;
-    /* Choosing a model no longer finishes the flow: it opens the review screen,
-       which is where the product asks for the final go-ahead. */
-    case "review":
-      return state.phase === "model" && state.model ? { ...state, phase: "review" } : state;
-    case "verify": {
-      if (state.phase !== "provider" || !state.agentId || !state.providerId || !state.compatibility) {
-        return errorState(state);
-      }
-      // An unvalidated endpoint must not reach verification, the same way the
-      // product's probe button stays disabled until a custom base URL parses.
-      if (state.providerId === CUSTOM_PROVIDER_ID && !validateDemoBaseUrl(state.customBaseUrl).ok) {
-        return state;
-      }
-      return { ...state, phase: "verifying" };
-    }
-    case "verify-complete":
-      if (state.phase !== "verifying") return state;
-      if (state.compatibility === "preview-gate") return { ...state, phase: "preview-gate" };
-      if (state.compatibility === "supported" || state.compatibility === "verified") {
-        // Verification unlocks model choice; it is not the end of the flow.
-        return { ...state, phase: "model" };
-      }
-      return { ...state, phase: "unsupported" };
-    /* Only reachable from review. Previously this fired straight from the model
-       step, which is why the review screen had nowhere to live. */
-    case "confirm":
-      return state.phase === "review" && state.model ? { ...state, phase: "ready" } : state;
-    case "fail":
-      return errorState(state);
   }
+}
+
+export function routeForScreen(screen: ActivationScreen, agentId = "claude-code"): string {
+  switch (screen) {
+    case "agents":
+      return "/setup/agents";
+    case "profile":
+      return "/setup/profile";
+    case "provider":
+      return "/setup/provider";
+    case "model":
+      return "/setup/model";
+    case "review":
+      return "/setup/review";
+    case "install":
+      return `/tasks/install/${encodeURIComponent(agentId)}`;
+    case "overview":
+      return "/overview";
+  }
+}
+
+export function stepPresentation(state: ActivationState, step: DemoStepId): StepPresentation {
+  if (state.profileMode === "reuse" && (step === "provider" || step === "model")) return "skipped";
+  if (state.screen === "overview") return "complete";
+
+  const current = screenStep[state.screen];
+  const currentIndex = stepOrder.indexOf(current);
+  const index = stepOrder.indexOf(step);
+  if (index < currentIndex) return "complete";
+  if (index === currentIndex) return "current";
+  return "upcoming";
 }

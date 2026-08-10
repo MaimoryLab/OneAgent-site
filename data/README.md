@@ -12,6 +12,7 @@ Two more files sit beside them and are **not** upstream copies:
 | --- | --- |
 | `desktop-agents.json` | Desktop applications are declared in Go, in `internal/desktopapp/registry.go`, with no generated lock file to copy. Transcribed by hand. |
 | `planned-agents.json` | Agents OneAgent intends to support but has not shipped. By definition absent from the installer contract, so there is nothing upstream to copy. |
+| `activation-demo.json` | Versioned, deterministic UI walkthrough contract pinned to the released desktop flow. It contains no credentials and makes no network request. |
 
 Both are hand-maintained, which means nothing upstream will fail if they drift.
 Check them against the sources named inside each file when refreshing the locks.
@@ -28,7 +29,7 @@ coupling splitting the repositories was meant to remove.
 Copy both files from a released tag, not from `main`:
 
 ```bash
-tag=v0.3.0   # the release the site should describe
+tag=v0.4.0   # the release the site should describe
 for f in agents.lock.json providers.lock.json; do
   curl -fsSL "https://raw.githubusercontent.com/MaimoryLab/OneAgent/$tag/manifests/$f" -o "data/$f"
 done
@@ -42,11 +43,13 @@ command — which is what the previous copies were fetched with — now 404s.
 `pnpm run build` runs `astro check` and `scripts/validate-build.mjs`, so a shape
 change in either file fails the build rather than rendering a broken page.
 
-Current copies came from tag `v0.3.0` (commit `64da015`), OneAgent's first
-published release. Earlier copies tracked a `main` commit because no tag existed;
-that workaround is no longer needed.
+Current copies and the activation walkthrough were audited against tag `v0.4.0`
+(commit `ff81ee8`) on 2026-08-10. The lock-file contents did not change from
+`v0.3.0`, but their provenance and the UI flow did, so the source reference still
+advances with the release. Earlier copies tracked a `main` commit because no tag
+existed; that workaround is no longer needed.
 
-The command-line contract is now seven agents, all `config_mode: auto`: `codex`,
+The v0.4.0 command-line contract is seven agents, all `config_mode: auto`: `codex`,
 `claude-code`, `opencode`, `kilo-cli`, `aider`, and — new in `v0.3.0` —
 `openclaw` at rank 6 and `hermes` at rank 7. The history is worth keeping because
 the site followed each pass and the last one reverses a removal:
@@ -56,7 +59,7 @@ the site followed each pass and the last one reverses a removal:
   own build. `fac25e5` restored `cursor`, `openclaw` and `hermes` at ranks 6-8
   and kept the other six deleted.
 - `206a610` dropped those three as well, leaving five.
-- `v0.3.0` brings `openclaw` and `hermes` back as fully supported entries with
+- `v0.3.0` brought `openclaw` and `hermes` back as fully supported entries with
   config adapters. `cursor` stays out.
 
 Because they are now in the installer contract, both were **removed** from

@@ -38,6 +38,8 @@ interface AgentSource {
   config_path?: string;
   guide?: string;
   package?: {
+    manager?: string;
+    name?: string;
     version?: string;
     source?: string;
     license?: string;
@@ -75,6 +77,11 @@ interface PlannedSource {
 interface ProviderSource {
   name?: string;
   home: string;
+  key_management_url?: string;
+  base_url: string;
+  anthropic_base_url?: string;
+  default_model?: string;
+  fallback_probe_model?: string;
   relationship?: "none" | "referral" | "sponsor";
   disclosure?: string;
   referral_url?: string;
@@ -99,6 +106,8 @@ const cliAgents = Object.entries(agentLock.agents as Record<string, AgentSource>
          empty string that looks like a missing value. */
       command: meta.command ?? null,
       configPath: meta.config_path ?? null,
+      packageManager: meta.package?.manager ?? null,
+      packageName: meta.package?.name ?? null,
       platforms: (meta.platforms ?? []) as PlatformId[],
       lockedVersion: meta.package?.version ?? null,
       source: meta.package?.source ?? null,
@@ -133,6 +142,8 @@ const desktopAgents = Object.entries(desktopConfig.agents as Record<string, Desk
        and it is carried in `platforms` below. */
     command: null,
     configPath: meta.config_path ?? null,
+    packageManager: null,
+    packageName: null,
     platforms: Object.keys(meta.install ?? {}) as PlatformId[],
     /* OneAgent installs the vendor's current build from the vendor's own
        endpoint; there is no pinned version to quote, and no package manifest
@@ -164,6 +175,8 @@ const plannedAgents = Object.entries(plannedConfig.agents as Record<string, Plan
     rank: meta.rank ?? 99,
     command: null,
     configPath: null,
+    packageManager: null,
+    packageName: null,
     platforms: [],
     lockedVersion: null,
     source: null,
@@ -191,6 +204,11 @@ const providers = Object.entries(providerConfig.providers as Record<string, Prov
     id,
     name: meta.name ?? id,
     home: meta.home,
+    keyManagementUrl: meta.key_management_url ?? meta.home,
+    baseUrl: meta.base_url,
+    anthropicBaseUrl: meta.anthropic_base_url ?? "",
+    defaultModel: meta.default_model ?? "",
+    fallbackProbeModel: meta.fallback_probe_model ?? providerConfig.default_fallback_probe_model ?? "",
     relationship: meta.relationship ?? "none",
     disclosure: meta.disclosure ?? "",
     referralUrl: meta.referral_url ?? "",

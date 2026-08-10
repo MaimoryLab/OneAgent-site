@@ -1,313 +1,155 @@
 import { describe, expect, it } from "vitest";
 
-import { CUSTOM_PROVIDER_ID, activationReducer, initialActivationState, validateDemoBaseUrl } from "./activation";
-import type { SiteCatalogV2 } from "./explorer";
-import { DEMO_AGENT_STATES, demoModelsFor, featuredDemoAgents, missingDemoAgentIds } from "./demo-environment";
+import { catalog } from "./catalog";
+import {
+  activationReducer,
+  initialActivationState,
+  routeForScreen,
+  stepPresentation,
+} from "./activation";
+import { activationDemo, demoAgentStateFor, demoModelsFor } from "./demo-environment";
 
-const catalog: SiteCatalogV2 = {
-  schema_version: 2,
-  groups: [{ id: "auto", name: "Auto" }, { id: "ide", name: "IDE" }],
-  agents: [
-    {
-      id: "managed",
-      name: "Managed",
-      kind: "cli",
-      status: "available",
-      group: "auto",
-      rank: 1,
-      command: "managed",
-      configPath: ".managed/config",
-      platforms: ["macos"],
-      lockedVersion: "1.0.0",
-      source: null,
-      license: null,
-      licenseUrl: null,
-      guide: null,
-      protocol: "anthropic",
-      support: { managedInstall: true, officialInstallGuide: false, managedConfig: true },
-    },
-    {
-      id: "preview",
-      name: "Preview",
-      kind: "cli",
-      status: "available",
-      group: "auto",
-      rank: 2,
-      command: "preview",
-      configPath: ".preview/config",
-      platforms: ["macos"],
-      lockedVersion: "1.0.0",
-      source: null,
-      license: null,
-      licenseUrl: null,
-      guide: null,
-      protocol: "responses",
-      support: { managedInstall: true, officialInstallGuide: false, managedConfig: true },
-    },
-    {
-      id: "guided",
-      name: "Guided",
-      kind: "cli",
-      status: "available",
-      group: "ide",
-      rank: 3,
-      command: null,
-      configPath: null,
-      platforms: ["macos"],
-      lockedVersion: null,
-      source: null,
-      license: null,
-      licenseUrl: null,
-      guide: "Use the official flow.",
-      protocol: null,
-      support: { managedInstall: false, officialInstallGuide: true, managedConfig: false },
-    },
-  ],
-  providers: [
-    {
-      id: "provider",
-      name: "Provider",
-      home: "https://provider.example/",
-      relationship: "none",
-      disclosure: "",
-      referralUrl: "",
-      order: 1,
-      protocols: [
-        { id: "anthropic", status: "implementation-supported" },
-        { id: "responses", status: "release-candidate-required" },
-      ],
-    },
-  ],
-};
+const scenario = activationDemo.scenario;
 
-function scanned() {
-  return activationReducer(
-    activationReducer(initialActivationState(), { type: "start" }, catalog),
-    { type: "scan-complete" },
-    catalog,
-  );
+function reachProfile() {
+  let state = initialActivationState(scenario);
+  state = activationReducer(state, { type: "select-agent-tab", tab: "cli" }, scenario);
+  state = activationReducer(state, { type: "select-agent", agentId: scenario.selectedAgent.id }, scenario);
+  return activationReducer(state, { type: "continue-agents" }, scenario);
 }
 
-describe("activation demo state machine", () => {
-  it("moves a supported managed combination to ready", () => {
-    let state = scanned();
-    state = activationReducer(state, { type: "select-agent", agentId: "managed" }, catalog);
-    state = activationReducer(state, { type: "select-mode", mode: "provider" }, catalog);
-    state = activationReducer(state, { type: "select-provider", providerId: "provider" }, catalog);
-    state = activationReducer(state, { type: "verify" }, catalog);
-    state = activationReducer(state, { type: "verify-complete" }, catalog);
-    state = activationReducer(state, { type: "select-model", model: "deepseek/deepseek-v3" }, catalog);
-    /* Review sits between the model choice and the write, mirroring
-       /setup/review upstream: choosing a model is not the last decision. */
-    state = activationReducer(state, { type: "review" }, catalog);
-    expect(state.phase).toBe("review");
-    state = activationReducer(state, { type: "confirm" }, catalog);
-
-    expect(state).toMatchObject({ phase: "ready", agentId: "managed", providerId: "provider", compatibility: "supported" });
-  });
-
-  // Nothing may skip the review screen, because it is the only place the demo
-  // states what will be written and that a backup is taken first.
-  it("does not reach ready straight from the model step", () => {
-    let state = scanned();
-    state = activationReducer(state, { type: "select-agent", agentId: "managed" }, catalog);
-    state = activationReducer(state, { type: "select-mode", mode: "provider" }, catalog);
-    state = activationReducer(state, { type: "select-provider", providerId: "provider" }, catalog);
-    state = activationReducer(state, { type: "verify" }, catalog);
-    state = activationReducer(state, { type: "verify-complete" }, catalog);
-    state = activationReducer(state, { type: "select-model", model: "deepseek/deepseek-v3" }, catalog);
-
-    expect(activationReducer(state, { type: "confirm" }, catalog).phase).toBe("model");
-  });
-
-  it("never upgrades release-candidate-required support to ready", () => {
-    let state = scanned();
-    state = activationReducer(state, { type: "select-agent", agentId: "preview" }, catalog);
-    state = activationReducer(state, { type: "select-mode", mode: "provider" }, catalog);
-    state = activationReducer(state, { type: "select-provider", providerId: "provider" }, catalog);
-    state = activationReducer(state, { type: "verify" }, catalog);
-    state = activationReducer(state, { type: "verify-complete" }, catalog);
-
-    expect(state.phase).toBe("preview-gate");
-    // Nothing downstream may rescue a gated combination.
-    expect(activationReducer(state, { type: "confirm" }, catalog).phase).toBe("preview-gate");
-  });
-
-  it("routes guide-only agents without asking for a provider", () => {
-    const state = activationReducer(scanned(), { type: "select-agent", agentId: "guided" }, catalog);
-
-    expect(state).toMatchObject({ phase: "guide-only", agentId: "guided", providerId: null });
-  });
-
-  it("resets every terminal state without retaining a selection", () => {
-    const state = activationReducer(
-      {
-        phase: "error",
-        agentId: "managed",
-        configMode: "provider",
-        providerId: "provider",
-        customBaseUrl: "https://api.example.com",
-        model: "deepseek/deepseek-v3",
-        compatibility: "supported",
-      },
-      { type: "reset" },
-      catalog,
-    );
-
-    expect(state).toEqual(initialActivationState());
-  });
-});
-
-describe("demo environment fixture", () => {
-  it("references only real catalog agents", async () => {
-    const realCatalog = (await import("./catalog")).catalog;
-    expect(missingDemoAgentIds(realCatalog, DEMO_AGENT_STATES)).toEqual([]);
-  });
-
-  // The console's first screen has to keep offering both product shapes. A rank
-  // change upstream already emptied it of its second branch once, back when the
-  // screen was the first four agents by rank, and nothing failed until an
-  // end-to-end test timed out looking for a button.
-  it("features both a command-line and a desktop agent", async () => {
-    const realCatalog = (await import("./catalog")).catalog;
-    const featured = featuredDemoAgents(realCatalog);
-
-    expect(featured.some((agent) => agent.kind === "cli")).toBe(true);
-    expect(featured.some((agent) => agent.kind === "desktop")).toBe(true);
-  });
-
-  // A coming-soon agent has no install or config contract, so the demo must not
-  // offer it as something a visitor can walk to Ready.
-  it("never features an agent that is only planned", async () => {
-    const realCatalog = (await import("./catalog")).catalog;
-
-    expect(featuredDemoAgents(realCatalog).every((agent) => agent.status === "available")).toBe(true);
-  });
-
-  it("offers a model list for every provider the real catalog publishes", async () => {
-    const realCatalog = (await import("./catalog")).catalog;
-    for (const provider of realCatalog.providers) {
-      expect(demoModelsFor(provider.id).length, `${provider.id} has no demo models`).toBeGreaterThan(0);
-    }
-  });
-});
-
-// These mirror validate_base_url in oneagent/providers.py. If the kernel's rules
-// change, this suite should fail — the demo claiming an endpoint is acceptable
-// when the product would reject it is the failure mode worth catching.
-describe("custom endpoint validation matches the kernel", () => {
-  it("accepts http and https and strips trailing slashes", () => {
-    expect(validateDemoBaseUrl("https://api.example.com/openai")).toEqual({
-      ok: true,
-      value: "https://api.example.com/openai",
-    });
-    expect(validateDemoBaseUrl("http://localhost:8080/v1//")).toEqual({
-      ok: true,
-      value: "http://localhost:8080/v1",
+describe("v0.4.0 activation demo contract", () => {
+  it("pins the demo to the audited OneAgent release", () => {
+    expect(activationDemo.source).toMatchObject({
+      release: "v0.4.0",
+      commit: "ff81ee81df8a5d9bf91be336d5df280fe20736d8",
+      publishedAt: "2026-08-09",
+      verifiedAt: "2026-08-10",
     });
   });
 
-  it("rejects an empty value", () => {
-    expect(validateDemoBaseUrl("")).toEqual({ ok: false, reason: "required" });
-  });
-
-  it("rejects a scheme the kernel does not allow", () => {
-    for (const value of ["ftp://api.example.com", "file:///etc/passwd", "api.example.com", "://nohost"]) {
-      expect(validateDemoBaseUrl(value).ok, value).toBe(false);
-    }
-    expect(validateDemoBaseUrl("ftp://api.example.com")).toEqual({ ok: false, reason: "scheme" });
-  });
-
-  it("rejects credentials embedded in the URL", () => {
-    expect(validateDemoBaseUrl("https://user:secret@api.example.com")).toEqual({
-      ok: false,
-      reason: "credentials",
+  it("derives provider and install facts from the vendored release catalog", () => {
+    expect(scenario.provider).toMatchObject({
+      id: "ppio",
+      baseUrl: "https://api.ppio.com/openai",
+      defaultModel: "deepseek/deepseek-v4-pro",
+      fallbackProbeModel: "deepseek/deepseek-v4-flash",
     });
-    expect(validateDemoBaseUrl("https://user@api.example.com")).toEqual({ ok: false, reason: "credentials" });
+    expect(scenario.selectedAgent).toMatchObject({
+      id: "claude-code",
+      command: "claude",
+      packageManager: "npm",
+      packageName: "@anthropic-ai/claude-code",
+    });
+    expect(demoModelsFor(scenario)).toEqual([
+      "deepseek/deepseek-v4-pro",
+      "deepseek/deepseek-v4-flash",
+    ]);
+    expect(demoModelsFor(scenario)).not.toContain("deepseek/deepseek-v3");
   });
 
-  it("rejects control characters", () => {
-    // Written as escapes on purpose: a literal newline, tab or DEL in the source
-    // is invisible to a reviewer and an editor may silently normalise it away.
-    for (const value of [
-      "https://api.example.com/\nopenai",
-      "https://api.example.com/\topenai",
-      "https://api.example.com/\u007f",
-      "https://api.example.com/\u0000",
-    ]) {
-      expect(validateDemoBaseUrl(value), JSON.stringify(value)).toEqual({
-        ok: false,
-        reason: "control-characters",
-      });
-    }
+  it("keeps the selected agent uninstalled in the authored demo environment", () => {
+    expect(demoAgentStateFor(scenario.selectedAgent.id)).toEqual({ installed: false, configured: false });
+    expect(catalog.agents.some((agent) => agent.id === scenario.selectedAgent.id)).toBe(true);
   });
 });
 
-describe("configuration mode branches", () => {
-  const atMode = () => activationReducer(scanned(), { type: "select-agent", agentId: "managed" }, catalog);
-
-  it("asks how to configure before asking for a provider", () => {
-    expect(atMode()).toMatchObject({ phase: "mode", agentId: "managed", configMode: null });
-  });
-
-  it("skips provider and model when an existing account is reused", () => {
-    const state = activationReducer(atMode(), { type: "select-mode", mode: "existing-account" }, catalog);
-
+describe("route-aligned activation state", () => {
+  it("starts on the real Agent screen with the desktop tab selected", () => {
+    const state = initialActivationState(scenario);
     expect(state).toMatchObject({
-      phase: "ready",
-      configMode: "existing-account",
-      providerId: null,
-      model: null,
+      screen: "agents",
+      agentTab: "desktop",
+      agentId: null,
+      probeState: "idle",
+      installState: "idle",
     });
+    expect(routeForScreen(state.screen)).toBe("/setup/agents");
   });
 
-  it("requires a verified connection before a model can be chosen", () => {
-    let state = activationReducer(atMode(), { type: "select-mode", mode: "provider" }, catalog);
-    state = activationReducer(state, { type: "select-provider", providerId: "provider" }, catalog);
-    state = activationReducer(state, { type: "verify" }, catalog);
-    state = activationReducer(state, { type: "verify-complete" }, catalog);
+  it("keeps Agent selection single-valued while switching tabs", () => {
+    let state = initialActivationState(scenario);
+    state = activationReducer(state, { type: "select-agent", agentId: "chatgpt-desktop" }, scenario);
+    expect(state.agentId).toBe("chatgpt-desktop");
 
-    expect(state.phase).toBe("model");
-    // Advancing without a model must not open the review screen.
-    expect(activationReducer(state, { type: "review" }, catalog).phase).toBe("model");
+    state = activationReducer(state, { type: "select-agent-tab", tab: "cli" }, scenario);
+    expect(state.agentId).toBeNull();
+    state = activationReducer(state, { type: "select-agent", agentId: "codex" }, scenario);
+    state = activationReducer(state, { type: "select-agent", agentId: "claude-code" }, scenario);
+    expect(state.agentId).toBe("claude-code");
+  });
 
-    state = activationReducer(state, { type: "select-model", model: "deepseek/deepseek-v3" }, catalog);
-    state = activationReducer(state, { type: "review" }, catalog);
-    expect(activationReducer(state, { type: "confirm" }, catalog)).toMatchObject({
-      phase: "ready",
-      model: "deepseek/deepseek-v3",
+  it("uses the real new-profile path and does not gate Model on a probe", () => {
+    let state = reachProfile();
+    expect(state.screen).toBe("profile");
+
+    state = activationReducer(state, { type: "start-new-profile" }, scenario);
+    expect(state).toMatchObject({
+      screen: "provider",
+      profileMode: "new",
+      providerId: "ppio",
+      model: "deepseek/deepseek-v4-pro",
     });
-  });
-});
 
-describe("custom provider path", () => {
-  const atProvider = () => {
-    let state = activationReducer(scanned(), { type: "select-agent", agentId: "managed" }, catalog);
-    state = activationReducer(state, { type: "select-mode", mode: "provider" }, catalog);
-    return activationReducer(state, { type: "select-provider", providerId: CUSTOM_PROVIDER_ID }, catalog);
-  };
-
-  it("holds at the provider step until the endpoint validates", () => {
-    let state = activationReducer(atProvider(), { type: "set-custom-base-url", value: "not-a-url" }, catalog);
-    expect(activationReducer(state, { type: "verify" }, catalog).phase).toBe("provider");
-
-    state = activationReducer(state, { type: "set-custom-base-url", value: "https://api.example.com/openai" }, catalog);
-    expect(activationReducer(state, { type: "verify" }, catalog).phase).toBe("verifying");
+    state = activationReducer(state, { type: "continue-provider" }, scenario);
+    expect(state.screen).toBe("model");
+    expect(state.probeState).toBe("idle");
   });
 
-  it("ignores an endpoint typed against a built-in provider", () => {
-    let state = activationReducer(scanned(), { type: "select-agent", agentId: "managed" }, catalog);
-    state = activationReducer(state, { type: "select-mode", mode: "provider" }, catalog);
-    state = activationReducer(state, { type: "select-provider", providerId: "provider" }, catalog);
-    state = activationReducer(state, { type: "set-custom-base-url", value: "https://elsewhere.example" }, catalog);
+  it("treats connection testing as optional inline state", () => {
+    let state = activationReducer(reachProfile(), { type: "start-new-profile" }, scenario);
+    state = activationReducer(state, { type: "start-probe" }, scenario);
+    expect(state).toMatchObject({ screen: "provider", probeState: "loading" });
 
-    expect(state.customBaseUrl).toBe("");
+    state = activationReducer(state, { type: "finish-probe", ok: true }, scenario);
+    expect(state).toMatchObject({ screen: "provider", probeState: "success" });
+
+    state = activationReducer(state, { type: "continue-provider" }, scenario);
+    expect(state.screen).toBe("model");
   });
 
-  it("clears a typed endpoint when switching back to a built-in provider", () => {
-    let state = activationReducer(atProvider(), { type: "set-custom-base-url", value: "https://api.example.com" }, catalog);
-    state = activationReducer(state, { type: "select-provider", providerId: "provider" }, catalog);
+  it("reuses a saved profile by skipping Provider and Model but still reviewing and installing", () => {
+    let state = activationReducer(reachProfile(), { type: "reuse-profile" }, scenario);
+    expect(state).toMatchObject({
+      screen: "review",
+      profileMode: "reuse",
+      providerId: "ppio",
+      model: "deepseek/deepseek-v4-pro",
+    });
+    expect(stepPresentation(state, "provider")).toBe("skipped");
+    expect(stepPresentation(state, "model")).toBe("skipped");
+    expect(stepPresentation(state, "review")).toBe("current");
 
-    expect(state).toMatchObject({ providerId: "provider", customBaseUrl: "" });
+    state = activationReducer(state, { type: "start-install" }, scenario);
+    expect(state).toMatchObject({ screen: "install", installState: "running", taskCenterOpen: true });
+  });
+
+  it("runs Model through Review, a durable install task, and Overview", () => {
+    let state = activationReducer(reachProfile(), { type: "start-new-profile" }, scenario);
+    state = activationReducer(state, { type: "continue-provider" }, scenario);
+    state = activationReducer(state, { type: "set-model", value: scenario.provider.defaultModel }, scenario);
+    state = activationReducer(state, { type: "continue-model" }, scenario);
+    expect(state.screen).toBe("review");
+
+    state = activationReducer(state, { type: "set-profile-label", value: "团队默认 2" }, scenario);
+    state = activationReducer(state, { type: "start-install" }, scenario);
+    expect(state).toMatchObject({ screen: "install", installState: "running", profileLabel: "团队默认 2" });
+
+    state = activationReducer(state, { type: "finish-install" }, scenario);
+    expect(state).toMatchObject({ screen: "install", installState: "success", taskCenterOpen: true });
+
+    state = activationReducer(state, { type: "enter-overview" }, scenario);
+    expect(state).toMatchObject({ screen: "overview", installState: "success", taskCenterOpen: false });
+    expect(routeForScreen(state.screen)).toBe("/overview");
+  });
+
+  it("keeps cancellation separate from reset", () => {
+    let state = activationReducer(reachProfile(), { type: "reuse-profile" }, scenario);
+    state = activationReducer(state, { type: "start-install" }, scenario);
+    state = activationReducer(state, { type: "cancel-install" }, scenario);
+    expect(state).toMatchObject({ screen: "install", installState: "cancelled" });
+
+    state = activationReducer(state, { type: "reset" }, scenario);
+    expect(state).toEqual(initialActivationState(scenario));
   });
 });

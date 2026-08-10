@@ -27,62 +27,100 @@ test("home presents one activation entry without claiming a real scan", async ({
   await expect(page.getByRole("heading", { level: 1 })).toContainText("激活你的 AI 开发环境");
   await expect(page.locator(".hero-actions").getByRole("button", { name: "开始激活演示" })).toBeVisible();
   await expect(page.locator(".hero-actions").getByRole("link")).toHaveCount(0);
-  /* The console used to sit at idle until clicked. It now plays itself once it
-     scrolls into view, so the successor guarantee is that the page drives the
-     demo — the button stays as the replay and takeover entry. Scrolled here
-     explicitly because whether the console starts on screen varies by viewport,
-     and this test is not the one about the trigger threshold. */
+
   const console = page.locator("#activation-console");
   await console.scrollIntoViewIfNeeded();
-  /* The guarantee is that the page drove the demo without being clicked, which
-     holds both while it plays and once it has finished. Asserting
-     data-autoplaying="true" alone made this a race: on a slow first paint the run
-     completes before the assertion arrives, leaving data-phase="ready" and the
-     flag cleared — the same correct behaviour passing or failing by timing. */
-  await expect
-    .poll(
-      async () => {
-        const [autoplaying, phase] = await Promise.all([
-          console.getAttribute("data-autoplaying"),
-          console.getAttribute("data-phase"),
-        ]);
-        return autoplaying === "true" || phase !== "idle";
-      },
-      { message: "the console should drive itself without a click" },
-    )
-    .toBe(true);
+  await expect(console).toHaveAttribute("data-screen", "agents");
+  await expect(console).toHaveAttribute("data-route", "/setup/agents");
+  await expect(console).toHaveAttribute("data-source-release", "v0.4.0");
+  await expect(console).toHaveAttribute("data-autoplaying", "true");
   await expect(page.getByText("示例环境", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("不访问设备", { exact: true })).toBeVisible();
   await expect(page.locator('input[type="password"], input[name*="key" i]')).toHaveCount(0);
   await expect(page.locator(".hero-note")).toContainText("未签名技术预览版");
 });
 
-test("activation demo reaches Ready only for a supported managed combination", async ({ page }) => {
+test("activation demo uses the v0.4.0 English product vocabulary", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/en/");
+  const console = page.locator("#activation-console");
+  await expect(console.locator('[data-nav-id="overview"]')).toHaveText("Environment overview");
+  await expect(console.locator('[data-nav-id="providers"]')).toHaveText("Provider");
+  await expect(console.locator('[data-nav-id="profiles"]')).toHaveText("Profiles");
+  await expect(console.locator('[data-utility-id="tasks"]')).toContainText("Task center");
+  await expect(console.locator('[data-utility-id="settings"]')).toContainText("Settings");
+  await expect(console.locator('[data-step-id="profile"]')).toContainText("Select a profile");
+  await expect(console.locator('[data-step-id="review"]')).toContainText("Review");
+});
+
+test("activation demo follows the v0.4.0 new-profile path through Overview", async ({ page }) => {
   const fetches: string[] = [];
   page.on("request", (request) => {
     if (["fetch", "xhr"].includes(request.resourceType())) fetches.push(request.url());
   });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const console = page.locator("#activation-console");
   await page.getByRole("button", { name: "开始激活演示" }).click();
-  await expect(console).toHaveAttribute("data-phase", "agent");
-  await console.getByRole("button", { name: /Claude Code/ }).click();
-  await expect(console).toHaveAttribute("data-phase", "mode");
+
+  await expect(console).toHaveAttribute("data-screen", "agents");
+  await console.getByRole("tab", { name: "命令行 Agent" }).click();
+  await console.getByRole("radio", { name: "选择 Claude Code" }).click();
+  await console.getByRole("button", { name: /^继续/ }).click();
+
+  await expect(console).toHaveAttribute("data-screen", "profile");
+  await expect(console).toHaveAttribute("data-route", "/setup/profile");
+  await expect(console.getByText("团队默认", { exact: true })).toBeVisible();
   await console.getByRole("button", { name: /新建配置模版/ }).click();
-  await expect(console).toHaveAttribute("data-phase", "provider");
-  await console.getByRole("button", { name: /PPIO/ }).click();
-  await console.getByRole("button", { name: "验证示例连接" }).click();
-  await expect(console).toHaveAttribute("data-phase", "model");
-  await console.getByRole("button", { name: "deepseek/deepseek-v3" }).click();
-  /* Two steps now, mirroring /setup/model → /setup/review upstream: choosing a
-     model opens the review screen, and the write is authorised there. */
-  await console.getByRole("button", { name: "下一步：确认" }).click();
-  await expect(console).toHaveAttribute("data-phase", "review");
-  await console.getByRole("button", { name: "开始安装" }).click();
-  await expect(console).toHaveAttribute("data-phase", "ready");
-  await expect(console.getByRole("heading", { name: "示例环境已 Ready" })).toBeVisible();
-  await expect(console.getByRole("link", { name: "下载 OneAgent" })).toBeVisible();
-  await expect(console.getByRole("link", { name: "打开完整配置目录" })).toBeVisible();
+
+  await expect(console).toHaveAttribute("data-screen", "provider");
+  await expect(console.getByRole("combobox", { name: "模型服务" })).toContainText("PPIO");
+  const continueWithoutProbe = console.getByRole("button", { name: /继续选择模型/ });
+  await expect(continueWithoutProbe).toBeEnabled();
+  await expect(console.getByText("连接测试是可选的，可以直接继续选择模型")).toBeVisible();
+
+  await console.getByRole("button", { name: "测试连接" }).click();
+  await expect(console.getByText(/正在验证端点和 Key/)).toBeVisible();
+  await expect(console.getByText(/Anthropic Messages connection test passed/)).toBeVisible();
+  await continueWithoutProbe.click();
+
+  await expect(console).toHaveAttribute("data-screen", "model");
+  await expect(console.getByLabel("手动输入模型 ID")).toHaveValue("deepseek/deepseek-v4-pro");
+  await expect(console.getByText("deepseek/deepseek-v3", { exact: true })).toHaveCount(0);
+  await console.getByRole("radio", { name: /deepseek\/deepseek-v4-pro/ }).click();
+  await console.getByRole("button", { name: /^继续/ }).click();
+
+  await expect(console).toHaveAttribute("data-screen", "review");
+  await expect(console.getByRole("heading", { name: "确认激活" })).toBeVisible();
+  await expect(console.getByText("~/.claude/settings.json", { exact: true })).toBeVisible();
+  await expect(console.getByText("~/.oneagent/profile.json", { exact: true })).toBeVisible();
+  const reviewFitsWindow = await console.evaluate((root) => {
+    const windowRect = root.querySelector<HTMLElement>("[data-console-window]")!.getBoundingClientRect();
+    const footerRect = root.querySelector<HTMLElement>(".activation-page-footer")!.getBoundingClientRect();
+    return footerRect.top >= windowRect.top && footerRect.bottom <= windowRect.bottom + 1;
+  });
+  expect(reviewFitsWindow, "the fixed Review actions must stay inside the product window").toBe(true);
+  await console.getByLabel("配置模版名称").fill("团队默认 2");
+  await console.getByRole("button", { name: /开始安装/ }).click();
+
+  await expect(console).toHaveAttribute("data-screen", "install");
+  await expect(console).toHaveAttribute("data-route", "/tasks/install/claude-code");
+  await expect(console.getByText("@anthropic-ai/claude-code", { exact: false })).toBeVisible();
+  const installLog = console.locator(".activation-install-log pre");
+  await expect(installLog).toContainText("$ npm install -g --registry=https://registry.npmmirror.com/");
+  await expect(installLog).not.toContainText("\\n");
+  expect(await installLog.innerText()).toContain("\n$ claude --version");
+  await expect(console.locator("[data-task-popover]")).toBeVisible();
+  await expect(console.locator("[data-task-status]")).toContainText("安装完成", { timeout: 5000 });
+  await console.getByRole("button", { name: /进入总览/ }).click();
+
+  await expect(console).toHaveAttribute("data-screen", "overview");
+  await expect(console).toHaveAttribute("data-route", "/overview");
+  await expect(console.getByRole("heading", { name: "环境总览" })).toBeVisible();
+  await expect(console.locator('[data-nav-id="overview"]')).toHaveClass(/is-active/);
+  await expect(console.getByText("团队默认 2", { exact: true })).toBeVisible();
+  await expect(console.getByRole("button", { name: /启动/ })).toBeVisible();
+
   await page.addScriptTag({ content: axe.source });
   const result = await page.evaluate(async () => {
     const axeApi = (window as typeof window & { axe: typeof axe }).axe;
@@ -97,135 +135,110 @@ test("activation demo reaches Ready only for a supported managed combination", a
   expect(fetches, "the public demo must not call a local or remote activation API").toEqual([]);
 });
 
-/* This used to drive the guide-only branch first, by picking Cursor. Upstream
- * removed every guide-only agent from agents.lock.json, so the reducer's
- * guide-only phase is unreachable from the real catalog — it is still exercised
- * against a fixture in src/lib/activation.test.ts, which is where a branch with
- * no catalog subject belongs.
- *
- * The preview gate is the boundary that still has one, and it is the one worth
- * driving end to end: a release-candidate-required protocol must not reach Ready
- * no matter what the visitor clicks afterwards.
- */
-test("activation demo preserves the preview-gate boundary", async ({ page }) => {
-  await page.goto("/");
-  const console = page.locator("#activation-console");
-
-  await page.getByRole("button", { name: "开始激活演示" }).click();
-  await expect(console).toHaveAttribute("data-phase", "agent");
-  await console.getByRole("button", { name: /Codex/ }).click();
-  await console.getByRole("button", { name: /新建配置模版/ }).click();
-  await console.getByRole("button", { name: /PPIO/ }).click();
-  await console.getByRole("button", { name: "验证示例连接" }).click();
-  await expect(console).toHaveAttribute("data-phase", "preview-gate");
-  await expect(console.getByRole("heading", { name: "仍需通过发布门禁" })).toBeVisible();
-  await expect(console.getByRole("link", { name: "下载 OneAgent" })).toBeHidden();
-  await expect(console.getByRole("link", { name: "发行政策" })).toBeVisible();
-});
-
-// The custom endpoint is the demo's only typed input, and its whole point is
-// that the browser applies the same rules as oneagent/providers.py. A field that
-// accepted anything would teach visitors an endpoint works when the app rejects it.
-test("activation demo validates a custom endpoint the way the app does", async ({ page }) => {
-  const fetches: string[] = [];
-  page.on("request", (request) => {
-    if (["fetch", "xhr"].includes(request.resourceType())) fetches.push(request.url());
-  });
-  await page.goto("/");
-  const console = page.locator("#activation-console");
-  await page.getByRole("button", { name: "开始激活演示" }).click();
-  await console.getByRole("button", { name: /Claude Code/ }).click();
-  await console.getByRole("button", { name: /新建配置模版/ }).click();
-  await console.getByRole("button", { name: /自定义端点/ }).click();
-
-  const url = console.getByLabel("Base URL");
-  const verify = console.getByRole("button", { name: "验证示例连接" });
-  await expect(url).toBeVisible();
-  await expect(verify).toBeDisabled();
-
-  for (const [value, message] of [
-    ["ftp://api.example.com", "需要以 http:// 或 https:// 开头。"],
-    ["https://user:secret@api.example.com", "请从地址中去掉用户名或密码。"],
-  ]) {
-    await url.fill(value);
-    await expect(console.locator("[data-custom-hint]")).toHaveText(message);
-    await expect(url).toHaveAttribute("aria-invalid", "true");
-    await expect(verify, `${value} must not be verifiable`).toBeDisabled();
-  }
-
-  await url.fill("https://api.example.com/openai");
-  await expect(console.locator("[data-custom-hint]")).toHaveText("端点可用");
-  await expect(verify).toBeEnabled();
-  await verify.click();
-
-  // A custom endpoint publishes no catalog, so the demo shows the app's real
-  // recovery — type the id — rather than inventing a discovered list.
-  await expect(console).toHaveAttribute("data-phase", "model");
-  await expect(console.locator("[data-model-grid]")).toBeHidden();
-  await console.getByLabel("模型 ID").fill("deepseek/deepseek-v3");
-  /* Two steps now, mirroring /setup/model → /setup/review upstream: choosing a
-     model opens the review screen, and the write is authorised there. */
-  await console.getByRole("button", { name: "下一步：确认" }).click();
-  await expect(console).toHaveAttribute("data-phase", "review");
-  await console.getByRole("button", { name: "开始安装" }).click();
-  await expect(console).toHaveAttribute("data-phase", "ready");
-  await expect(console.locator("[data-result-provider]")).toHaveText("api.example.com");
-  expect(fetches, "typing an endpoint must not make the page call it").toEqual([]);
-});
-
-// Reusing an existing account is a real branch in the product's ConfigModePage,
-// and it exists precisely because no new credential is introduced — so the demo
-// must not walk it through provider and model steps it genuinely skips.
-test("activation demo skips provider and model for an existing account", async ({ page }) => {
-  await page.goto("/");
-  const console = page.locator("#activation-console");
-  await page.getByRole("button", { name: "开始激活演示" }).click();
-  await console.getByRole("button", { name: /Claude Code/ }).click();
-  await expect(console).toHaveAttribute("data-phase", "mode");
-  await console.getByRole("button", { name: /套用已有配置模版/ }).click();
-
-  await expect(console).toHaveAttribute("data-phase", "ready");
-  await expect(console.getByRole("heading", { name: "保留现有账号" })).toBeVisible();
-  await expect(console.locator(".activation-steps li.is-skipped")).toHaveCount(2);
-  await expect(console.locator("[data-result-provider]")).toHaveText("已跳过");
-  await expect(console.locator("[data-log]")).toContainText("Provider 与模型步骤已跳过");
-});
-
-test("activation demo keeps a complete event history under reduced motion", async ({ page }) => {
+test("activation demo reuses a saved profile by skipping Provider and Model but still installs", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const console = page.locator("#activation-console");
-  /* Advancing the interface on its own is motion, so reduced motion means the
-     console waits to be asked. That is also what keeps the rest of this test
-     valid: nothing has moved off idle before the first click. */
-  await console.scrollIntoViewIfNeeded();
-  await expect(console).toHaveAttribute("data-phase", "idle");
-  await expect(console).not.toHaveAttribute("data-autoplaying", "true");
   await page.getByRole("button", { name: "开始激活演示" }).click();
-  await expect(console).toHaveAttribute("data-phase", "agent");
-  await expect(console.locator("[data-log] li")).toHaveCount(2);
-  await console.getByRole("button", { name: /Claude Code/ }).click();
+  await console.getByRole("tab", { name: "命令行 Agent" }).click();
+  await console.getByRole("radio", { name: "选择 Claude Code" }).click();
+  await console.getByRole("button", { name: /^继续/ }).click();
+
+  await expect(console).toHaveAttribute("data-screen", "profile");
+  await console.getByRole("button", { name: /^继续/ }).click();
+
+  await expect(console).toHaveAttribute("data-screen", "review");
+  await expect(console.locator('[data-step-id="provider"]')).toHaveAttribute("data-presentation", "skipped");
+  await expect(console.locator('[data-step-id="model"]')).toHaveAttribute("data-presentation", "skipped");
+  await expect(console.getByLabel("配置模版名称")).toBeHidden();
+  await console.getByRole("button", { name: /开始安装/ }).click();
+  await expect(console).toHaveAttribute("data-screen", "install");
+  await expect(console).not.toHaveAttribute("data-screen", "overview");
+});
+
+test("activation Review keeps its fixed actions inside the 1180 by 760 reference viewport", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the reference viewport only needs one browser project");
+  await page.setViewportSize({ width: 1180, height: 760 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const console = page.locator("#activation-console");
+  await page.getByRole("button", { name: "开始激活演示" }).click();
+  await console.getByRole("tab", { name: "命令行 Agent" }).click();
+  await console.getByRole("radio", { name: "选择 Claude Code" }).click();
+  await console.getByRole("button", { name: /^继续/ }).click();
   await console.getByRole("button", { name: /新建配置模版/ }).click();
-  await console.getByRole("button", { name: /PPIO/ }).click();
-  await console.getByRole("button", { name: "验证示例连接" }).click();
-  await expect(console).toHaveAttribute("data-phase", "model");
-  await console.getByRole("button", { name: "deepseek/deepseek-v3" }).click();
-  /* Two steps now, mirroring /setup/model → /setup/review upstream: choosing a
-     model opens the review screen, and the write is authorised there. */
-  await console.getByRole("button", { name: "下一步：确认" }).click();
-  await expect(console).toHaveAttribute("data-phase", "review");
-  await console.getByRole("button", { name: "开始安装" }).click();
-  await expect(console).toHaveAttribute("data-phase", "ready");
-  await expect(console.locator("[data-log]")).toContainText("示例协议验证完成");
+  await console.getByRole("button", { name: /继续选择模型/ }).click();
+  await console.getByRole("radio", { name: /deepseek\/deepseek-v4-pro/ }).click();
+  await console.getByRole("button", { name: /^继续/ }).click();
+
+  const geometry = await console.evaluate((root) => {
+    const windowRect = root.querySelector<HTMLElement>("[data-console-window]")!.getBoundingClientRect();
+    const body = root.querySelector<HTMLElement>(".activation-page-body")!;
+    const footerRect = root.querySelector<HTMLElement>(".activation-page-footer")!.getBoundingClientRect();
+    const startButtonRect = root
+      .querySelector<HTMLElement>('[data-action="start-install"]')!
+      .getBoundingClientRect();
+    return {
+      bodyOverflow: body.scrollHeight - body.clientHeight,
+      footerBottom: footerRect.bottom,
+      startButtonBottom: startButtonRect.bottom,
+      windowBottom: windowRect.bottom,
+    };
+  });
+  expect(geometry.bodyOverflow, "the desktop Review should show its full summary without scrolling").toBeLessThanOrEqual(1);
+  expect(geometry.footerBottom, "the Review footer must not be clipped").toBeLessThanOrEqual(geometry.windowBottom + 1);
+  expect(geometry.startButtonBottom, "the Start installation action must remain visible").toBeLessThanOrEqual(
+    geometry.windowBottom + 1,
+  );
+
+  await page.setViewportSize({ width: 680, height: 900 });
+  const narrowGeometry = await console.evaluate((root) => {
+    const window = root.querySelector<HTMLElement>("[data-console-window]")!;
+    const workspace = root.querySelector<HTMLElement>(".activation-workspace")!;
+    const windowRect = window.getBoundingClientRect();
+    const footerRect = root.querySelector<HTMLElement>(".activation-page-footer")!.getBoundingClientRect();
+    const noteRect = root
+      .querySelector<HTMLElement>('[data-footer-screen="review"] .activation-route-note')!
+      .getBoundingClientRect();
+    return {
+      footerBottom: footerRect.bottom,
+      noteBottom: noteRect.bottom,
+      windowBottom: windowRect.bottom,
+      workspaceOverflow: workspace.scrollHeight - Math.round(workspace.getBoundingClientRect().height),
+    };
+  });
+  expect(narrowGeometry.workspaceOverflow, "the narrow workspace must not overflow its clipped window").toBeLessThanOrEqual(1);
+  expect(narrowGeometry.footerBottom, "the narrow Review footer must stay inside the product window").toBeLessThanOrEqual(
+    narrowGeometry.windowBottom + 1,
+  );
+  expect(narrowGeometry.noteBottom, "the backup note must remain legible at the narrow breakpoint").toBeLessThanOrEqual(
+    narrowGeometry.windowBottom + 1,
+  );
+});
+
+test("reduced motion starts on Agent and leaves autoplay disabled", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const console = page.locator("#activation-console");
+  await expect(console).toHaveAttribute("data-screen", "agents");
+  await expect(console).not.toHaveAttribute("data-autoplaying", "true");
+  const trigger = page.getByRole("button", { name: "开始激活演示" });
+  await trigger.focus();
+  const scrollBeforeReplay = await page.evaluate(() => window.scrollY);
+  await trigger.click();
+  await expect(console).toHaveAttribute("data-screen", "agents");
+  expect(await page.evaluate(() => window.scrollY), "replay must not scroll under reduced motion").toBe(scrollBeforeReplay);
+  expect(
+    await console.evaluate((element) => element.contains(document.activeElement)),
+    "replay must not move focus into the product window under reduced motion",
+  ).toBe(false);
   const animations = await console.evaluate((element) =>
     element.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running").length,
   );
   expect(animations).toBe(0);
 });
 
-/* The landing page has to show what activation looks like to someone who clicks
-   nothing at all — that is the whole reason autoplay exists. */
-test("activation demo plays itself through to Ready without a click", async ({ page }) => {
+test("activation demo plays itself through to Overview without a click", async ({ page }) => {
   const fetches: string[] = [];
   page.on("request", (request) => {
     if (["fetch", "xhr"].includes(request.resourceType())) fetches.push(request.url());
@@ -234,70 +247,31 @@ test("activation demo plays itself through to Ready without a click", async ({ p
   const console = page.locator("#activation-console");
   await console.scrollIntoViewIfNeeded();
 
-  /* The unattended run takes ~17s end to end — each panel now stays up long enough
-     to be read rather than just long enough to be seen. That is past the 10s
-     default expect timeout, so this one assertion gets its own budget instead of
-     the whole suite getting a longer one. */
-  await expect(console).toHaveAttribute("data-phase", "ready", { timeout: 30_000 });
-  await expect(console.getByRole("heading", { name: "示例环境已 Ready" })).toBeVisible();
-  // Reaching the end clears the flag, so the visitor is in charge from here.
+  await expect(console).toHaveAttribute("data-screen", "overview", { timeout: 40_000 });
+  await expect(console.getByRole("heading", { name: "环境总览" })).toBeVisible();
   await expect(console).not.toHaveAttribute("data-autoplaying", "true");
-  await expect(console.locator("[data-log]")).toContainText("示例环境可进入 Ready");
+  await expect(console.getByRole("button", { name: /启动/ })).toBeVisible();
   expect(fetches, "an unattended demo must not call anything either").toEqual([]);
 });
 
-// Autoplay is a demonstration, not a ride: the moment someone reaches for the
-// console it belongs to them, and it must not resume behind their back.
 test("interacting during autoplay stops it where it stands", async ({ page }) => {
   await page.goto("/");
   const console = page.locator("#activation-console");
   await console.scrollIntoViewIfNeeded();
   await expect(console).toHaveAttribute("data-autoplaying", "true");
+  await expect(console).toHaveAttribute("data-screen", /^(agents|profile|provider|model|review)$/);
 
-  /* Takes over at a step that is waiting on a choice, then asserts the phase
-     stops changing.
-   *
-   * `scanning` has to be excluded, and not because of timing: taking over mid-scan
-   * still lands on `agent`, since start()'s own 650ms timer resolves the scan the
-   * same way a clicked run would. Leaving a spinner up forever would be the worse
-   * behaviour, so that transition is correct — it just is not "autoplay resumed",
-   * which is what this test is about.
-   *
-   * Reading the phase and comparing it against itself, rather than waiting for one
-   * named step and asserting that name later, is what keeps this stable. The
-   * earlier version waited for `agent` and expected `agent` 2.5s on, but `agent`
-   * lasted less than that wait, so under the full suite's three-viewport load the
-   * click landed after the script had moved on and the assertion failed on a name
-   * mismatch. Every step is longer now that the demo has been slowed down, but the
-   * approach is what matters: it does not need to know which step the click caught,
-   * so it survives the next retiming too. */
-  /* Waits for a step that is genuinely waiting on input. `idle` and `scanning`
-     both fail the "not scanning" test for different reasons — one has not started,
-     the other resolves on its own — so the wait is written as a positive match on
-     the steps where the demo is parked on a choice. Whichever one the script has
-     reached by click time is fine; the assertion below compares against it rather
-     than against a fixed name. */
-  await expect(console).toHaveAttribute("data-phase", /^(agent|mode|provider|model|review)$/);
-  await console.locator("[data-log]").click();
+  await console.locator("[data-panel]:visible").click({ position: { x: 8, y: 8 } });
   await expect(console).not.toHaveAttribute("data-autoplaying", "true");
-  const takenOverAt = await console.getAttribute("data-phase");
-  expect(takenOverAt, "takeover must be measured at a decision point").not.toBe("scanning");
-  /* Longer than the widest gap in AUTOPLAY_SCRIPT, so a resumed script would have
-     advanced at least one step by the time this returns. That gap is now 3000ms
-     (it was 1500ms before the demo was slowed down), which is exactly the sort of
-     coupling that goes stale silently — hence the number is named here. */
+  const takenOverAt = await console.getAttribute("data-screen");
   await page.waitForTimeout(4000);
-  expect(await console.getAttribute("data-phase"), "autoplay resumed after takeover").toBe(takenOverAt);
+  expect(await console.getAttribute("data-screen"), "autoplay resumed after takeover").toBe(takenOverAt);
 
-  // Taken over, not broken: the trigger still replays from the top.
   await page.getByRole("button", { name: "开始激活演示" }).click();
-  await expect(console).toHaveAttribute("data-phase", "agent");
+  await expect(console).toHaveAttribute("data-screen", "agents");
   await expect(console).not.toHaveAttribute("data-autoplaying", "true");
 });
 
-/* The failure this guards is specific and easy to reintroduce: every step calls
-   focusPanel, and if autoplay keeps doing that it steals focus from whatever the
-   visitor is reading or tabbing through — on a page they never interacted with. */
 test("autoplay never takes keyboard focus", async ({ page }) => {
   await page.goto("/");
   const console = page.locator("#activation-console");
@@ -305,16 +279,12 @@ test("autoplay never takes keyboard focus", async ({ page }) => {
 
   const insideConsole = () =>
     page.evaluate(() => Boolean(document.querySelector("#activation-console")?.contains(document.activeElement)));
-  /* Sampled across the whole unattended run rather than a fixed 3s window. Every
-     step calls focusPanel, so a step that steals focus late would have gone
-     unnoticed once the demo was slowed to ~17s — the old loop finished long before
-     the script reached review or confirm. Ends when the run does. */
-  for (let sample = 0; sample < 90; sample += 1) {
+  for (let sample = 0; sample < 130; sample += 1) {
     expect(await insideConsole(), "autoplay moved focus into the console").toBe(false);
-    if ((await console.getAttribute("data-phase")) === "ready") break;
+    if ((await console.getAttribute("data-screen")) === "overview") break;
     await page.waitForTimeout(250);
   }
-  await expect(console).toHaveAttribute("data-phase", "ready", { timeout: 30_000 });
+  await expect(console).toHaveAttribute("data-screen", "overview", { timeout: 40_000 });
 });
 
 test("Explorer restores shareable state and returns focus after the drawer closes", async ({ page }) => {
@@ -1315,14 +1285,14 @@ test("interactive rows and cards respond to hover", async ({ page, viewport }) =
 test("the elements a visitor taps acknowledge the press itself", async ({ page, viewport }) => {
   test.skip((viewport?.width ?? 0) < 920, "these targets are laid out for a pointer at this width");
 
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const console_ = page.locator("#activation-console");
   await page.getByRole("button", { name: "开始激活演示" }).click();
-  const agent = console_.getByRole("button", { name: /Claude Code/ });
+  await console_.getByRole("tab", { name: "命令行 Agent" }).click();
+  const agent = console_.locator('[data-agent-id="claude-code"]');
 
-  /* The four selection grids are the most-pressed surfaces on the site. They
-     scale rather than changing background, because the selected state is itself a
-     background change and the two would cancel out. */
+  /* The Agent rows acknowledge pointer-down before the selection state changes. */
   await expect(agent).toHaveCSS("transform", "none");
   const box = await agent.boundingBox();
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
