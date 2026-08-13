@@ -28,7 +28,7 @@ const { Content, headings } = await render(article);
 const sections = headings.filter((heading) => heading.depth === 2);
 const slugOf = (entry: CollectionEntry<"help">) => entry.id.replace(/^[^/]+\//, "");
 ---
-<BaseLayout title={`${article.data.title} — OneAgent help`} description={article.data.description}>
+<BaseLayout title={`${article.data.title} — BootAgent help`} description={article.data.description}>
   <header class="page-hero">
     <div class="shell page-hero-grid">
       <div>

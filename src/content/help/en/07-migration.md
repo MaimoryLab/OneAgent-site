@@ -11,7 +11,7 @@ The entry point is "import and export" in settings.
 
 ## Exporting
 
-Select the model services and templates to take with you. OneAgent then asks **whether to encrypt**.
+Select the model services and templates to take with you. BootAgent then asks **whether to encrypt**.
 
 That choice matters. The next section is about it.
 
@@ -34,15 +34,15 @@ Encryption derives a key from your password with PBKDF2 and encrypts with AES-GC
 
 Use the same entry point on the other machine and select the file. If it is encrypted you will be asked for the password.
 
-Before writing anything, OneAgent lists what the file contains and what would be added or overwritten, and waits for you to confirm.
+Before writing anything, BootAgent lists what the file contains and what would be added or overwritten, and waits for you to confirm.
 
 ## What the error messages mean
 
 **"Wrong password, or the file is damaged"** — these two cannot be distinguished cryptographically: a failed decryption gives no evidence about which one it was. Check the password first, then whether the file transferred intact.
 
-**"This file's version (N) is not supported; only version 1 is"** — the file came from a newer OneAgent than this one. Upgrade this machine and try again.
+**"This file's version (N) is not supported; only version 1 is"** — the file came from a newer BootAgent than this one. Upgrade this machine and try again.
 
-**"Invalid file format; check that this is a OneAgent export"** — wrong file, or a file that did not come from the export feature.
+**"Invalid file format; check that this is a BootAgent export"** — wrong file, or a file that did not come from the export feature.
 
 **"Model service data is invalid; the file may have been edited by hand"** — the structure is right but the contents are not what was expected, usually because someone opened it in a text editor. Export a fresh one.
 

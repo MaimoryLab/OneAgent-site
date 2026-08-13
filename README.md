@@ -1,10 +1,14 @@
-# OneAgent public site
+# BootAgent public site
 
 The static marketing and documentation site for
-[OneAgent](https://github.com/MaimoryLab/OneAgent), built with Astro. Chinese is
+[BootAgent](https://github.com/MaimoryLab/OneAgent), built with Astro. Chinese is
 the default locale and is served unprefixed; English is additive under `/en/`.
 
-This repository was split out of the OneAgent repository so a copy fix does not
+The product repository above still carries the old `OneAgent` name; it is being
+renamed separately, and the link updates when it does. See
+[`docs/rename-to-bootagent.md`](docs/rename-to-bootagent.md).
+
+This repository was split out of the product repository so a copy fix does not
 have to ride the desktop app's release cadence. It has no Go, Wails or React
 dependency — the only thing it shares is the vendored catalog data described in
 [`data/README.md`](data/README.md).

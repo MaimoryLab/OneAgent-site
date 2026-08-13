@@ -1,13 +1,13 @@
 ---
 title: Backups and rolling back
-description: OneAgent backs up a configuration file before overwriting it — what the backup is called, where it goes, and how to restore from it.
+description: BootAgent backs up a configuration file before overwriting it — what the backup is called, where it goes, and how to restore from it.
 order: 5
 summary: Every write is preceded by a timestamped backup; rolling back is renaming a file.
 ---
 
 If you have a configuration you spent a long time getting right, this is the page to read first.
 
-The short version: **OneAgent takes a timestamped backup before it overwrites any configuration file**, and it does not touch the parts of your configuration that are none of its business.
+The short version: **BootAgent takes a timestamped backup before it overwrites any configuration file**, and it does not touch the parts of your configuration that are none of its business.
 
 ## What a backup looks like
 
@@ -37,13 +37,13 @@ Then make the agent re-read its configuration the way [Switching models](/en/hel
 
 This matters more than the backup does, because it means you usually will not need to roll back at all.
 
-OneAgent does not rewrite a configuration file wholesale. It reads your existing file and changes only the part it is responsible for. For OpenClaw, it adds an entry named `oneagent` under `models.providers`; everything else you tuned stays exactly as it was.
+BootAgent does not rewrite a configuration file wholesale. It reads your existing file and changes only the part it is responsible for. For OpenClaw, it adds an entry named `oneagent` under `models.providers`; everything else you tuned stays exactly as it was.
 
 So if the worry is "will my custom settings survive" — they will.
 
 ## Writes are atomic
 
-OneAgent writes a temporary file first and only replaces the real one once that is safely on disk. A power cut, a killed process, or an error halfway through cannot leave a half-written configuration: you either get the complete new file, or the original untouched.
+BootAgent writes a temporary file first and only replaces the real one once that is safely on disk. A power cut, a killed process, or an error halfway through cannot leave a half-written configuration: you either get the complete new file, or the original untouched.
 
 ## When a write happens
 

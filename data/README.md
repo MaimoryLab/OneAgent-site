@@ -11,7 +11,7 @@ Two more files sit beside them and are **not** upstream copies:
 | File | Why it exists |
 | --- | --- |
 | `desktop-agents.json` | Desktop applications are declared in Go, in `internal/desktopapp/registry.go`, with no generated lock file to copy. Transcribed by hand. |
-| `planned-agents.json` | Agents OneAgent intends to support but has not shipped. By definition absent from the installer contract, so there is nothing upstream to copy. |
+| `planned-agents.json` | Agents BootAgent intends to support but has not shipped. By definition absent from the installer contract, so there is nothing upstream to copy. |
 | `activation-demo.json` | Versioned, deterministic UI walkthrough contract pinned to the released desktop flow. It contains no credentials and makes no network request. |
 
 Both are hand-maintained, which means nothing upstream will fail if they drift.
@@ -19,7 +19,7 @@ Check them against the sources named inside each file when refreshing the locks.
 
 ## Why these are copied rather than referenced
 
-The site describes what a *published release* supports. Following the OneAgent
+The site describes what a *published release* supports. Following the product
 repository's HEAD would advertise agents that are merged but not yet shipped,
 and would couple a documentation fix to that repository's release cadence — the
 coupling splitting the repositories was meant to remove.
@@ -95,9 +95,9 @@ entry pairs an install source per platform with the config file the app owns:
 | ChatGPT Desktop | shares Codex's `~/.codex/config.toml` | `.dmg` download | Microsoft Store |
 | WorkBuddy | its own `~/.workbuddy/models.json` | `.zip` download | vendor installer |
 
-Neither runs on Linux, and neither has a pinned version: OneAgent fetches whatever
+Neither runs on Linux, and neither has a pinned version: BootAgent fetches whatever
 the vendor's endpoint currently serves, so there is no locked version or package
-license for the site to quote. Both are installed by OneAgent — the registry pairs
+license for the site to quote. Both are installed by BootAgent — the registry pairs
 every entry with its own install function, so there is no guide-only desktop app.
 
 To refresh, re-read `registry.go` plus the per-agent files it points at

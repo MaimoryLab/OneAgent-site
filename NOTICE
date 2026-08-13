@@ -1,4 +1,4 @@
-OneAgent public site
+BootAgent public site
 Copyright 2026 MaimoryLab
 
 This product includes software developed at MaimoryLab.
@@ -35,12 +35,14 @@ and WorkBuddy are in that position -- neither has a mark in lobe-icons, Aider
 publishes no brand kit and its Apache-2.0 code licence grants no trademark
 rights, and WorkBuddy publishes no vector at all.
 
-OneAgent's own mark under public/images/brand/ and public/favicon.png is
+BootAgent's own mark under public/images/brand/ and public/favicon.png is
 first-party work under this repository's licence, so it carries no third-party
 provenance record — recording it in asset-rights.json would claim an origin it
-does not have. oneagent-logo.png is the 1024px master; nothing on the site
-references it directly, but MaimoryLab/OneAgent traces its vector mark from it,
-so it is kept here as the source of record rather than as a stray asset.
+does not have. bootagent-logo.png is the 1024px master; nothing on the site
+references it directly, but the product repository (MaimoryLab/OneAgent, still
+under its former name pending its own rename) traces its vector mark from it, so
+it is kept here as the source of record rather than as a stray asset. The artwork
+itself has not yet been redrawn for the new name.
 
 Screenshots under public/images/guide/ are screen captures of macOS system UI,
 showing what the operating system displays when it blocks an unsigned
@@ -55,7 +57,7 @@ or other identifying detail.
 Third-party trademarks
 ================================================================================
 
-This site names supported Agents and Providers in order to say what OneAgent
+This site names supported Agents and Providers in order to say what BootAgent
 does and does not support. This is nominative use: the names identify the
 referenced products and do not imply endorsement, affiliation or sponsorship.
 The bundled agent marks are not recoloured or restyled and remain the property

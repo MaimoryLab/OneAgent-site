@@ -8,8 +8,8 @@ import { localePath } from "../../../i18n";
 const base = import.meta.env.BASE_URL;
 ---
 <BaseLayout
-  title="Quickstart — OneAgent"
-  description="From download to a first verified agent configuration with OneAgent."
+  title="Quickstart — BootAgent"
+  description="From download to a first verified agent configuration with BootAgent."
 >
   <header class="page-hero">
     <div class="shell page-hero-grid">
@@ -20,7 +20,7 @@ const base = import.meta.env.BASE_URL;
       </div>
       <div class="page-hero-aside">
         <strong>Goal</strong>
-        Configure one agent, one provider and one real model protocol — and know exactly what OneAgent wrote.
+        Configure one agent, one provider and one real model protocol — and know exactly what BootAgent wrote.
       </div>
     </div>
   </header>
@@ -32,7 +32,7 @@ const base = import.meta.env.BASE_URL;
         </div>
         <h2 id="download">1. Download and verify</h2>
         <p>Pick the artifact matching your platform and architecture from the download centre. Compute its SHA-256 before running anything, and compare it character by character with the value shown on that page.</p>
-        <h2 id="launch">2. Launch OneAgent</h2>
+        <h2 id="launch">2. Launch BootAgent</h2>
         <p>Unpack and run it. The interface is served on your machine's loopback address, never exposed to your LAN or the internet, and the local service exits with the app.</p>
         <h3 id="macos-gatekeeper">First launch on macOS: why it is blocked, and how to allow it</h3>
         <p>The current builds carry no Apple Developer ID signature and are not notarised. Gatekeeper therefore refuses to open them, and the most prominent button in the first dialog is “Move to Trash”. This is not a corrupt download or a false positive — it is what Gatekeeper does with every un-notarised app.</p>
@@ -40,15 +40,15 @@ const base = import.meta.env.BASE_URL;
         <ol class="guide-steps">
           <li>
             <p>This dialog appears on first launch. Choose <strong>Done</strong>, not Move to Trash.</p>
-            <figure><img src={`${base}images/guide/gatekeeper-1-blocked.png`} alt="macOS dialog: “OneAgent” Not Opened. Apple could not verify whether it contains malware, offering Done and Move to Trash." width="520" height="470" loading="lazy" /></figure>
+            <figure><img src={`${base}images/guide/gatekeeper-1-blocked.png`} alt="macOS dialog: “BootAgent” Not Opened. Apple could not verify whether it contains malware, offering Done and Move to Trash." width="520" height="470" loading="lazy" /></figure>
           </li>
           <li>
-            <p>Open <strong>System Settings › Privacy &amp; Security</strong> and scroll to <strong>Security</strong>. A line reading “OneAgent” was blocked to protect your Mac appears there, with an <strong>Open Anyway</strong> button. It only shows for a while after the block, so if it is missing, launch the app once more.</p>
-            <figure><img src={`${base}images/guide/gatekeeper-2-settings.jpg`} alt="The Privacy and Security pane of System Settings, whose Security section shows OneAgent was blocked, with an Open Anyway button." width="1446" height="1250" loading="lazy" /></figure>
+            <p>Open <strong>System Settings › Privacy &amp; Security</strong> and scroll to <strong>Security</strong>. A line reading “BootAgent” was blocked to protect your Mac appears there, with an <strong>Open Anyway</strong> button. It only shows for a while after the block, so if it is missing, launch the app once more.</p>
+            <figure><img src={`${base}images/guide/gatekeeper-2-settings.jpg`} alt="The Privacy and Security pane of System Settings, whose Security section shows BootAgent was blocked, with an Open Anyway button." width="1446" height="1250" loading="lazy" /></figure>
           </li>
           <li>
             <p>Confirm once more. This dialog states the risk plainly: Apple cannot verify the source. Choose <strong>Open Anyway</strong>.</p>
-            <figure><img src={`${base}images/guide/gatekeeper-3-open-anyway.png`} alt="macOS confirmation dialog: Open “OneAgent”? It warns the app cannot be verified, offering Move to Trash, Open Anyway and Done." width="520" height="638" loading="lazy" /></figure>
+            <figure><img src={`${base}images/guide/gatekeeper-3-open-anyway.png`} alt="macOS confirmation dialog: Open “BootAgent”? It warns the app cannot be verified, offering Move to Trash, Open Anyway and Done." width="520" height="638" loading="lazy" /></figure>
           </li>
           <li>
             <p>Authorise with <strong>an administrator's Touch ID or password</strong>. macOS asks for an administrator because this changes an execution policy on the machine, not just a single click.</p>
@@ -56,18 +56,18 @@ const base = import.meta.env.BASE_URL;
           </li>
         </ol>
         <div class="notice notice-warning">
-          <span class="notice-mark">!</span><div><strong>What this actually does</strong><p>It adds an exception for OneAgent alone, letting that one app skip the notarisation check. It does not turn Gatekeeper off, does not affect other apps, and does not change your system-wide security settings. OneAgent will never ask you to run <code>spctl --master-disable</code> or anything like it — instructions to disable protection globally do not come from us.</p><p>The trade is worth stating: you give up Apple's assurance that this binary was scanned, and take on verifying the SHA-256 yourself. Once signing and notarisation are done, none of these four steps are needed and this guide comes down.</p></div>
+          <span class="notice-mark">!</span><div><strong>What this actually does</strong><p>It adds an exception for BootAgent alone, letting that one app skip the notarisation check. It does not turn Gatekeeper off, does not affect other apps, and does not change your system-wide security settings. BootAgent will never ask you to run <code>spctl --master-disable</code> or anything like it — instructions to disable protection globally do not come from us.</p><p>The trade is worth stating: you give up Apple's assurance that this binary was scanned, and take on verifying the SHA-256 yourself. Once signing and notarisation are done, none of these four steps are needed and this guide comes down.</p></div>
         </div>
         <h2 id="agent">3. Choose an agent</h2>
-        <p>Choose the tool you actually intend to use. Agents marked “official guide” still go through the flow, but OneAgent will not dress them up as automatically installed or configured.</p>
+        <p>Choose the tool you actually intend to use. Agents marked “official guide” still go through the flow, but BootAgent will not dress them up as automatically installed or configured.</p>
         <h2 id="provider">4. Connect your own provider</h2>
-        <p>Choose a provider or a custom compatible endpoint, and use your own API key. OneAgent offers no shared key, builds no unified model gateway, and never bills you for model usage.</p>
+        <p>Choose a provider or a custom compatible endpoint, and use your own API key. BootAgent offers no shared key, builds no unified model gateway, and never bills you for model usage.</p>
         <h2 id="probe">5. Test the real protocol</h2>
-        <p>A reachable model list does not mean the agent will work. OneAgent tests the connection using the protocol that agent actually speaks: OpenAI Chat Completions, Anthropic Messages, or OpenAI Responses.</p>
+        <p>A reachable model list does not mean the agent will work. BootAgent tests the connection using the protocol that agent actually speaks: OpenAI Chat Completions, Anthropic Messages, or OpenAI Responses.</p>
         <h2 id="review">6. Review what was written</h2>
         <p>The final page shows each agent's result, where its configuration lives and how to start it. Backups are taken before anything is modified, and errors surface immediately rather than at the agent's first request.</p>
         <div class="notice notice-info">
-          <span class="notice-mark">i</span><div><strong>Where does the key go?</strong><p>Your key is written only to the local config or OneAgent environment file the target agent needs to work. It never reaches a OneAgent profile, log, screenshot or telemetry event.</p></div>
+          <span class="notice-mark">i</span><div><strong>Where does the key go?</strong><p>Your key is written only to the local config or BootAgent environment file the target agent needs to work. It never reaches a BootAgent profile, log, screenshot or telemetry event.</p></div>
         </div>
         <h2 id="troubleshooting">If something goes wrong</h2>
         <ul>

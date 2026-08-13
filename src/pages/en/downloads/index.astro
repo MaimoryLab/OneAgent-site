@@ -10,10 +10,10 @@ const channel = await getPreviewChannel();
 const published = channel?.targets.some((target) => target.status === "available") ?? false;
 ---
 <BaseLayout
-  title={published ? "Download OneAgent — unsigned technical preview" : "Download OneAgent — not yet released"}
+  title={published ? "Download BootAgent — unsigned technical preview" : "Download BootAgent — not yet released"}
   description={published
-    ? "Download the OneAgent technical preview. Every artifact carries the SHA-256 reported by GitHub Releases."
-    : "OneAgent has not been released publicly yet. This page will list each platform's artifact, size and SHA-256 so you can check it before downloading."}
+    ? "Download the BootAgent technical preview. Every artifact carries the SHA-256 reported by GitHub Releases."
+    : "BootAgent has not been released publicly yet. This page will list each platform's artifact, size and SHA-256 so you can check it before downloading."}
 >
   <header class="page-hero">
     <div class="shell page-hero-grid">
@@ -23,7 +23,7 @@ const published = channel?.targets.some((target) => target.status === "available
         <h1 class="page-title">{published ? "Pick your platform and get started." : "There is nothing to download yet."}</h1>
       </div>
       <div class="page-hero-aside">
-        <strong>No OneAgent account required</strong>
+        <strong>No BootAgent account required</strong>
         {published
           ? "Every artifact carries its version, size, build date and SHA-256, so you can check it before you download."
           : "Once released, every artifact will carry its version, size, build date and SHA-256, so you can check it before you download."}
@@ -50,7 +50,7 @@ const published = channel?.targets.some((target) => target.status === "available
           Trash" dialog with no explanation. What the site still refuses to do is
           weaken the policy itself. */}
       <p>Because it is unsigned, macOS blocks the first launch. The <a href={localePath("en", "quickstart/#macos-gatekeeper")}>first-launch guide</a> explains what allowing it grants, and why a signed build removes the need for it.</p>
-      <p>OneAgent will never ask you to disable Gatekeeper, run <code>spctl --master-disable</code>, or lower your system-wide security settings. That flow covers this one app and every step is yours to confirm.</p>
+      <p>BootAgent will never ask you to disable Gatekeeper, run <code>spctl --master-disable</code>, or lower your system-wide security settings. That flow covers this one app and every step is yours to confirm.</p>
     </div>
   </section>
 </BaseLayout>

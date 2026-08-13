@@ -10,8 +10,8 @@ const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact
    security/#release-evidence, and those anchors have to resolve in both locales. */
 ---
 <BaseLayout
-  title="Security, privacy and release integrity — OneAgent"
-  description="How OneAgent runs locally, where API keys go, how configuration is backed up, why every channel ships the same build, and what the unsigned preview does not claim."
+  title="Security, privacy and release integrity — BootAgent"
+  description="How BootAgent runs locally, where API keys go, how configuration is backed up, why every channel ships the same build, and what the unsigned preview does not claim."
 >
   <header class="page-hero">
     <div class="shell page-hero-grid">
@@ -27,8 +27,8 @@ const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact
         <p>The local service is not a control plane for anything outside it.</p>
 
         <h2 id="privacy">A key only goes where it has to</h2>
-        <p>An API key is written to the one file the target agent needs to work: its own configuration, or OneAgent's environment file.</p>
-        <p>Keys never appear in the OneAgent profile, logs, screenshots, web analytics events, or command-line arguments.</p>
+        <p>An API key is written to the one file the target agent needs to work: its own configuration, or BootAgent's environment file.</p>
+        <p>Keys never appear in the BootAgent profile, logs, screenshots, web analytics events, or command-line arguments.</p>
         <p>Where it lands depends on the agent and the operating system. These are the common ones:</p>
         <ul>
           <li><code>~/.codex/config.toml</code></li>
@@ -40,13 +40,13 @@ const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact
         <p>The launcher lists the real paths before and after every write.</p>
 
         <h2 id="backups">A backup comes before any change</h2>
-        <p>Before modifying existing configuration, OneAgent writes a timestamped backup.</p>
+        <p>Before modifying existing configuration, BootAgent writes a timestamped backup.</p>
         <p>Configuration directories and files holding a key are readable only by the current user. The cleanroom check confirms the real user directory was untouched by the test run.</p>
 
         <h2 id="distribution">Every channel ships the same package</h2>
         <p>This site, GitHub Releases, a file host and an internal drive all distribute the identical official build. For a given version, the contents and the SHA-256 match.</p>
         <p>Channels do not repackage, append promotional content, or re-sign.</p>
-        <p>Third-party agent binaries are not redistributed by OneAgent. They come from the official installer, a mirror with written permission, or your own manual install.</p>
+        <p>Third-party agent binaries are not redistributed by BootAgent. They come from the official installer, a mirror with written permission, or your own manual install.</p>
 
         <h2 id="release-evidence">Current release evidence</h2>
         {publishedTarget && publishedArtifact ? (

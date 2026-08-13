@@ -23,7 +23,7 @@ const t = useTranslations(locale);
 const {
   title = t("site.title"),
   description = t("site.description"),
-  image = "images/oneagent-overview.jpg",
+  image = "images/bootagent-overview.jpg",
   noindex = false,
   canonicalPath,
 } = Astro.props;
@@ -48,7 +48,7 @@ const availableSystems = preview?.targets
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "OneAgent",
+  name: "BootAgent",
   applicationCategory: "DeveloperApplication",
   operatingSystem: availableSystems.join(", ") || "No public build",
   softwareVersion: preview?.version,
@@ -112,7 +112,7 @@ const structuredData = {
     <link rel="alternate" type="text/plain" href="llms.txt" title="llms.txt" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content={ogLocale[locale]} />
-    <meta property="og:site_name" content="OneAgent" />
+    <meta property="og:site_name" content="BootAgent" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />

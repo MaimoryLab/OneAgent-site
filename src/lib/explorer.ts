@@ -25,7 +25,7 @@ interface SiteAgentSupport {
 export type AgentKind = "cli" | "desktop";
 
 /* `available` is the only kind of support the catalog can prove. `planned` is an
-   agent OneAgent intends to support and does not yet: it has no entry in
+   agent BootAgent intends to support and does not yet: it has no entry in
    agents.lock.json, so there is no install or config contract to describe, and
    the explorer must not offer it as a combination a reader could act on. */
 export type AgentStatus = "available" | "planned";

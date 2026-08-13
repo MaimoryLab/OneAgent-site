@@ -12,7 +12,7 @@ const { agentDescriptions, groupLabels, agentFallbackDescription } = useCatalogL
 /* The explorer's job is to return a compatibility verdict for a pair. A planned
    agent has no protocol to compare against a provider, so every pair including
    it would read "unsupported" — which is a claim about the provider rather than
-   the truth, that OneAgent does not support the agent yet. Excluded here so the
+   the truth, that BootAgent does not support the agent yet. Excluded here so the
    grid, the counter and the shareable URL all agree. */
 const explorerAgents = catalog.agents.filter((agent) => agent.status === "available");
 const technicalHref = (agentId: string) => localePath("zh-CN", `agents/${agentId}/`);
@@ -57,8 +57,8 @@ const copy = locale === "en"
       needsSetup: "Needs setup",
       providerCompatibility: "Provider compatibility",
       capability: "Activation boundary",
-      managedBoundary: "OneAgent can manage this agent's configuration and backs up an existing file before a managed write.",
-      guideBoundary: "This agent stays in its official install, sign-in or extension flow. OneAgent does not write private configuration for it.",
+      managedBoundary: "BootAgent can manage this agent's configuration and backs up an existing file before a managed write.",
+      guideBoundary: "This agent stays in its official install, sign-in or extension flow. BootAgent does not write private configuration for it.",
       technical: "Technical reference (Chinese)",
       source: "Upstream source",
       providerReference: "Provider reference (Chinese)",
@@ -109,8 +109,8 @@ const copy = locale === "en"
       needsSetup: "待配置",
       providerCompatibility: "Provider 兼容性",
       capability: "激活边界",
-      managedBoundary: "OneAgent 可以管理这个 Agent 的配置，并会在托管写入前备份已有文件。",
-      guideBoundary: "这个 Agent 保留官方安装、登录或扩展内流程；OneAgent 不写入它的私有配置。",
+      managedBoundary: "BootAgent 可以管理这个 Agent 的配置，并会在托管写入前备份已有文件。",
+      guideBoundary: "这个 Agent 保留官方安装、登录或扩展内流程；BootAgent 不写入它的私有配置。",
       technical: "技术详情",
       source: "上游源码",
       providerReference: "Provider 详情",

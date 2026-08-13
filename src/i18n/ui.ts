@@ -7,10 +7,10 @@ import type { Locale } from "./index";
  */
 const strings = {
   "zh-CN": {
-    "site.title": "OneAgent — 可信的本地 AI 开发环境激活器",
+    "site.title": "BootAgent — 可信的本地 AI 开发环境激活器",
     "site.description": "用一个可信的本地流程，激活你自己的 Agent、账号和 Provider。",
     "skip.main": "跳到主要内容",
-    "nav.home": "OneAgent 首页",
+    "nav.home": "BootAgent 首页",
     "nav.downloads": "下载",
     "nav.quickstart": "快速开始",
     "nav.help": "帮助文档",
@@ -45,14 +45,14 @@ const strings = {
     "footer.channel": "当前公开渠道：technical-preview-unsigned",
     /* The count is as fresh as the last deploy, so the label says "查看源码"
        rather than implying a live figure. */
-    "github.label": "在 GitHub 上查看 OneAgent 源码",
-    "github.labelWithCount": "在 GitHub 上查看 OneAgent 源码，已获 {count} 个 star",
+    "github.label": "在 GitHub 上查看 BootAgent 源码",
+    "github.labelWithCount": "在 GitHub 上查看 BootAgent 源码，已获 {count} 个 star",
   },
   en: {
-    "site.title": "OneAgent — a trustworthy local AI development environment activator",
+    "site.title": "BootAgent — a trustworthy local AI development environment activator",
     "site.description": "Activate your own agents, accounts and providers through one auditable local flow.",
     "skip.main": "Skip to main content",
-    "nav.home": "OneAgent home",
+    "nav.home": "BootAgent home",
     "nav.downloads": "Downloads",
     "nav.quickstart": "Quickstart",
     "nav.help": "Help",
@@ -82,8 +82,8 @@ const strings = {
     "footer.supportFeedback": "Support & feedback",
     "footer.releaseIndex": "GitHub Releases",
     "footer.channel": "Current public channel: technical-preview-unsigned",
-    "github.label": "View the OneAgent source on GitHub",
-    "github.labelWithCount": "View the OneAgent source on GitHub, {count} stars",
+    "github.label": "View the BootAgent source on GitHub",
+    "github.labelWithCount": "View the BootAgent source on GitHub, {count} stars",
   },
 } as const;
 
