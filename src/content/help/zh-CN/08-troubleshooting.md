@@ -38,7 +38,7 @@ BootAgent 的模型列表来自 Provider 接口的实时返回，不是内置清
 
 **先看是不是网络。** 包和运行时默认走 npmmirror（阿里云）镜像，国内网络一般不需要额外配置。如果你的环境有代理或防火墙，可能需要放行。
 
-**Node 不是必须自己装的。** BootAgent 会把需要的运行时装进 `~/.oneagent/runtimes/`，不动系统的 Node 也不改 PATH。所以"我没装 Node"不是装不上的原因。
+**Node 不是必须自己装的。** BootAgent 会把需要的运行时装进 `~/.bootagent/runtimes/`，不动系统的 Node 也不改 PATH。所以"我没装 Node"不是装不上的原因。
 
 ## 首次打开被系统拦住
 

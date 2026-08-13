@@ -39,10 +39,9 @@ BootAgent's own mark under public/images/brand/ and public/favicon.png is
 first-party work under this repository's licence, so it carries no third-party
 provenance record — recording it in asset-rights.json would claim an origin it
 does not have. bootagent-logo.png is the 1024px master; nothing on the site
-references it directly, but the product repository (MaimoryLab/OneAgent, still
-under its former name pending its own rename) traces its vector mark from it, so
-it is kept here as the source of record rather than as a stray asset. The artwork
-itself has not yet been redrawn for the new name.
+references it directly, but MaimoryLab/BootAgent traces its vector mark from it,
+so it is kept here as the source of record rather than as a stray asset. The
+artwork itself has not yet been redrawn for the new name.
 
 Screenshots under public/images/guide/ are screen captures of macOS system UI,
 showing what the operating system displays when it blocks an unsigned
@@ -68,5 +67,5 @@ Catalog data
 ================================================================================
 
 data/agents.lock.json and data/providers.lock.json are copies of files of the
-same name in MaimoryLab/OneAgent, which is licensed under Apache-2.0. See
+same name in MaimoryLab/BootAgent, which is licensed under Apache-2.0. See
 data/README.md for the commit they came from and how to refresh them.

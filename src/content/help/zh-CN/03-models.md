@@ -32,7 +32,7 @@ BootAgent 不维护一份写死的模型清单。它去问 Provider 的接口当
 **Aider** 需要带参数启动，BootAgent 会把完整命令拼好给你：
 
 ```
-aider --env-file ~/.oneagent/aider.env --model openai/<你选的模型>
+aider --env-file ~/.bootagent/aider.env --model openai/<你选的模型>
 ```
 
 **OpenClaw** 是最需要注意的一个。它的网关是常驻后台进程，很多人把它注册成了开机自启服务。配置是在**网关重启时**重新读取的，不是在你重开终端命令时。所以要执行：

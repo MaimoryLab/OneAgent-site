@@ -83,6 +83,11 @@ const plannedTargets: Array<{ id: string; platform: string; platformLabel: strin
   { id: "windows-x64", platform: "windows", platformLabel: "Windows", arch: "x64", archLabel: "Intel / AMD 64-bit" },
   { id: "windows-arm64", platform: "windows", platformLabel: "Windows", arch: "arm64", archLabel: "ARM64" },
   { id: "linux-x64", platform: "linux", platformLabel: "Linux", arch: "x64", archLabel: "Intel / AMD 64-bit" },
+  /* Upstream began publishing Linux arm64 in v0.6.0. Without an entry here the
+     asset is matched and then discarded, so the page would omit a build that
+     exists — the same silent-omission failure as #28, arriving from the other
+     direction. */
+  { id: "linux-arm64", platform: "linux", platformLabel: "Linux", arch: "arm64", archLabel: "ARM64" },
 ];
 
 const previewChannelId = "technical-preview-unsigned";

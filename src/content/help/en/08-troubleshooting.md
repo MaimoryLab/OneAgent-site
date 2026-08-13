@@ -38,7 +38,7 @@ With a provider from the catalogue, a failure is usually the key. Note that some
 
 **Check the network first.** Packages and runtimes go through the npmmirror (Aliyun) registry by default, which usually needs no extra configuration on a mainland-China network. A proxy or firewall may need to allow it.
 
-**You do not need to install Node yourself.** BootAgent installs the runtime it needs into `~/.oneagent/runtimes/` without touching a system Node or your PATH. So "I don't have Node" is not the reason.
+**You do not need to install Node yourself.** BootAgent installs the runtime it needs into `~/.bootagent/runtimes/` without touching a system Node or your PATH. So "I don't have Node" is not the reason.
 
 ## The operating system blocks the first launch
 

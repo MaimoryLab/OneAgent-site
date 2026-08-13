@@ -19,9 +19,23 @@ summary: 设置页检查更新，下载完点重启即可；已写入的 Agent �
 
 不会。升级替换的是 BootAgent 这个应用本身，它不重写你的 Agent 配置文件。
 
-你已经配好的 Codex、Claude Code、OpenClaw 等等，配置文件在各自的位置（`~/.codex/config.toml` 之类），升级不碰它们。配置模版存在 `~/.oneagent/` 里，也保留。
+你已经配好的 Codex、Claude Code、OpenClaw 等等，配置文件在各自的位置（`~/.codex/config.toml` 之类），升级不碰它们。配置模版存在 `~/.bootagent/` 里，也保留。
 
 换句话说，升级之后你不需要重新配一遍。
+
+## 从 OneAgent 升级过来
+
+本产品原名 OneAgent，自己的目录是 `~/.oneagent/`。首次启动 BootAgent 时，它会把这个目录迁移过来，你不需要手动搬。
+
+迁移做了这几件事：
+
+- 把 `~/.oneagent/` 的内容复制到 `~/.bootagent/`，**但不含 `runtimes/`**。
+- 改写各 Agent 配置里指向旧名的 Provider 条目，比如 Codex 的 `model_providers.oneagent` 变成 `model_providers.bootagent`。涉及 Codex、OpenCode、Kilo、OpenClaw、Kimi Code 和 ZCode 的配置文件；你自己加的 Provider 和其他配置不动。
+- 把原目录改名为 `~/.oneagent-migrated-<时间戳>` 保留下来，不删。
+
+**托管安装的运行时和 Agent 需要重装。** `runtimes/` 不在迁移范围内，所以 BootAgent 之前为你装的 Node、uv，以及它装的各个 Agent，都要在 BootAgent 里重新装一次。你的配置在，可执行文件不在。
+
+确认迁移结果没问题之后，可以自己删掉 `~/.oneagent-migrated-<时间戳>`。它留在那里只是为了让你在出问题时能找回原样。
 
 ## 升级 Agent 是另一件事
 

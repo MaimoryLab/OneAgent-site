@@ -32,7 +32,7 @@ This differs per agent, and BootAgent prints the right command on the result scr
 **Aider** needs arguments, and BootAgent assembles the full command for you:
 
 ```
-aider --env-file ~/.oneagent/aider.env --model openai/<your model>
+aider --env-file ~/.bootagent/aider.env --model openai/<your model>
 ```
 
 **OpenClaw** is the one to be careful with. Its gateway is a long-lived background process, and many people have registered it as a service that starts at login. The configuration is re-read **when the gateway restarts**, not when you reopen a terminal command. So run:

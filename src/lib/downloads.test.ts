@@ -169,7 +169,7 @@ describe("release asset naming", () => {
   const release = {
     name: "v0.3.0",
     tag_name: "v0.3.0",
-    html_url: "https://github.com/MaimoryLab/OneAgent/releases/tag/v0.3.0",
+    html_url: "https://github.com/MaimoryLab/BootAgent/releases/tag/v0.3.0",
     published_at: "2026-08-06T11:10:43Z",
     prerelease: false,
     draft: false,
@@ -194,6 +194,65 @@ describe("release asset naming", () => {
     expect(target?.file).toBe("OneAgent-darwin-arm64.zip");
     expect(target?.bytes).toBe(4517447);
     expect(target?.sha256).toBe("1".repeat(64));
+  });
+
+  /* Everything below is v0.6.0's asset set, which is shaped differently from the
+     one above: native installers rather than archives, Linux for the first time,
+     and `ota-*` update payloads shipped beside the installers. Each of the three
+     rules exists because that release broke it — see #28. */
+  const modernRelease = {
+    ...release,
+    tag_name: "v0.6.0",
+    assets: [
+      { name: "BootAgent-darwin-arm64.dmg", size: 1, digest: `sha256:${"1".repeat(64)}`, browser_download_url: "https://example.test/dmg" },
+      { name: "BootAgent-windows-amd64-installer.exe", size: 2, digest: `sha256:${"2".repeat(64)}`, browser_download_url: "https://example.test/exe" },
+      { name: "BootAgent-linux-amd64.AppImage", size: 3, digest: `sha256:${"3".repeat(64)}`, browser_download_url: "https://example.test/appimage" },
+      { name: "BootAgent-linux-amd64.deb", size: 4, digest: `sha256:${"4".repeat(64)}`, browser_download_url: "https://example.test/deb" },
+      { name: "ota-BootAgent-windows-amd64.zip", size: 5, digest: `sha256:${"5".repeat(64)}`, browser_download_url: "https://example.test/ota-win" },
+      { name: "ota-BootAgent-darwin-arm64.zip", size: 6, digest: `sha256:${"6".repeat(64)}`, browser_download_url: "https://example.test/ota-mac" },
+      { name: "SHA256SUMS", size: 7, digest: `sha256:${"7".repeat(64)}`, browser_download_url: "https://example.test/sums" },
+    ],
+  };
+
+  /* The installer is the whole point of the Windows column. Anchoring the arch to
+     the extension meant `-installer.exe` never matched, which left the OTA payload
+     as the only candidate and put an update package on the download page. */
+  it("matches an installer whose name carries a word after the arch", () => {
+    const target = releaseTargets(modernRelease).find((candidate) => candidate.id === "windows-x64");
+
+    expect(target?.file).toBe("BootAgent-windows-amd64-installer.exe");
+  });
+
+  /* An OTA payload is not a first install. It looks like one to every other rule
+     here, so it has to be excluded by name. */
+  it("never offers an ota update payload as a download", () => {
+    const files = releaseTargets(modernRelease).map((target) => target.file);
+
+    expect(files.some((file) => file.startsWith("ota-"))).toBe(false);
+  });
+
+  /* Two formats for one platform-arch used to emit two targets with the same id,
+     and callers resolve with `.find()` — so the winner was whichever GitHub listed
+     first. `.dmg` beat `.zip` on alphabetical luck rather than on a decision. */
+  it("offers one artifact per platform-arch, chosen by format not feed order", () => {
+    const targets = releaseTargets(modernRelease);
+    const ids = targets.map((target) => target.id);
+
+    expect(ids).toHaveLength(new Set(ids).size);
+    expect(targets.find((target) => target.id === "macos-arm64")?.file).toBe("BootAgent-darwin-arm64.dmg");
+    expect(targets.find((target) => target.id === "linux-x64")?.file).toBe("BootAgent-linux-amd64.AppImage");
+  });
+
+  /* Reversing the feed must not change the answer. This is the assertion that
+     would have caught the original defect, which was invisible while upstream's
+     names happened to sort favourably. */
+  it("picks the same artifact regardless of the order the feed lists assets in", () => {
+    const reversed = { ...modernRelease, assets: [...modernRelease.assets].reverse() };
+
+    const forward = releaseTargets(modernRelease).find((target) => target.id === "macos-arm64");
+    const backward = releaseTargets(reversed).find((target) => target.id === "macos-arm64");
+
+    expect(backward?.file).toBe(forward?.file);
   });
 
   it("falls back to the combined SHA256SUMS when no per-target file exists", () => {
@@ -267,7 +326,7 @@ describe("repository stars", () => {
   it("points at the product repository, not the site's own", async () => {
     const { repositoryUrl } = await import("./downloads");
 
-    expect(repositoryUrl).toBe("https://github.com/MaimoryLab/OneAgent");
+    expect(repositoryUrl).toBe("https://github.com/MaimoryLab/BootAgent");
   });
 
   /* Every page renders the header, so a per-page request would be dozens of calls

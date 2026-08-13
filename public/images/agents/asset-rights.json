@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "note": "Provenance for every image asset in this directory. An agent absent from this file has no mark and renders the letter fallback in src/components/AgentMark.astro — that is the intended state, not a gap to fill. Mirrors frontend/src/components/icons/asset-rights.json in MaimoryLab/OneAgent.",
+  "note": "Provenance for every image asset in this directory. An agent absent from this file has no mark and renders the letter fallback in src/components/AgentMark.astro — that is the intended state, not a gap to fill. Mirrors frontend/src/components/icons/asset-rights.json in MaimoryLab/BootAgent.",
   "assets": {
     "codex": {
       "file": "codex.svg",
