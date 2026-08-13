@@ -8,59 +8,73 @@
   text-rendering: optimizeLegibility;
 
   /* Palette mirrors the desktop client's tokens.css so the site and the app
-     a user downloads read as one product. */
-  --paper: #ececef;
-  --paper-strong: #ededf0;
-  --surface: #ffffff;
-  --surface-muted: #f7f7f9;
-  --surface-pressed: #ededf0;
-  --ink: #1d1d1f;
-  /* Darkened from tokens.css's #6e6e73 / #8e8e93 / #006ee6: those clear AA on
-     the app's white window but not on this page's #ececef ground. */
-  --ink-soft: #636368;
-  --ink-faint: #68686d;
-  --line: rgba(60, 60, 67, 0.18);
-  --line-strong: rgba(60, 60, 67, 0.28);
-  --blue: #007aff;
-  --blue-deep: #0062cc;
+     a user downloads read as one product. Both are derived from the logo's
+     three colours: the cream ground, the ink ring, and the terracotta stem. */
+  --paper: #efeae0;
+  --paper-strong: #eae4d7;
+  --surface: #fbf9f4;
+  --surface-muted: #f1ece2;
+  --surface-pressed: #e7e3da;
+  --ink: #211f1b;
+  /* Darkened from tokens.css's --text-secondary / --text-tertiary: those clear
+     AA on the app's lighter window but not on this page's --paper ground. */
+  --ink-soft: #544f45;
+  --ink-faint: #6b6457;
+  --line: rgba(33, 31, 27, 0.18);
+  --line-strong: rgba(33, 31, 27, 0.28);
+  /* The mark's own terracotta, decorative only. It is 2.79:1 on --paper, so it
+     cannot take text or a control's only boundary -- it exists for the logo and
+     for large brand shapes that carry no information. Actions use --accent. */
+  --brand: #d96e49;
+  /* One accent where there were two. --blue and --blue-deep differed by depth
+     alone and the split had stopped tracking anything: --blue-deep carried
+     every link, label and fill because white on --blue was 4.02:1, while --blue
+     was left holding borders and accent-color. A single value that clears AA as
+     text (4.88:1 on --paper) and under white as a fill (5.85:1) collapses the
+     two without losing a distinction that meant something. */
+  --accent: #a94623;
   /* Opaque on purpose: a translucent tint resolves against whatever section
      background sits behind it, so the chip's contrast drifted per page. */
-  --blue-soft: #e8f0fb;
-  --green: #1c722f;
-  --green-soft: #e9f7ec;
-  --orange: #b25000;
-  --orange-soft: #fff3e7;
-  --red: #d70015;
-  --red-soft: #fff0f1;
+  --accent-soft: #f7e7de;
+  --green: #3f6b2e;
+  --green-soft: #e9f0e1;
+  --orange: #8a5a12;
+  --orange-soft: #f8efdc;
+  --red: #a32b1d;
+  --red-soft: #f9e7e2;
   --radius-control: 6px;
   --radius-panel: 8px;
   --radius-window: 12px;
-  --shadow-float: 0 22px 55px rgba(42, 42, 46, 0.16), 0 2px 8px rgba(42, 42, 46, 0.08);
-  --shadow-lift: 0 8px 24px rgba(42, 42, 46, 0.08);
+  --shadow-float: 0 22px 55px rgba(33, 31, 27, 0.16), 0 2px 8px rgba(33, 31, 27, 0.08);
+  --shadow-lift: 0 8px 24px rgba(33, 31, 27, 0.08);
 
   /* Colours that used to be written inline. Naming them is what lets the dark
      scheme reach them — a literal in a rule body cannot follow the theme. */
   --on-accent: #ffffff;
-  --accent-pressed: #00539f;
-  --code-ink: #292b2f;
-  --code-bg: #e8e7e3;
-  --cta-ink: #ffffff;
-  --cta-ink-soft: rgba(255, 255, 255, 0.66);
-  --cta-bg: #1b1d22;
-  --cta-line: rgba(255, 255, 255, 0.32);
-  --selection-bg: #cfdfff;
+  --accent-pressed: #87381c;
+  /* Stays a light block on the light theme, as before -- only the hue moved.
+     11.40:1. */
+  --code-ink: #2d2a24;
+  --code-bg: #ebe5d9;
+  --cta-ink: #f4efe6;
+  --cta-ink-soft: rgba(244, 239, 230, 0.66);
+  --cta-bg: #211f1b;
+  --cta-line: rgba(244, 239, 230, 0.32);
+  --selection-bg: #f2d9cb;
   /* Opaque, because WCAG 1.4.11 wants 3:1 for a focus indicator and this ring is
      the only thing telling a keyboard user where they are. At the previous
      rgba(36, 103, 242, 0.33) it composited to 1.55:1 on --paper — close to
      invisible on the default theme, and invisible to axe-core too, whose
-     color-contrast rule only measures text. Same hue, alpha removed: 4.14:1 on
-     --paper, 4.89:1 on --surface. */
-  --focus-ring: #2467f2;
-  --chip-blue-line: rgba(0, 98, 204, 0.2);
-  --chip-green-line: rgba(28, 114, 47, 0.2);
-  --chip-orange-line: rgba(178, 80, 0, 0.2);
-  --chip-red-line: rgba(215, 0, 21, 0.2);
-  --particle: 0, 98, 204;
+     color-contrast rule only measures text. Alpha stays off: 5.71:1 on --paper,
+     6.51:1 on --surface. */
+  --focus-ring: #983f20;
+  --chip-accent-line: rgba(169, 70, 35, 0.2);
+  --chip-green-line: rgba(63, 107, 46, 0.2);
+  --chip-orange-line: rgba(138, 90, 18, 0.2);
+  --chip-red-line: rgba(163, 43, 29, 0.2);
+  /* Bare channels, not a colour: HeroParticles composes rgba() from these per
+     particle. Keep it in step with the fallback in that component's script. */
+  --particle: 169, 70, 35;
 
   /* Type scale measured off apple.com's compiled marketing stylesheet. The
      tracking curve is not monotonic: 40px is the 0em neutral point, larger
@@ -139,7 +153,7 @@ button, select { color: inherit; }
   z-index: 100;
   padding: 9px 13px;
   color: var(--on-accent);
-  background: var(--blue-deep);
+  background: var(--accent);
   border-radius: var(--radius-control);
   transform: translateY(-140%);
 }
@@ -185,7 +199,7 @@ button, select { color: inherit; }
 .header-inner { min-height: var(--header-height); display: flex; align-items: center; gap: 34px; }
 .wordmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -0.01em; }
 .wordmark-mark { transition: border-color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple); }
-.wordmark:hover .wordmark-mark { border-color: var(--blue); background: var(--blue-soft); }
+.wordmark:hover .wordmark-mark { border-color: var(--accent); background: var(--accent-soft); }
 .wordmark-mark {
   width: 34px;
   height: 34px;
@@ -304,18 +318,18 @@ button, select { color: inherit; }
 .button:active { transform: scale(0.97); transition-duration: 100ms; }
 /* --blue is Apple's system blue, but white on it is only 4.02:1 at this text
    size; --blue-deep carries the fill so the label clears AA. */
-.button-primary { color: var(--on-accent); background: var(--blue-deep); border-color: var(--blue-deep); }
+.button-primary { color: var(--on-accent); background: var(--accent); border-color: var(--accent); }
 .button-primary:hover { background: var(--accent-pressed); border-color: var(--accent-pressed); }
 .button-secondary { color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
 .button-secondary:hover { background: var(--surface-muted); }
 .button-small { min-height: 36px; padding-inline: 13px; font-size: 13px; }
-.button-text { min-height: auto; padding: 2px 0; color: var(--blue-deep); border: 0; }
+.button-text { min-height: auto; padding: 2px 0; color: var(--accent); border: 0; }
 /* Overrides .button's lift: a text link sliding sideways reads as "go here",
    where a vertical hop reads as a button. */
 .button-text:hover { transform: translateX(3px); }
 .button[aria-disabled="true"] { color: var(--ink-faint); background: var(--paper-strong); border-color: var(--line); cursor: not-allowed; transform: none; }
 
-.eyebrow { margin: 0 0 14px; color: var(--blue-deep); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.eyebrow { margin: 0 0 14px; color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .display {
   margin: 0;
   max-width: 900px;
@@ -324,7 +338,7 @@ button, select { color: inherit; }
   letter-spacing: var(--ls-hero);
   font-weight: 600;
 }
-.display em { color: var(--blue); font-style: normal; }
+.display em { color: var(--accent); font-style: normal; }
 .page-title { margin: 0; font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); font-weight: 600; }
 .section-title { margin: 0; max-width: var(--measure-text); font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); font-weight: 600; }
 .card-title { margin: 0; font-size: 21px; line-height: 1.25; letter-spacing: .011em; font-weight: 600; }
@@ -336,7 +350,7 @@ button, select { color: inherit; }
 .prose p, .prose li { max-width: var(--measure-text); }
 /* :not(.button) keeps this from overriding .button-primary's white text —
    both selectors are 0-2-0 and this one used to win on order alone. */
-.prose a:not(.button) { color: var(--blue-deep); text-decoration: underline; text-underline-offset: 3px; }
+.prose a:not(.button) { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .prose code, code.inline { padding: 2px 5px; overflow-wrap: anywhere; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 0.88em ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 /* Markdown tables. Authored help articles can emit these, and with no rules at
    all a browser renders a borderless grid with collapsed padding that reads as
@@ -415,14 +429,14 @@ button, select { color: inherit; }
 .steps { counter-reset: step; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--line-strong); }
 .step { counter-increment: step; padding: 30px 32px 0 0; min-height: 210px; border-bottom: 1px solid var(--line); }
 .step + .step { padding-left: 32px; border-left: 1px solid var(--line); }
-.step::before { content: "0" counter(step); display: block; margin-bottom: 52px; color: var(--blue-deep); font: 650 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.step::before { content: "0" counter(step); display: block; margin-bottom: 52px; color: var(--accent); font: 650 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .step h3 { margin: 0 0 9px; font-size: 21px; letter-spacing: .011em; font-weight: 600; }
 .step p { margin: 0; color: var(--ink-soft); font-size: var(--fs-caption); }
 
 .agent-list { display: grid; border-top: 1px solid var(--line-strong); }
 .agent-row { min-height: 86px; padding: 18px 8px; display: grid; grid-template-columns: 42px minmax(160px, 1fr) minmax(240px, 1.4fr) auto; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); transition: background-color var(--dur-micro) var(--ease-apple), box-shadow var(--dur-micro) var(--ease-apple); }
 @media (hover: hover) {
-  .agent-row:hover { background: var(--surface); box-shadow: inset 3px 0 0 var(--blue); }
+  .agent-row:hover { background: var(--surface); box-shadow: inset 3px 0 0 var(--accent); }
 }
 .agent-row:active { background: var(--surface-pressed); transition-duration: 100ms; }
 .agent-row strong { display: block; letter-spacing: -.015em; }
@@ -433,13 +447,13 @@ button, select { color: inherit; }
 .agent-fallback { font-size: 13px; font-weight: 650; }
 
 .chip { min-height: 26px; padding: 3px 8px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-soft); background: var(--surface); font-size: 11px; font-weight: 600; white-space: nowrap; }
-.chip-blue { color: var(--blue-deep); background: var(--blue-soft); border-color: var(--chip-blue-line); }
+.chip-accent { color: var(--accent); background: var(--accent-soft); border-color: var(--chip-accent-line); }
 .chip-green { color: var(--green); background: var(--green-soft); border-color: var(--chip-green-line); }
 .chip-orange { color: var(--orange); background: var(--orange-soft); border-color: var(--chip-orange-line); }
 .chip-red { color: var(--red); background: var(--red-soft); border-color: var(--chip-red-line); }
 
 .split-callout { display: grid; grid-template-columns: .78fr 1.22fr; gap: 72px; align-items: start; }
-.callout-index { color: var(--blue-deep); font: 650 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.callout-index { color: var(--accent); font: 650 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .callout-body { padding-top: 1px; }
 .callout-body h2 { margin: 0 0 20px; font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); font-weight: 600; }
 .callout-body p { max-width: var(--measure-text); color: var(--ink-soft); font-size: var(--fs-intro); letter-spacing: var(--ls-intro); }
@@ -453,13 +467,13 @@ button, select { color: inherit; }
 .breadcrumb a:hover { color: var(--ink); }
 /* Press lands on the ink rather than a surface: these are inline links inside a
    sentence, so a background block would redraw the line box on every tap. */
-.breadcrumb a:active { color: var(--blue-deep); transition-duration: 100ms; }
+.breadcrumb a:active { color: var(--accent); transition-duration: 100ms; }
 
 .notice { padding: 17px 18px; display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface); font-size: var(--fs-caption); }
 .notice strong { display: block; color: var(--ink); }
 .notice p { margin: 2px 0 0; color: var(--ink-soft); }
 .notice-warning { background: var(--orange-soft); border-color: var(--chip-orange-line); }
-.notice-info { background: var(--blue-soft); border-color: var(--chip-blue-line); }
+.notice-info { background: var(--accent-soft); border-color: var(--chip-accent-line); }
 .notice-success { background: var(--green-soft); border-color: var(--chip-green-line); }
 .notice-mark { flex: 0 0 auto; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: 12px; font-weight: 650; }
 
@@ -484,8 +498,8 @@ button, select { color: inherit; }
 .platform-option:active { background: var(--surface-pressed); transition-duration: 100ms; }
 /* Keeping the real radio (rather than hiding it behind a drawn circle) is what
    gives this arrow-key navigation, form semantics and focus for free. */
-.platform-option input { width: 16px; height: 16px; margin: 0; accent-color: var(--blue-deep); }
-.platform-option:has(input:checked) { border-color: var(--blue-deep); background: var(--blue-soft); }
+.platform-option input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+.platform-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
 /* The ring belongs on the card, not the 16px dot inside it. */
 .platform-option:has(input:focus-visible) { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
 .platform-option input:focus-visible { outline: none; }
@@ -526,7 +540,7 @@ button, select { color: inherit; }
 @media (hover: hover) {
   .side-index a:hover { color: var(--ink); transform: translateX(4px); }
 }
-.side-index a:active { color: var(--blue-deep); transition-duration: 100ms; }
+.side-index a:active { color: var(--accent); transition-duration: 100ms; }
 
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line-strong); }
 .detail-cell { min-height: 142px; padding: 26px 28px 28px 0; border-bottom: 1px solid var(--line); }
@@ -557,7 +571,7 @@ button, select { color: inherit; }
 .service-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid var(--line-strong); }
 .service { padding: 30px 30px 34px 0; border-bottom: 1px solid var(--line); }
 .service + .service { padding-left: 30px; border-left: 1px solid var(--line); }
-.service-number { color: var(--blue-deep); font: 650 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.service-number { color: var(--accent); font: 650 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .service h2 { margin: 58px 0 10px; font-size: var(--fs-h4); letter-spacing: var(--ls-h4); font-weight: 600; }
 .service p, .service li { color: var(--ink-soft); font-size: var(--fs-caption); }
 .service ul { padding-left: 18px; }
@@ -575,7 +589,7 @@ button, select { color: inherit; }
 .footer-grid a:not(.wordmark), .footer-grid p { color: var(--ink-soft); font-size: 13px; }
 .footer-grid a { transition: color var(--dur-micro) var(--ease-apple); }
 .footer-grid a:hover { color: var(--ink); }
-.footer-grid a:active { color: var(--blue-deep); transition-duration: 100ms; }
+.footer-grid a:active { color: var(--accent); transition-duration: 100ms; }
 .footer-brand p { max-width: 330px; margin: 17px 0 0; }
 .footer-brand .footer-fine { color: var(--ink-faint); }
 .footer-bottom { margin-top: 60px; padding-top: 18px; display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 11px; }
@@ -734,61 +748,63 @@ button, select { color: inherit; }
 }
 
 /* Dark scheme. Every value here was measured against its own surface rather
-   than derived by inverting the light palette: Apple's #007aff drops to 4.28:1
-   on a dark card and fails, so the accent is lifted to #3d9bff for text while
-   the button keeps the darker fill that white sits on at 5.80:1.
+   than derived by inverting the light palette: the light theme's --accent drops
+   below AA on a dark card, so the accent lifts to the logo's terracotta warmed
+   one step further, which carries text at 7.45:1 and takes dark ink as a fill.
 
    Declared before the prefers-contrast block below, whose :root override is
    written in light-scheme literals and would otherwise win on order. */
 .theme-dark {
   color-scheme: dark;
 
-  --paper: #0f1418;
-  --paper-strong: #0b0f12;
-  --surface: #161c21;
-  --surface-muted: #1b2228;
-  --surface-pressed: #212a31;
-  --ink: #f5f6f7;
-  --ink-soft: #adb3b9;
-  --ink-faint: #9aa1a8;
-  --line: rgba(233, 238, 243, 0.16);
-  --line-strong: rgba(233, 238, 243, 0.28);
+  --paper: #161410;
+  --paper-strong: #1d1b16;
+  --surface: #211f1b;
+  --surface-muted: #2b2822;
+  --surface-pressed: #302d27;
+  --ink: #f4efe6;
+  --ink-soft: #bfb8a9;
+  --ink-faint: #9c9484;
+  --line: rgba(244, 239, 230, 0.16);
+  --line-strong: rgba(244, 239, 230, 0.28);
   /* A white wash would read as haze on a dark ground, so the dark fill lifts with
      a light tint at low alpha instead — same idea, inverted. */
-  --control-fill: rgba(233, 238, 243, 0.07);
+  --control-fill: rgba(244, 239, 230, 0.07);
 
-  --blue: #3d9bff;
-  --blue-deep: #6bb4ff;
-  --blue-soft: #14283c;
-  --green: #5fd07f;
-  --green-soft: #12291b;
-  --orange: #f0a95c;
-  --orange-soft: #301f0f;
-  --red: #ff8a8f;
-  --red-soft: #331619;
+  /* Here the brand value and the accent coincide: the mark's stem needs the same
+     lift off a dark ground that the accent does, so both take #e4855c. */
+  --brand: #e4855c;
+  --accent: #e4855c;
+  --accent-soft: #38231a;
+  --green: #8fcb74;
+  --green-soft: #1e2c17;
+  --orange: #e0ae5c;
+  --orange-soft: #332512;
+  --red: #f08a78;
+  --red-soft: #37180f;
 
   --shadow-float: 0 22px 55px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.45);
 
   /* The accent is light here, so anything sitting on it needs dark ink — white
-     on #6bb4ff is 2.19:1. This covers the primary button and the skip link. */
-  --on-accent: #08131f;
-  --accent-pressed: #82c1ff;
-  --code-ink: #d4d8dc;
-  --code-bg: #12181d;
-  --cta-ink: #f5f6f7;
-  --cta-ink-soft: rgba(245, 246, 247, 0.7);
-  --cta-bg: #05080a;
-  --cta-line: rgba(245, 246, 247, 0.32);
-  --selection-bg: #1d3a5c;
-  /* Opaque for the same reason as the light theme: 2.65:1 composited, 8.47:1
+     on #e4855c is 1.90:1. This covers the primary button and the skip link. */
+  --on-accent: #211f1b;
+  --accent-pressed: #ee9a75;
+  --code-ink: #ded7c9;
+  --code-bg: #17150f;
+  --cta-ink: #f4efe6;
+  --cta-ink-soft: rgba(244, 239, 230, 0.7);
+  --cta-bg: #0d0b08;
+  --cta-line: rgba(244, 239, 230, 0.32);
+  --selection-bg: #4a2d1e;
+  /* Opaque for the same reason as the light theme: 2.65:1 composited, 8.33:1
      without the alpha. */
-  --focus-ring: #6bb4ff;
-  --chip-blue-line: rgba(107, 180, 255, 0.28);
-  --chip-green-line: rgba(95, 208, 127, 0.28);
-  --chip-orange-line: rgba(240, 169, 92, 0.28);
-  --chip-red-line: rgba(255, 138, 143, 0.28);
-  --particle: 107, 180, 255;
+  --focus-ring: #ee9a75;
+  --chip-accent-line: rgba(238, 154, 117, 0.28);
+  --chip-green-line: rgba(143, 203, 116, 0.28);
+  --chip-orange-line: rgba(224, 174, 92, 0.28);
+  --chip-red-line: rgba(240, 138, 120, 0.28);
+  --particle: 238, 154, 117;
 }
 
 /* The Codex and OpenCode marks declare fill="currentColor", but an <img> has no
@@ -820,11 +836,11 @@ button, select { color: inherit; }
 }
 
 @media (prefers-contrast: more) {
-  :root { --line: rgba(60, 60, 67, 0.5); --line-strong: rgba(60, 60, 67, 0.7); --ink-soft: #4a4a4f; --ink-faint: #4a4a4f; }
+  :root { --line: rgba(33, 31, 27, 0.5); --line-strong: rgba(33, 31, 27, 0.7); --ink-soft: #3b372f; --ink-faint: #3b372f; }
   /* These were light-scheme literals only, so a dark-theme reader asking for more
      contrast got nothing. Same intent, inverted: firmer lines, and the soft inks
      pulled toward the foreground rather than toward the page. */
-  .theme-dark { --line: rgba(233, 238, 243, 0.46); --line-strong: rgba(233, 238, 243, 0.66); --ink-soft: #d8dde2; --ink-faint: #d8dde2; }
+  .theme-dark { --line: rgba(244, 239, 230, 0.46); --line-strong: rgba(244, 239, 230, 0.66); --ink-soft: #ded8cc; --ink-faint: #ded8cc; }
   .site-header { background: var(--surface); backdrop-filter: none; border-bottom: 1px solid var(--line-strong); }
   .scroll-edge { display: none; }
   .header-control { background: var(--surface); border-color: var(--line-strong); }

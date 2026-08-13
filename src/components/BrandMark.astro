@@ -1,8 +1,37 @@
 ---
+/**
+ * The product mark: a stroked ring and a round-capped stem, the b that boots.
+ *
+ * Inlined rather than served through <img src>, which is what this component
+ * used to do. The mark is two-colour now, and neither colour is a literal: the
+ * ring takes currentColor so it follows whatever ink surrounds it (--ink in the
+ * wordmark plate, so it inverts with the theme), and the stem takes var(--brand).
+ * An <img> is an isolated document — currentColor would fall back to black there
+ * and a custom property would not cross into it at all, so the stem simply would
+ * not paint. The agent marks hit the same wall and are handled in AgentMark.
+ *
+ * var(--brand) is the one place the logo's undarkened terracotta is used: at
+ * 2.79:1 on --paper it cannot carry text or a control's boundary, so everything
+ * actionable takes the deeper --accent instead.
+ */
 interface Props {
   size?: number;
 }
 const { size = 28 } = Astro.props;
-const source = `${import.meta.env.BASE_URL}images/brand/bootagent-logo-mark-256.png`;
 ---
-<img src={source} alt="" width={size} height={size} aria-hidden="true" decoding="async" draggable="false" />
+<svg
+  width={size}
+  height={size}
+  viewBox="24 -1 84 108"
+  fill="none"
+  aria-hidden="true"
+  focusable="false"
+><circle cx="66" cy="65" r="33" stroke="currentColor" stroke-width="12" /><line
+    x1="33"
+    y1="8"
+    x2="33"
+    y2="98"
+    stroke="var(--brand)"
+    stroke-width="12"
+    stroke-linecap="round"
+  /></svg>

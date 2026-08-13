@@ -15,8 +15,8 @@ import { describe, expect, it } from "vitest";
  * remains, and it is the layer a regression would be introduced at anyway.
  *
  * The rule that prompted this: the activation panel's indicator was
- * `box-shadow: 0 0 0 3px var(--blue-soft)`, and `--blue-soft` is a pale fill
- * (#e8f0fb light, #14283c dark) rather than a ring colour — far below 3:1 on the
+ * `box-shadow: 0 0 0 3px var(--accent-soft)`, and `--accent-soft` is a pale fill
+ * (#f7e7de light, #38231a dark) rather than a ring colour — far below 3:1 on the
  * surface behind it. The panel is a programmatic focus target between steps, so a
  * keyboard user met it on every advance.
  */

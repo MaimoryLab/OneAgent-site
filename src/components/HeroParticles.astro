@@ -53,7 +53,7 @@
     // Canvas cannot resolve var() itself, so the theme's channel triple is read
     // off the element and cached — re-reading it per particle per frame would
     // force a style recalc 56 times a frame.
-    let channels = "0, 98, 204";
+    let channels = "169, 70, 35";
     const readChannels = () => {
       const value = getComputedStyle(canvas).getPropertyValue("--particle").trim();
       if (value) channels = value;

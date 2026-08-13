@@ -78,8 +78,11 @@ const structuredData = {
         Permissions-Policy cannot be set this way. */}
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#ececef" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0f1418" media="(prefers-color-scheme: dark)" />
+    <!-- --paper per scheme, duplicated because the browser chrome reads the tag
+         and cannot resolve var(). Move these with that token, and with
+         site.webmanifest's background_color / theme_color. -->
+    <meta name="theme-color" content="#efeae0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161410" media="(prefers-color-scheme: dark)" />
     {/* Runs before first paint and before the stylesheet, so the resolved theme
         is on <html> by the time anything is drawn. Deferring this to the module
         script would paint the light palette first and flash. */}
@@ -107,6 +110,11 @@ const structuredData = {
         href={alternates.find((alternate) => alternate.code === defaultLocale)!.href}
       />
     )}
+    <!-- The SVG is listed first and wins wherever it is understood; the PNG is
+         the fallback. The mark is two strokes, so at 16px the vector stays crisp
+         where the raster has to guess. Both carry the ink ring rather than a
+         theme-dependent one: a favicon has no document to inherit from. -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="favicon.png" type="image/png" sizes="64x64" />
     <link rel="manifest" href="site.webmanifest" />
     <link rel="alternate" type="text/plain" href="llms.txt" title="llms.txt" />

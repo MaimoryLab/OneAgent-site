@@ -35,7 +35,7 @@ const desktopCount = catalog.agents.filter((agent) => agent.kind === "desktop").
               ) : (
                 <>
                   {agent.support.managedInstall ? <span class="chip chip-green">管理安装</span> : <span class="chip">官方引导</span>}
-                  {agent.support.managedConfig ? <span class="chip chip-blue">管理配置</span> : <span class="chip">官方配置</span>}
+                  {agent.support.managedConfig ? <span class="chip chip-accent">管理配置</span> : <span class="chip">官方配置</span>}
                   {agent.protocol && <span class="chip">{protocolLabels[agent.protocol]}</span>}
                 </>
               )}

@@ -228,7 +228,7 @@ const demoLabel = (status: string) => status === "ready"
           <span class="explorer-description">{agentDescriptions[agent.id] ?? agentFallbackDescription}</span>
           <span class="explorer-chips">
             <span class:list={["chip", agent.support.managedInstall && "chip-green"]}>{agent.support.managedInstall ? copy.managedInstall : copy.officialGuide}</span>
-            <span class:list={["chip", agent.support.managedConfig && "chip-blue"]}>{agent.support.managedConfig ? copy.managedConfig : copy.officialConfig}</span>
+            <span class:list={["chip", agent.support.managedConfig && "chip-accent"]}>{agent.support.managedConfig ? copy.managedConfig : copy.officialConfig}</span>
             {agent.protocol && <span class="chip">{protocolLabels[agent.protocol]}</span>}
           </span>
           <span class="explorer-card-foot">
@@ -529,7 +529,7 @@ const demoLabel = (status: string) => status === "ready"
     background: var(--surface);
     cursor: pointer;
   }
-  .explorer-card:hover, .explorer-card.is-selected { border-color: var(--blue); box-shadow: var(--shadow-lift); }
+  .explorer-card:hover, .explorer-card.is-selected { border-color: var(--accent); box-shadow: var(--shadow-lift); }
   .explorer-card-head { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 11px; }
   .explorer-card-head > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
   .explorer-card-head strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; }
@@ -555,12 +555,12 @@ const demoLabel = (status: string) => status === "ready"
     border: 0;
     border-left: 1px solid var(--line-strong);
     background: var(--surface);
-    box-shadow: -24px 0 70px rgba(0, 0, 0, .22);
+    box-shadow: -24px 0 70px rgba(33, 31, 27, .22);
   }
   /* The scrim dims the page behind a modal task, which is what separates this from
      a parallel panel. The blur reads as depth rather than as a flat wash — and it
      uses the shared token so the site has one blur strength, not three. */
-  .explorer-drawer::backdrop { background: rgba(8, 13, 17, .52); backdrop-filter: blur(calc(var(--blur-material) / 4)); }
+  .explorer-drawer::backdrop { background: rgba(16, 14, 10, .52); backdrop-filter: blur(calc(var(--blur-material) / 4)); }
   .drawer-shell { height: 100%; position: relative; overflow: auto; }
   .drawer-close {
     width: 38px;
@@ -626,14 +626,14 @@ const demoLabel = (status: string) => status === "ready"
      block in global.css, which only reached .site-header. A reader who asked for
      less transparency still got a blurred scrim and a translucent close button. */
   @media (prefers-reduced-transparency: reduce) {
-    .explorer-drawer::backdrop { background: rgba(8, 13, 17, .82); backdrop-filter: none; }
+    .explorer-drawer::backdrop { background: rgba(16, 14, 10, .82); backdrop-filter: none; }
     .drawer-close { background: var(--surface); backdrop-filter: none; }
   }
 
   /* Settles back down on press: the lift belongs to hover, the give belongs to
      the press. This grid is the primary interaction on the explore page and had
      no acknowledgement of a tap at all. */
-  .explorer-card:active { border-color: var(--blue); box-shadow: var(--shadow-lift); transform: translateY(0) scale(0.995); transition-duration: 100ms; }
+  .explorer-card:active { border-color: var(--accent); box-shadow: var(--shadow-lift); transform: translateY(0) scale(0.995); transition-duration: 100ms; }
   @keyframes drawer-in { from { transform: translateX(28px); } }
 
   @media (max-width: 980px) {

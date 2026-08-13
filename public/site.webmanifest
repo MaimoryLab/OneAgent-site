@@ -4,8 +4,8 @@
   "description": "A trustworthy local AI development environment activator.",
   "start_url": "./",
   "display": "browser",
-  "background_color": "#ececef",
-  "theme_color": "#ececef",
+  "background_color": "#efeae0",
+  "theme_color": "#efeae0",
   "icons": [
     { "src": "images/brand/bootagent-app-icon-192.png", "type": "image/png", "sizes": "192x192" },
     { "src": "images/brand/bootagent-app-icon-512.png", "type": "image/png", "sizes": "512x512" }
