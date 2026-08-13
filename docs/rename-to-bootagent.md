@@ -11,7 +11,10 @@ records what we depend on from it and what has to wait for it.
   product was called on those dates.
 - **`~/.oneagent/` is migrating** to the new name. Whether the installer moves
   existing data is still unconfirmed, which is what gates Group 3.
-- **This repository is being renamed too**, from `OneAgent-site`.
+- **This repository is being renamed too**, from `OneAgent-site` to
+  **`BootAgent-site`** — matching its existing capitalisation rather than the
+  all-lowercase package name. Deferred to the cutover so the product and the site
+  change name in one visible move; see Group 7 for why that costs nothing.
 - The site is **live at the custom domain `oneagentpro.ai`** (verified, HTTPS
   enforced, cert covers `oneagentpro.ai` and `www`). The domain is configured in
   the repository's Pages settings, not in a tracked `CNAME` file — so renaming
@@ -21,9 +24,17 @@ records what we depend on from it and what has to wait for it.
 
 ## Baseline
 
-311 case-insensitive occurrences across 70 tracked text files, plus 5 brand
-binaries whose filenames carry the name. `pnpm-lock.yaml` is clean. No
-occurrence in `LICENSE` other than the copyright holder, which does not change.
+At the start of this work: 311 case-insensitive occurrences across 70 tracked text
+files, plus 5 brand binaries whose filenames carry the name. `pnpm-lock.yaml` is
+clean. No occurrence in `LICENSE` other than the copyright holder, which does not
+change.
+
+After Group 2 landed, the rendered site carries 799 uses of the new name and 176
+of the old. Every one of those 176 is deliberate — upstream repository URLs, the
+real release asset names the download page quotes from the live feed, the vendored
+lock files' sponsor and guide text, the changelog history, and the
+`RELEASE_REPOSITORY` fallback. Re-check that split with the grep under
+[Verification](#verification) rather than trusting this number.
 
 ## What must NOT be renamed
 
@@ -38,14 +49,14 @@ occurrence in `LICENSE` other than the copyright holder, which does not change.
   wondering why the old name appears. `changelog/index.astro:4` is the page
   `title`/`description`, which is present-tense chrome — that one *does* change.
 
-## Group 1 — blocked on upstream
+## Group 1 — upstream repository references · BLOCKED on upstream
 
 These break the moment we change them ahead of upstream, or stay broken until
 upstream moves. Do them in the cutover commit, not before.
 
 | Location | Current | Note |
 | --- | --- | --- |
-| `src/lib/downloads.ts:48` | `RELEASE_REPOSITORY \|\| "MaimoryLab/OneAgent"` | The release feed default. Points at a 404 until upstream's repo is renamed. GitHub redirects renamed repos for the API too, so this keeps working through the rename — but the fallback literal should still end up correct. |
+| `src/lib/downloads.ts:48` | `RELEASE_REPOSITORY \|\| "MaimoryLab/OneAgent"` | The release feed default, and the source of the header's GitHub link. `MaimoryLab/BootAgent` is still an unclaimed slug — verified — so changing this now breaks both. GitHub redirects renamed repos for the API too, so it keeps working *through* the rename; the literal just has to end up correct afterwards. The line carries a comment saying this, because it looks exactly like something a later sweep would "finish". |
 | `src/lib/downloads.test.ts:270` | asserts `MaimoryLab/OneAgent` | Must change in the same commit as the line above or the suite fails. |
 | `e2e/site.spec.ts:678,683` | header GitHub link assertions | Same coupling. |
 | `data/README.md:4,34` | `raw.githubusercontent.com/MaimoryLab/OneAgent/$tag/manifests/` | The lock-file refresh command. Update when upstream's path is final. |
@@ -64,19 +75,19 @@ Confirmed against the live feed: upstream's current release is `v0.5.3`, shippin
 `OneAgent-windows-{amd64,arm64}-installer.exe`, and `SHA256SUMS`. Two things to
 carry into the cutover:
 
-- The `-installer.exe` assets do **not** match the regex, which anchors the
-  platform-arch pair to the end of the name before the extension. They are
-  invisible to the download page today. That is pre-existing behaviour and not
-  caused by the rename — worth a separate issue, but do not let it get diagnosed
-  as rename fallout later.
+- Asset *matching* survives the rename, but it is already lossier than it looks:
+  the `-installer.exe` assets never match, and the macOS format is chosen by feed
+  order. See #28. Fix or decide that separately from the rename, and do not let it
+  get diagnosed as rename fallout later.
 - The site is currently a release behind its own data: `data/README.md` records an
-  audit against `v0.5.0`. Re-copying the lock files at cutover (step 3) closes
-  that gap, so check whether `v0.5.1`–`v0.5.3` changed the contract rather than
-  assuming the files are still byte-identical.
+  audit against `v0.5.0`. Re-copying the lock files at cutover closes that gap, so
+  check whether `v0.5.1`–`v0.5.3` changed the contract rather than assuming the
+  files are still byte-identical.
 
-## Group 2 — user-visible copy, safe to change now
+## Group 2 — user-visible copy · DONE
 
-Independent of upstream. This is the bulk of the work.
+Independent of upstream, and the bulk of the work. Landed in PR #27; the inventory
+below is kept as the record of what was in scope.
 
 - `src/i18n/ui.ts` — 8 occurrences, both locales: `site.title`, `nav.home`,
   `github.label`, `github.labelWithCount`.
@@ -96,7 +107,7 @@ Independent of upstream. This is the bulk of the work.
 Two e2e assertions match on Chinese copy and must change with it:
 `e2e/site.spec.ts:490,516` assert `"OneAgent 可管理安装"` / `"OneAgent 可管理配置"`.
 
-## Group 3 — the `~/.oneagent/` home directory
+## Group 3 — the `~/.oneagent/` home directory · BLOCKED on upstream
 
 Confirmed: the directory is migrating to the new name. The site documents the
 directory the installer actually creates, so **these edits ship with the
@@ -139,62 +150,90 @@ answer changes what we write, not just where:
 Either way `06-upgrade.md` gains content rather than just swapping a string. Ask
 upstream before writing it; do not guess which sentence to write.
 
-## Group 4 — identifiers and stored state
+## Group 4 — identifiers and stored state · DONE
 
-- **`localStorage` key `oneagent-theme`** — `src/components/ThemeToggle.astro:39`
-  and `src/layouts/BaseLayout.astro:89`. Both must change together or the toggle
-  desyncs from the inline theme script. Renaming the key silently resets every
-  returning visitor's theme to system default. Cheapest correct option: leave
-  the key as-is. It is invisible to users, and a rename buys nothing. If it must
-  change, read the old key as a fallback and migrate on first load.
-- **`package.json:2`** — `"name": "oneagent-public-site"`. Private package, no
-  registry, safe to rename.
+- **`localStorage` key `oneagent-theme` — deliberately kept.** Read in
+  `src/components/ThemeToggle.astro` and `src/layouts/BaseLayout.astro`; the two
+  must always agree or the toggle desyncs from the inline theme script. The key is
+  invisible to users, so renaming it buys nothing and costs something real: every
+  returning visitor's saved theme silently resets to the system default. If a
+  future change does rename it, read the old key as a fallback and migrate on
+  first load rather than dropping it.
+- **`package.json:2`** — was `"name": "oneagent-public-site"`, now
+  `bootagent-public-site`. Private package, no registry, so this was safe to
+  rename on its own. **DONE.**
 - **`RELEASE_REPOSITORY`** — env var name is product-neutral. No change.
 - **`SITE_URL` / `BASE_PATH`** — no change, and no hardcoded origin anywhere in
   the repository (checked: no `oneagentpro`, no `github.io`, no tracked `CNAME`).
   `deploy.yml:120-128` reads both from `actions/configure-pages`. See Group 7.
 
-## Group 5 — brand assets
+## Group 5 — brand assets · (a) DONE, (b) not started
 
-Five binaries carry the name in their filename:
+Two separable decisions: **(a) rename the files — done. (b) redraw the artwork —
+not started.**
+
+(a) Five binaries carried the name in their filename and are now `bootagent-*`:
 
 ```
-public/images/brand/oneagent-app-icon-192.png
-public/images/brand/oneagent-app-icon-512.png
-public/images/brand/oneagent-logo-mark-256.png
-public/images/brand/oneagent-logo.png
-public/images/oneagent-overview.jpg
+public/images/brand/bootagent-app-icon-192.png
+public/images/brand/bootagent-app-icon-512.png
+public/images/brand/bootagent-logo-mark-256.png
+public/images/brand/bootagent-logo.png
+public/images/bootagent-overview.jpg
 ```
 
-Referenced from `public/site.webmanifest:10-11`,
-`src/components/BrandMark.astro:6`, `src/layouts/BaseLayout.astro:26`.
-`public/favicon.png` has a neutral filename but the same artwork question.
+Referenced from `public/site.webmanifest`, `src/components/BrandMark.astro` and
+`src/layouts/BaseLayout.astro`, all updated. Verified byte-identical across the
+rename by SHA-256, since a `git mv` that silently re-encodes an image would be
+easy to miss.
 
-Two separable decisions: (a) rename the files, (b) redraw the artwork. Renaming
-alone is a `git mv` plus three reference updates. Redrawing is a design task and
-should not block the copy rename. `NOTICE:38-42` describes these as the
-product's own mark and notes upstream traces its vector mark from
-`oneagent-logo.png` — coordinate (b) with upstream so the two do not diverge.
+(b) The artwork itself is unchanged and still the pre-rename drawing.
+`public/favicon.png` has a neutral filename but the same question. `NOTICE`
+records these as the product's own mark and notes that the product repository
+traces its vector mark from `bootagent-logo.png` — coordinate any redraw with
+upstream so the two do not diverge. This is a design task and was correctly not
+allowed to block the copy rename.
 
-`public/images/oneagent-overview.jpg` is the default Open Graph image
-(`BaseLayout.astro:26`). If it contains rendered UI with the old name in it, it
-is stale content regardless of its filename.
+`public/images/bootagent-overview.jpg` is the default Open Graph image
+(`BaseLayout.astro:26`). **Worth a look before the cutover:** if it shows rendered
+UI containing the old name, it is stale content regardless of its filename, and it
+is the image every social and chat preview of the site renders.
 
-## Group 6 — visual snapshots
+## Group 6 — visual snapshots · DONE
 
-`e2e/activation.visual.spec.ts-snapshots/` holds 6 PNG baselines. Any rename
-that changes rendered text inside `ActivationConsole` invalidates them.
-Regenerate with `pnpm exec playwright test --update-snapshots` and eyeball the
-diff — a snapshot update is the one step where a real regression can hide behind
-an expected change. The `-v040` in the filenames tracks the upstream flow
-version, not the product name; leave it.
+`e2e/activation.visual.spec.ts-snapshots/` holds 6 PNG baselines, all regenerated.
+The `-v040` in the filenames tracks the upstream flow version, not the product
+name; it stays.
 
-## Group 7 — renaming this repository
+Two things here surprised me and are worth knowing before the cutover touches this
+console again:
 
-Confirmed as in scope. Verified current state: `MaimoryLab/OneAgent-site` is
-public, Pages is enabled and built by workflow, and the custom domain
-`oneagentpro.ai` is verified with HTTPS enforced (cert covers apex and `www`,
-valid to 2026-11-05).
+- **The snapshots did not fail on the rename.** `ActivationConsole` renders the
+  brand name in the sidebar, well inside the captured region, but the glyph
+  difference is smaller than the spec's `maxDiffPixels: 1_500` — a tolerance sized
+  for the rounded window edge. Left alone, the baselines would have kept showing
+  the old name indefinitely while reporting green. They were updated deliberately,
+  not because a test demanded it.
+- **`--update-snapshots` does not rewrite a passing snapshot.** It only replaces
+  baselines for tests that fail. Since these passed, it was a no-op and the files
+  were untouched; `--update-snapshots=all` is what actually rebuilds them.
+
+Because the tolerance hides small text changes, a snapshot refresh here cannot be
+justified by "the test failed, so I updated it". Diff the old and new PNGs
+properly. For the Group 2 refresh that meant a per-pixel comparison: zero residual
+below `y=40`, and every remaining delta a 2–9 pixel band at the rounded corners
+(`x≈248`, `x≈1067`) — i.e. exactly the rasterisation the spec's comment describes,
+and no layout shift.
+
+## Group 7 — renaming this repository · scheduled for cutover
+
+Target slug: **`MaimoryLab/BootAgent-site`** (verified unclaimed). Scheduled for
+the cutover alongside Group 1, not before — the work is independent, but doing
+both at once means one name change visible to the outside rather than two.
+
+Verified current state: `MaimoryLab/OneAgent-site` is public, Pages is enabled and
+built by workflow, and the custom domain `oneagentpro.ai` is verified with HTTPS
+enforced (cert covers apex and `www`, valid to 2026-11-05).
 
 What makes this low-risk:
 
@@ -206,46 +245,51 @@ What makes this low-risk:
 - **GitHub redirects the old slug** for git remotes, HTML and API, so clones and
   any inbound links keep resolving.
 
-What still needs doing:
+Checklist for the cutover:
 
-- `git remote set-url origin` on every local clone. The redirect works, but a
-  stale remote is a confusing thing to leave behind. Current: `origin` →
-  `https://github.com/MaimoryLab/OneAgent-site.git`.
-- `src/lib/downloads.ts:44` names the old slug in a comment explaining why
-  `GITHUB_REPOSITORY` must not be used as the release source. Update the name;
-  keep the explanation, it is still the reason the code is written this way.
-- Confirm Pages and the domain still resolve after the rename before announcing
-  anything. `has_pages` and the cert survive a rename, but verify rather than
-  assume — this is the one step with a public blast radius.
-- Re-check that `deploy.yml`'s `preflight` job still passes. It reads
-  `has_pages`/`visibility` from `${GITHUB_REPOSITORY}` at runtime, so it follows
-  the rename on its own; no edit expected.
+1. `gh repo rename BootAgent-site --repo MaimoryLab/OneAgent-site`. Requires
+   admin, which the current operator has.
+2. Verify `oneagentpro.ai` still serves and `has_pages` is still true. The cert
+   and CNAME survive a rename, but this is the one step with a public blast
+   radius, so check rather than assume.
+3. `git remote set-url origin` on every local clone. The redirect keeps working,
+   but a stale remote is a confusing thing to leave behind.
+4. Confirm `deploy.yml`'s `preflight` job still passes. It reads
+   `has_pages`/`visibility` from `${GITHUB_REPOSITORY}` at runtime, so it follows
+   the rename on its own; no edit expected.
+
+`src/lib/downloads.ts` no longer names the old site slug — the comment there was
+reworded to "this repository" so it stays correct through the rename. The
+`RELEASE_REPOSITORY` fallback in the same file is a *different* slug (the product
+repository) and belongs to Group 1.
 
 **The `oneagentpro.ai` domain itself is out of scope here.** It carries the old
 name and presumably wants to change eventually, but that is a DNS and
 cert project with real downtime risk, and it is fully separable from renaming the
 code. Do not bundle it into this work.
 
-## Suggested sequencing
+## Sequencing
 
 The ordering constraint that matters: **the site must not name a path or a
 release the shipped binary does not have.** Everything else is free to move.
 
-1. **Now, no upstream dependency** — Group 2 (copy), the changelog note and its
-   `title`/`description`, Group 4 `package.json`, Group 5(a) file renames. One
-   commit per group, `pnpm run test:all` on each. Regenerate Group 6 snapshots in
-   the same commit as the copy change so the diff has one cause.
-2. **Ask upstream now, needed before step 4** — does the installer move an
-   existing `~/.oneagent/`? Also confirm the final upstream slug and that release
-   assets keep the `-<platform>-<arch>` suffix form.
-3. **Repository rename (Group 7)** — independent of upstream, can land any time
-   after step 1. Verify Pages and `oneagentpro.ai` still serve, then fix local
-   remotes and the comment at `src/lib/downloads.ts:44`.
-4. **Cutover, only after upstream publishes a renamed release** — Group 1 plus
-   Group 3 in one commit, then re-copy the lock files per `data/README.md` so
-   `oneagent_version` and aider's `config_path` update from the source rather
-   than by hand. Check `v0.5.1`–`v0.5.3` for contract changes while there.
-5. **Independent, unscheduled** — Group 5(b) artwork, and the `oneagentpro.ai`
+1. **Done** — Group 2 (copy), the changelog note and its `title`/`description`,
+   Group 4 `package.json`, Group 5(a) file renames, Group 6 snapshots. Landed as
+   one commit with `pnpm run test:all` green; PR #27.
+2. **Ask upstream, needed before step 3** — does the installer move an existing
+   `~/.oneagent/`? Also confirm the final upstream slug and that release assets
+   keep the `-<platform>-<arch>` suffix form.
+3. **Cutover, only after upstream publishes a renamed release** — Group 1, Group 3
+   and Group 7 together, so the product and the site change name in one move:
+   - the release-feed slug and its test fixtures, plus the `data/README.md` refresh
+     command;
+   - the ten `~/.oneagent/` sites, with whatever `06-upgrade.md` needs once the
+     migration behaviour is known;
+   - re-copy the lock files per `data/README.md` so `oneagent_version` and aider's
+     `config_path` update from the source rather than by hand — and check
+     `v0.5.1`–`v0.5.3` for contract changes while there;
+   - rename the repository to `BootAgent-site` per the Group 7 checklist.
+4. **Independent, unscheduled** — Group 5(b) artwork, and the `oneagentpro.ai`
    domain, which is explicitly not part of this work.
 
 ## Still open
@@ -256,20 +300,50 @@ release the shipped binary does not have.** Everything else is free to move.
 - **Does `~/.bootagent/` become the literal new path?** Group 3 assumes a
   same-shape rename. Confirm the exact string before editing ten files and a
   pasteable shell command.
-- **Not blocking, but worth filing separately:** the `-installer.exe` release
-  assets have never matched the download page's asset regex
-  (`src/lib/downloads.ts:200`), so Windows installers are not listed today.
+- **Not blocking, filed as #28:** the `-installer.exe` release assets have never
+  matched the download page's asset regex, so the Windows installers are not
+  listed — and the macOS `.dmg` wins over its `.zip` only because feed order
+  happens to favour it. Pre-existing, unrelated to the rename, but it lives in the
+  same function the cutover touches, so read #28 before editing
+  `releaseTargets`.
 
 ## Verification
 
 `pnpm run test:all` — vitest, then `astro check` + `astro build` +
 `scripts/validate-build.mjs`, then Playwright. `validate-build.mjs` checks every
-emitted page is well-formed, so a broken reference from a renamed asset fails
-the build rather than shipping. After the copy change, grep for stragglers:
+emitted page is well-formed, so a broken reference from a renamed asset fails the
+build rather than shipping.
+
+**Export `GITHUB_TOKEN` before running the e2e suite locally:**
+
+```bash
+export GITHUB_TOKEN="$(gh auth token)"
+```
+
+Without it the release feed hits the unauthenticated 60-per-hour limit and returns
+403. The build degrades to the "not published yet" state by design, and
+`site.spec.ts:371`/`:470` then **skip** every download-page test rather than
+failing. The run reports a green `198 passed` instead of `213`, having silently
+dropped coverage on the pages a rename touches most. `ci.yml` already injects the
+token, so CI is unaffected — this only bites locally, and it looks like success.
+
+Then grep for stragglers:
 
 ```bash
 git ls-files | grep -v pnpm-lock | xargs grep -in oneagent
 ```
 
-Expect only the deliberate survivors: `MaimoryLab` in `LICENSE`/`NOTICE`, the
-changelog history, and whatever Group 3 defers.
+Expect only the deliberate survivors: `MaimoryLab/OneAgent` and the
+`RELEASE_REPOSITORY` fallback, the vendored `data/*.lock.json`, the ten
+`~/.oneagent/` paths, the changelog history, the macOS screenshot provenance
+records, and the `oneagent-theme` storage key.
+
+Checking the rendered output is the stronger test, since it catches a string that
+only appears after templating:
+
+```bash
+find dist -name '*.html' -exec grep -o '.\{0,45\}OneAgent.\{0,40\}' {} + | sort -u
+```
+
+Every line it prints should be explicable as one of the survivors above. After
+Group 2 that was 176 occurrences against 799 of the new name.
