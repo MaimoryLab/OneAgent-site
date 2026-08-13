@@ -31,11 +31,11 @@ Linux 没有系统级的签名拦截，下载后加可执行权限即可运行�
 
 **Agent 的配置文件。** 每个 Agent 有自己的位置，比如 Codex 是 `~/.codex/config.toml`，Claude Code 是 `~/.claude/settings.json`。只有你在界面上确认之后才会写，写之前一定先备份，详见[备份与回退](/help/05-backup/)。
 
-**BootAgent 自己的目录。** `~/.oneagent/`，存放配置模版、以及它托管安装的运行时。
+**BootAgent 自己的目录。** `~/.bootagent/`，存放配置模版、以及它托管安装的运行时。
 
 ## 运行时不依赖你本机装了什么
 
-命令行 Agent 大多需要 Node。如果你机器上没有，BootAgent 会把它装进 `~/.oneagent/runtimes/`，不动系统的 Node，也不改 PATH。已经装了的话它会直接用现有的。
+命令行 Agent 大多需要 Node。如果你机器上没有，BootAgent 会把它装进 `~/.bootagent/runtimes/`，不动系统的 Node，也不改 PATH。已经装了的话它会直接用现有的。
 
 包和运行时默认走 npmmirror（阿里云）镜像，国内网络不用另外配代理。
 

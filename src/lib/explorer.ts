@@ -4,10 +4,15 @@ export type PlatformId = (typeof platformIds)[number];
 const protocolIds = ["openai", "anthropic", "responses"] as const;
 export type ProtocolId = (typeof protocolIds)[number];
 
+/* Upstream's vocabulary, and it has grown: v0.6.0's provider data introduced
+   `route-present-unverified` and `not-supported` alongside the four already here.
+   `unsupported` is kept because older vendored data still carries it. */
 export type ProviderProtocolStatus =
   | "implementation-supported"
   | "release-candidate-required"
+  | "route-present-unverified"
   | "verified"
+  | "not-supported"
   | "unsupported";
 
 interface SiteAgentSupport {
@@ -109,7 +114,13 @@ export function compatibilityFor(agent: SiteAgent, provider: SiteProvider): Comp
       return "verified";
     case "implementation-supported":
       return "supported";
+    /* Both mean "the path exists but nothing has confirmed it end to end", which is
+       the gate, not a refusal. Letting `route-present-unverified` fall through to
+       the default would have printed 不支持 against a provider that publishes the
+       route — a claim about the provider stronger than the data behind it, and the
+       exact confusion `release-candidate-required` is already carved out to avoid. */
     case "release-candidate-required":
+    case "route-present-unverified":
       return "preview-gate";
     default:
       return "unsupported";

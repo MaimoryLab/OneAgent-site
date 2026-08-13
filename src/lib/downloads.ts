@@ -44,13 +44,8 @@ export interface AgentSupport {
    here pointed every CI and Pages build at this repository, which has no
    releases, and the download page rendered "not published yet" no matter what
    upstream had shipped. RELEASE_REPOSITORY overrides it for a fork that
-   publishes its own builds.
-
-   Still the pre-rename slug: the product repository has not been renamed to
-   BootAgent yet. Changing this ahead of it points the download page and the
-   header's GitHub link at a repository that does not exist. See
-   docs/rename-to-bootagent.md, group 1. */
-const repository = process.env.RELEASE_REPOSITORY || "MaimoryLab/OneAgent";
+   publishes its own builds. */
+const repository = process.env.RELEASE_REPOSITORY || "MaimoryLab/BootAgent";
 const releasesUrl = `https://api.github.com/repos/${repository}/releases?per_page=20`;
 export const releasesPageUrl = `https://github.com/${repository}/releases`;
 let releasesRequest: Promise<GitHubRelease[]> | undefined;
@@ -177,10 +172,41 @@ export async function getLatestRelease(): Promise<GitHubRelease | null> {
 
 const platformLabels = { macos: "macOS", windows: "Windows", linux: "Linux" } as const;
 const archLabels = { arm64: "Apple silicon / ARM64", x64: "Intel / AMD 64-bit" } as const;
-const binarySuffixes = [".zip", ".tar.gz", ".dmg", ".msi", ".exe", ".appimage"];
+
+/**
+ * Which format to offer when a release publishes several for one platform-arch,
+ * most-preferred first.
+ *
+ * This has to be stated rather than inferred. Before it existed the choice fell
+ * to whichever asset GitHub listed first, and the feed is ordered
+ * alphabetically — so macOS got its `.dmg` over its `.zip` by luck, and renaming
+ * an asset such that the archive sorted first would have silently started handing
+ * every macOS visitor a zip. A download page whose format depends on filename
+ * collation is not making a decision.
+ *
+ * Native installer first on each platform, archive last: the archive is the
+ * fallback for someone who cannot or will not run an installer, not the default.
+ */
+const formatPreference = {
+  macos: [".dmg", ".pkg", ".zip", ".tar.gz"],
+  windows: [".exe", ".msi", ".zip"],
+  linux: [".appimage", ".deb", ".rpm", ".tar.gz", ".zip"],
+} as const satisfies Record<ReleaseTarget["platform"], readonly string[]>;
+
+/* Every suffix any platform will accept. Derived rather than repeated: keeping a
+   separate list is how `.deb` and `.rpm` ended up matching the name pattern but
+   being dropped as non-binary when upstream started shipping them. */
+const binarySuffixes: readonly string[] = [...new Set(Object.values(formatPreference).flat())];
+
+/* Not a first-install download. Upstream ships `ota-*.zip` update payloads beside
+   the installers, and they satisfy every other rule here — platform, arch, a
+   `.zip` suffix — so they were picked up as the thing to offer. On v0.6.0 that
+   made the Windows column advertise an OTA update package, because the real
+   installers are `-installer.exe` and did not match at all. See #28. */
+const updatePayloadPattern = /^ota-/i;
 
 /* Asset names carry Go's GOOS/GOARCH, because that is what upstream's release
-   workflow builds with: `OneAgent-darwin-arm64.zip`, not `-macos-arm64`. The
+   workflow builds with: `BootAgent-darwin-arm64.dmg`, not `-macos-arm64`. The
    site's own vocabulary is macos/x64, so accept both spellings and normalise to
    the site's. Matching only the site's spelling is what made the download page
    render "not published yet" against a release that had four assets. */
@@ -198,14 +224,28 @@ const archAliases: Record<string, ReleaseTarget["arch"]> = {
   x86_64: "x64",
 };
 
+/* The arch is not always the last thing before the extension. Upstream's Windows
+   installers are `BootAgent-windows-amd64-installer.exe`, and anchoring the
+   arch to the extension meant they never matched — so the only Windows asset the
+   page could see was the OTA payload above. The optional group accepts that
+   trailing word without loosening what counts as an arch. */
+const assetNamePattern =
+  /-(macos|darwin|windows|linux)-(arm64|aarch64|x64|amd64|x86_64)(?:-[a-z0-9]+)?(?:\.[a-z0-9.]+)$/;
+
 export function releaseTargets(release: GitHubRelease): ReleaseTarget[] {
-  return release.assets.flatMap((asset) => {
-    const match = asset.name
-      .toLowerCase()
-      .match(/-(macos|darwin|windows|linux)-(arm64|aarch64|x64|amd64|x86_64)(?:\.[a-z0-9.]+)$/);
-    if (!match || !binarySuffixes.some((suffix) => asset.name.toLowerCase().endsWith(suffix))) return [];
+  const candidates = release.assets.flatMap((asset) => {
+    const name = asset.name.toLowerCase();
+    if (updatePayloadPattern.test(name)) return [];
+    const match = name.match(assetNamePattern);
+    if (!match) return [];
+    const suffix = binarySuffixes.find((candidate) => name.endsWith(candidate));
+    if (!suffix) return [];
     const platform = platformAliases[match[1]];
     const arch = archAliases[match[2]];
+    /* A format this platform does not list is not offered at all, rather than
+       ranked last: `.exe` on macOS would be a broken download, not a worse one. */
+    const rank = formatPreference[platform].indexOf(suffix as never);
+    if (rank < 0) return [];
     const digest = asset.digest?.match(/^sha256:([a-f0-9]{64})$/i)?.[1].toLowerCase() ?? null;
     /* Upstream publishes one combined `SHA256SUMS` covering every asset. Prefer a
        per-target file if one ever appears, then fall back to the combined one, so
@@ -214,18 +254,32 @@ export function releaseTargets(release: GitHubRelease): ReleaseTarget[] {
       release.assets.find((candidate) => candidate.name === `SHA256SUMS-${platform}-${arch}.txt`) ??
       release.assets.find((candidate) => /^sha256sums(\.txt)?$/i.test(candidate.name));
     return [{
-      id: `${platform}-${arch}`,
-      platform,
-      platformLabel: platformLabels[platform],
-      arch,
-      archLabel: archLabels[arch],
-      file: asset.name,
-      bytes: asset.size,
-      sha256: digest,
-      downloadUrl: asset.browser_download_url,
-      checksumUrl: checksum?.browser_download_url ?? null,
+      rank,
+      target: {
+        id: `${platform}-${arch}`,
+        platform,
+        platformLabel: platformLabels[platform],
+        arch,
+        archLabel: archLabels[arch],
+        file: asset.name,
+        bytes: asset.size,
+        sha256: digest,
+        downloadUrl: asset.browser_download_url,
+        checksumUrl: checksum?.browser_download_url ?? null,
+      } satisfies ReleaseTarget,
     }];
   });
+
+  /* One entry per platform-arch. Callers resolve a target with `.find()`, so
+     emitting the same id twice made the winner depend on feed order — the bug the
+     preference list above exists to remove. Ties keep the earlier asset, which for
+     equal rank means equal format, so the choice is immaterial. */
+  const best = new Map<string, { rank: number; target: ReleaseTarget }>();
+  for (const candidate of candidates) {
+    const incumbent = best.get(candidate.target.id);
+    if (!incumbent || candidate.rank < incumbent.rank) best.set(candidate.target.id, candidate);
+  }
+  return [...best.values()].map((candidate) => candidate.target);
 }
 
 export function detectTargetFromUserAgent(userAgent: string): DetectedTarget | null {

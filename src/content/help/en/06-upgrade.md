@@ -19,9 +19,36 @@ When there is nothing new it says so explicitly rather than doing nothing visibl
 
 No. An upgrade replaces the BootAgent application. It does not rewrite your agents' configuration files.
 
-Whatever you configured for Codex, Claude Code, OpenClaw and so on stays where it is (`~/.codex/config.toml` and friends). Configuration templates live in `~/.oneagent/` and are kept too.
+Whatever you configured for Codex, Claude Code, OpenClaw and so on stays where it is (`~/.codex/config.toml` and friends). Configuration templates live in `~/.bootagent/` and are kept too.
 
 You do not need to reconfigure anything after an upgrade.
+
+## Upgrading from OneAgent
+
+This product was called OneAgent, and kept its own directory at `~/.oneagent/`.
+The first time BootAgent starts it migrates that directory for you. There is
+nothing to move by hand.
+
+The migration does three things:
+
+- Copies the contents of `~/.oneagent/` into `~/.bootagent/`, **except for
+  `runtimes/`**.
+- Rewrites the provider entry that pointed at the old name in each agent's own
+  config — Codex's `model_providers.oneagent` becomes
+  `model_providers.bootagent`, and the same for OpenCode, Kilo, OpenClaw, Kimi
+  Code and ZCode. Providers you added yourself, and unrelated configuration, are
+  left alone.
+- Renames the original directory to `~/.oneagent-migrated-<timestamp>` and keeps
+  it. Nothing is deleted.
+
+**Managed runtimes and agents need reinstalling.** `runtimes/` is deliberately
+outside the migration, so any Node or uv that OneAgent installed for you — and the
+agents it installed — have to be installed again from BootAgent. Your
+configuration survives; the executables do not.
+
+Once you have checked the migration looks right, you can delete
+`~/.oneagent-migrated-<timestamp>` yourself. It is kept only so you can recover
+the original state if something went wrong.
 
 ## Upgrading an agent is separate
 

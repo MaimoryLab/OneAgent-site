@@ -37,7 +37,9 @@ const catalog = {
     protocolStatusLabels: {
       "implementation-supported": "实现已接入",
       "release-candidate-required": "需 Release Candidate 实证",
+      "route-present-unverified": "有路由，未验证",
       verified: "已验证",
+      "not-supported": "不支持",
       unsupported: "不支持",
     } as Record<string, string>,
     agentFallbackDescription: "按项目公开能力提供安装或配置支持。",
@@ -73,7 +75,9 @@ const catalog = {
     protocolStatusLabels: {
       "implementation-supported": "Implemented",
       "release-candidate-required": "Needs release-candidate evidence",
+      "route-present-unverified": "Route present, unverified",
       verified: "Verified",
+      "not-supported": "Not supported",
       unsupported: "Unsupported",
     } as Record<string, string>,
     agentFallbackDescription: "Install or configuration support follows the project's published capabilities.",

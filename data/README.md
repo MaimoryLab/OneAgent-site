@@ -1,7 +1,7 @@
 # Vendored catalog data
 
 `agents.lock.json` and `providers.lock.json` are copies of the files of the same
-name at the root of [MaimoryLab/OneAgent](https://github.com/MaimoryLab/OneAgent).
+name at the root of [MaimoryLab/BootAgent](https://github.com/MaimoryLab/BootAgent).
 They are the installer's contract: which agents exist, which platforms they run
 on, which config file each one writes, and which providers speak which protocol.
 `src/lib/catalog.ts` reads them to build every agent and provider page.
@@ -31,7 +31,7 @@ Copy both files from a released tag, not from `main`:
 ```bash
 tag=v0.5.0   # the release the site should describe
 for f in agents.lock.json providers.lock.json; do
-  curl -fsSL "https://raw.githubusercontent.com/MaimoryLab/OneAgent/$tag/manifests/$f" -o "data/$f"
+  curl -fsSL "https://raw.githubusercontent.com/MaimoryLab/BootAgent/$tag/manifests/$f" -o "data/$f"
 done
 pnpm run build
 ```

@@ -93,7 +93,7 @@ test("activation demo follows the v0.5.0 new-profile path through Overview", asy
   await expect(console).toHaveAttribute("data-screen", "review");
   await expect(console.getByRole("heading", { name: "确认激活" })).toBeVisible();
   await expect(console.getByText("~/.claude/settings.json", { exact: true })).toBeVisible();
-  await expect(console.getByText("~/.oneagent/profile.json", { exact: true })).toBeVisible();
+  await expect(console.getByText("~/.bootagent/profile.json", { exact: true })).toBeVisible();
   const reviewFitsWindow = await console.evaluate((root) => {
     const windowRect = root.querySelector<HTMLElement>("[data-console-window]")!.getBoundingClientRect();
     const footerRect = root.querySelector<HTMLElement>(".activation-page-footer")!.getBoundingClientRect();
@@ -383,14 +383,17 @@ test("download center recommends an available artifact but keeps manual choices"
   await expect(picker).toBeVisible();
   const platform = (id: string) => picker.locator(`input[type="radio"][value="${id}"]`);
 
-  /* Linux is the unpublished platform to assert against. This used to be
-     windows-x64, which upstream v0.3.0 now ships — so the assertion was checking
-     that a real, downloadable artifact was absent. Every platform stays in the
-     picker whether or not it has an asset, and choosing one with no asset has to
-     say so rather than offering a dead button. */
-  await platform("linux-x64").check();
-  await expect(page.getByRole("heading", { name: "这个平台尚未公开发行" })).toBeVisible();
-
+  /* The "this platform is not published yet" state used to be asserted here, first
+     against windows-x64 and then against linux-x64. Both assertions decayed the
+     same way: upstream shipped the platform, the artifact became real, and the test
+     was left checking that a working download was absent. As of v0.6.0 every target
+     in the picker has an asset, so there is no platform left to assert it against —
+     the state is unreachable from the live feed by construction.
+   *
+     It is covered deterministically instead by "lists targets with no asset as
+     planned rather than dropping them" in src/lib/release-channel.test.ts, which
+     stubs the feed and does not depend on what upstream happens to ship. Do not
+     reintroduce it here against whichever platform is currently missing. */
   await platform("macos-arm64").check();
   await expect(page.getByRole("link", { name: "下载 macOS 预览版" })).toBeVisible();
   const active = page.locator("[data-release-panel].is-active");
@@ -654,7 +657,7 @@ test("the sitemap lists the live help URL and not the retired one", async ({ pag
   expect(xml, "a noindex stub must not be advertised to crawlers").not.toContain("02-chatgpt-desktop");
 });
 
-/* The header's GitHub link points at the product repository, MaimoryLab/OneAgent —
+/* The header's GitHub link points at the product repository, MaimoryLab/BootAgent —
    not at this site's own repository. Getting that wrong is both easy and quiet:
    both URLs resolve, so nothing 404s and a reader is simply sent to the wrong
    place. downloads.ts already had exactly this bug with GITHUB_REPOSITORY.
@@ -675,12 +678,12 @@ test("the header links the product repository and stays keyboard reachable", asy
     await expect(link).toBeHidden();
     await page.locator(".mobile-menu summary").click();
     const menuLink = page.locator(".mobile-menu nav a", { hasText: "GitHub" });
-    await expect(menuLink).toHaveAttribute("href", "https://github.com/MaimoryLab/OneAgent");
+    await expect(menuLink).toHaveAttribute("href", "https://github.com/MaimoryLab/BootAgent");
     return;
   }
 
   await expect(link).toBeVisible();
-  await expect(link).toHaveAttribute("href", "https://github.com/MaimoryLab/OneAgent");
+  await expect(link).toHaveAttribute("href", "https://github.com/MaimoryLab/BootAgent");
   /* The visible text is a bare number when present, so the accessible name has to
      come from aria-label — "3" alone tells a screen-reader user nothing. */
   await expect(link).toHaveAttribute("aria-label", /GitHub/);

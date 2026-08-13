@@ -10,7 +10,7 @@ on:
   # Manual runs are allowed so a Pages configuration change can be published
   # without an empty commit.
   workflow_dispatch:
-  # Sent by MaimoryLab/OneAgent's release job once a tag's assets are published, so
+  # Sent by MaimoryLab/BootAgent's release job once a tag's assets are published, so
   # the download page stops advertising the previous version. The schedule below
   # would eventually catch it, but "eventually" is up to twelve hours of the site
   # naming a release that is no longer current.

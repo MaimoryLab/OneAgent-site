@@ -31,11 +31,11 @@ It is an application. It does not sit in the background, install a system servic
 
 **An agent's configuration file.** Each agent has its own location — Codex uses `~/.codex/config.toml`, Claude Code uses `~/.claude/settings.json`. Nothing is written until you confirm it in the interface, and a backup is always taken first. See [Backups and rolling back](/en/help/05-backup/).
 
-**BootAgent's own directory.** `~/.oneagent/`, holding configuration templates and any runtime it installed for you.
+**BootAgent's own directory.** `~/.bootagent/`, holding configuration templates and any runtime it installed for you.
 
 ## Runtimes do not depend on what you already have
 
-Most command-line agents need Node. If your machine does not have it, BootAgent installs one into `~/.oneagent/runtimes/` — it does not touch a system Node and does not change your PATH. If you already have one, it uses that.
+Most command-line agents need Node. If your machine does not have it, BootAgent installs one into `~/.bootagent/runtimes/` — it does not touch a system Node and does not change your PATH. If you already have one, it uses that.
 
 Packages and runtimes go through the npmmirror (Aliyun) registry by default, so a mainland-China network needs no extra proxy configuration.
 

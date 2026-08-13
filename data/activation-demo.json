@@ -96,7 +96,7 @@
     },
     "paths": {
       "agent_config": "~/.claude/settings.json",
-      "environment_summary": "~/.oneagent/profile.json"
+      "environment_summary": "~/.bootagent/profile.json"
     },
     "registry": "https://registry.npmmirror.com/",
     "installed_version": "1.0.0",
