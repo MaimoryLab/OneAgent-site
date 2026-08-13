@@ -821,7 +821,8 @@ test("serves its own stylesheet and Agent marks rather than 404ing on them", asy
   await page.goto("/agents/", { waitUntil: "networkidle" });
   expect(missing, "every asset the page asks for must exist").toEqual([]);
   // A stylesheet that failed to load leaves the UA default, not this palette.
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(236, 236, 239)");
+  // --paper on the light theme; update with that token.
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(239, 234, 224)");
   const brokenMarks = await page.evaluate(
     () => document.images.length && [...document.images].filter((image) => !image.complete || image.naturalWidth === 0).length,
   );
@@ -1266,7 +1267,9 @@ test("interactive rows and cards respond to hover", async ({ page, viewport }) =
   const row = page.locator(".agent-row").first();
   await expect(row).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await row.hover();
-  await expect(row).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  // --surface on the light theme. No longer pure white: the palette's grounds
+  // are warm, so this tracks the token rather than assuming #fff.
+  await expect(row).toHaveCSS("background-color", "rgb(251, 249, 244)");
   await expect(row).not.toHaveCSS("box-shadow", "none");
 
   await page.goto("/providers/");

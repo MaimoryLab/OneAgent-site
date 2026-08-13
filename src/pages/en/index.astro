@@ -67,7 +67,7 @@ const href = (path: string) => localePath("en", path);
             <span class="agent-meta">{agentDescriptions[agent.id] ?? agentFallbackDescription}</span>
             <div class="agent-status">
               {agent.support.managedInstall ? <span class="chip chip-green">Managed install</span> : <span class="chip">Official guide</span>}
-              {agent.support.managedConfig ? <span class="chip chip-blue">Managed config</span> : <span class="chip">Official config</span>}
+              {agent.support.managedConfig ? <span class="chip chip-accent">Managed config</span> : <span class="chip">Official config</span>}
               {agent.protocol && <span class="chip">{protocolLabels[agent.protocol]}</span>}
             </div>
           </a>

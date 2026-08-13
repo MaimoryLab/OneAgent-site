@@ -73,7 +73,7 @@ const href = (path: string) => localePath("zh-CN", path);
             <span class="agent-meta">{agentDescriptions[agent.id] ?? agentFallbackDescription}</span>
             <div class="agent-status">
               {agent.support.managedInstall ? <span class="chip chip-green">托管安装</span> : <span class="chip">官方引导</span>}
-              {agent.support.managedConfig ? <span class="chip chip-blue">托管配置</span> : <span class="chip">官方配置</span>}
+              {agent.support.managedConfig ? <span class="chip chip-accent">托管配置</span> : <span class="chip">官方配置</span>}
               {agent.protocol && <span class="chip">{protocolLabels[agent.protocol]}</span>}
             </div>
           </a>
