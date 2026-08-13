@@ -5,7 +5,7 @@ const preview = await getPreviewChannel();
 const publishedTarget = preview?.targets.find((target) => target.status === "available") ?? null;
 const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact.kind === "binary") ?? null;
 ---
-<BaseLayout title="安全、隐私与发行完整性 — OneAgent" description="OneAgent 的本地执行、密钥处理、配置备份、同包分发和未签名预览版边界。">
+<BaseLayout title="安全、隐私与发行完整性 — BootAgent" description="BootAgent 的本地执行、密钥处理、配置备份、同包分发和未签名预览版边界。">
   <header class="page-hero">
     <div class="shell page-hero-grid">
       <div><nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / 安全与隐私</nav><p class="eyebrow">Trust is inspectable</p><h1 class="page-title">每一条边界都可以自己核对。</h1></div>
@@ -20,8 +20,8 @@ const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact
         <p>本地服务不对外提供控制面。</p>
 
         <h2 id="privacy">Key 只去它该去的地方</h2>
-        <p>API Key 只写进目标 Agent 工作所需的那一个文件：它自己的配置，或 OneAgent 的环境文件。</p>
-        <p>Key 不会出现在 OneAgent profile、日志、截图、网页分析事件或命令行参数里。</p>
+        <p>API Key 只写进目标 Agent 工作所需的那一个文件：它自己的配置，或 BootAgent 的环境文件。</p>
+        <p>Key 不会出现在 BootAgent profile、日志、截图、网页分析事件或命令行参数里。</p>
         <p>写入位置随 Agent 与操作系统而定，常见的是这几个：</p>
         <ul>
           <li><code>~/.codex/config.toml</code></li>
@@ -33,13 +33,13 @@ const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact
         <p>每次写入前后，Launcher 都会把实际路径列出来。</p>
 
         <h2 id="backups">改动之前先备份</h2>
-        <p>修改既有配置前，OneAgent 先创建一份带时间戳的备份。</p>
+        <p>修改既有配置前，BootAgent 先创建一份带时间戳的备份。</p>
         <p>配置目录和含密钥的文件只对当前用户开放。cleanroom 会复核真实用户目录未被测试流程改动。</p>
 
         <h2 id="distribution">每个渠道都是同一个包</h2>
         <p>官网、GitHub Release、网盘、企业云盘分发的是完全相同的官方构建。同一版本，文件内容与 SHA-256 一致。</p>
         <p>渠道不重新打包，不追加推广内容，不二次签名。</p>
-        <p>第三方 Agent 二进制不由 OneAgent 转发。它们来自官方安装源、书面授权的镜像，或你手动安装。</p>
+        <p>第三方 Agent 二进制不由 BootAgent 转发。它们来自官方安装源、书面授权的镜像，或你手动安装。</p>
 
         <h2 id="release-evidence">当前发行证据</h2>
         {publishedTarget && publishedArtifact ? (

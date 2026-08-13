@@ -19,14 +19,14 @@ The full list is in [Switching models and providers](/en/help/03-models/).
 
 ## The model list is empty
 
-OneAgent's model list comes from the provider's endpoint, not a built-in list. An empty one usually means:
+BootAgent's model list comes from the provider's endpoint, not a built-in list. An empty one usually means:
 
-- That provider does not expose a model list. OneAgent will ask you to type the model id instead; do that
+- That provider does not expose a model list. BootAgent will ask you to type the model id instead; do that
 - The key is wrong or lacks permission, so the endpoint refused. Confirm the connection verifies first
 
 ## Connection verification fails
 
-If you are using your own endpoint, check the address format. OneAgent applies the same rules the app applies, and rejects:
+If you are using your own endpoint, check the address format. BootAgent applies the same rules the app applies, and rejects:
 
 - Anything not starting with `http://` or `https://`
 - A username or password embedded in the URL (`https://user:pass@...`)
@@ -38,7 +38,7 @@ With a provider from the catalogue, a failure is usually the key. Note that some
 
 **Check the network first.** Packages and runtimes go through the npmmirror (Aliyun) registry by default, which usually needs no extra configuration on a mainland-China network. A proxy or firewall may need to allow it.
 
-**You do not need to install Node yourself.** OneAgent installs the runtime it needs into `~/.oneagent/runtimes/` without touching a system Node or your PATH. So "I don't have Node" is not the reason.
+**You do not need to install Node yourself.** BootAgent installs the runtime it needs into `~/.oneagent/runtimes/` without touching a system Node or your PATH. So "I don't have Node" is not the reason.
 
 ## The operating system blocks the first launch
 

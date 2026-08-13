@@ -1,4 +1,4 @@
-/* Vendored under data/ rather than read from the OneAgent repository. The site
+/* Vendored under data/ rather than read from the BootAgent repository. The site
    describes what a published release supports, so it must not follow that
    repository's HEAD: an agent added there but not yet shipped would be
    advertised as available. data/README.md records where these came from and how
@@ -100,7 +100,7 @@ const cliAgents = Object.entries(agentLock.agents as Record<string, AgentSource>
       status: "available",
       group: meta.group ?? "other",
       rank: meta.rank ?? 99,
-      /* Both are shown on the site so a reader can check what OneAgent will run
+      /* Both are shown on the site so a reader can check what BootAgent will run
          and which file it will write before installing anything. guide-only
          agents have neither, and null keeps that visible rather than printing an
          empty string that looks like a missing value. */
@@ -124,7 +124,7 @@ const cliAgents = Object.entries(agentLock.agents as Record<string, AgentSource>
     };
   });
 
-/* Every desktop application OneAgent installs is installed by OneAgent — the
+/* Every desktop application BootAgent installs is installed by BootAgent — the
    registry pairs each one with its own install function, so there is no
    guide-only desktop app to model. Both currently ship a config adapter too,
    which is why managedConfig follows the adapter rather than a mode flag the
@@ -145,7 +145,7 @@ const desktopAgents = Object.entries(desktopConfig.agents as Record<string, Desk
     packageManager: null,
     packageName: null,
     platforms: Object.keys(meta.install ?? {}) as PlatformId[],
-    /* OneAgent installs the vendor's current build from the vendor's own
+    /* BootAgent installs the vendor's current build from the vendor's own
        endpoint; there is no pinned version to quote, and no package manifest
        declaring a license for the site to repeat. */
     lockedVersion: null,

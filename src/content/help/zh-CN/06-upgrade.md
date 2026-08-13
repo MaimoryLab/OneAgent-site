@@ -1,11 +1,11 @@
 ---
-title: 升级 OneAgent
+title: 升级 BootAgent
 description: 在应用内检查更新、下载并重启完成升级，以及升级不会动你已经配好的东西。
 order: 6
 summary: 设置页检查更新，下载完点重启即可；已写入的 Agent 配置不受影响。
 ---
 
-升级 OneAgent 本身和升级 Agent 是两件事，这页说的是前者。
+升级 BootAgent 本身和升级 Agent 是两件事，这页说的是前者。
 
 ## 怎么升
 
@@ -17,7 +17,7 @@ summary: 设置页检查更新，下载完点重启即可；已写入的 Agent �
 
 ## 升级会不会动我配好的东西
 
-不会。升级替换的是 OneAgent 这个应用本身，它不重写你的 Agent 配置文件。
+不会。升级替换的是 BootAgent 这个应用本身，它不重写你的 Agent 配置文件。
 
 你已经配好的 Codex、Claude Code、OpenClaw 等等，配置文件在各自的位置（`~/.codex/config.toml` 之类），升级不碰它们。配置模版存在 `~/.oneagent/` 里，也保留。
 
@@ -27,7 +27,7 @@ summary: 设置页检查更新，下载完点重启即可；已写入的 Agent �
 
 如果你要升级的是某个 Agent 本身（比如 Codex 出了新版），那走的是环境总览里该 Agent 的更新入口，不是设置页。
 
-OneAgent 托管安装的 Agent 默认装最新版本，所以更新就是重新装一次当前最新的。它写配置前依然会[备份](/help/05-backup/)。
+BootAgent 托管安装的 Agent 默认装最新版本，所以更新就是重新装一次当前最新的。它写配置前依然会[备份](/help/05-backup/)。
 
 ## 检查更新失败
 
@@ -39,4 +39,4 @@ OneAgent 托管安装的 Agent 默认装最新版本，所以更新就是重新�
 
 macOS 的公证和 Windows 的签名都还没完成，所以升级到新版本后，首次打开可能仍然会被系统拦一次，处理方式和[首次安装](/help/01-install/)时一样。
 
-签名完成之后这个步骤会消失。在那之前 OneAgent 不会提供任何降低你系统安全策略的绕过方法。
+签名完成之后这个步骤会消失。在那之前 BootAgent 不会提供任何降低你系统安全策略的绕过方法。

@@ -73,7 +73,7 @@ export interface ReleaseChannel {
   targets: ReleaseTarget[];
 }
 
-/* Every platform/arch OneAgent intends to ship, in the order the download page
+/* Every platform/arch BootAgent intends to ship, in the order the download page
    lists them. Targets with no asset in the release still appear, as `planned` —
    a reader comparing platforms should see that Windows exists and is not ready
    yet, rather than find it missing and wonder. */

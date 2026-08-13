@@ -330,7 +330,7 @@ test("Explorer filters only catalog-backed combinations", async ({ page }) => {
 
 /* A coming-soon agent has no protocol to compare against a provider, so every
    pair including it would render as "unsupported" — a claim about the provider
-   rather than the truth, that OneAgent does not support the agent yet. It belongs
+   rather than the truth, that BootAgent does not support the agent yet. It belongs
    on the catalog page and not in the verdict grid.
  *
  * The rule is asserted against whatever is currently planned rather than against
@@ -481,13 +481,13 @@ for (const [route, expected] of [
  * The distinction worth keeping is the one that replaced it: a desktop
  * application and a command-line agent are different products, and the page must
  * not describe one with the other's facts. A desktop app has no launch command
- * and no pinned version; both are installed by OneAgent.
+ * and no pinned version; both are installed by BootAgent.
  */
 test("a desktop application is described as a desktop application", async ({ page }) => {
   await page.goto("/agents/chatgpt-desktop/");
   await expect(page.getByText("桌面端 Agent", { exact: true }).first()).toBeVisible();
   // Rendered twice by design: once as a fact cell, once as a summary chip.
-  await expect(page.getByText("OneAgent 可管理安装", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("BootAgent 可管理安装", { exact: true }).first()).toBeVisible();
   // Shares Codex's config target, which is the fact a reader needs before install.
   await expect(page.getByText(/\.codex\/config\.toml/)).toBeVisible();
   // No CLI facts invented for it.
@@ -513,7 +513,7 @@ test("a coming-soon agent claims no support it does not have", async ({ page }) 
   for (const id of planned) {
     await page.goto(`/agents/${id}/`);
     await expect(page.getByText("即将支持").first()).toBeVisible();
-    for (const claim of ["OneAgent 可管理安装", "OneAgent 可管理配置", "按官方方式安装"]) {
+    for (const claim of ["BootAgent 可管理安装", "BootAgent 可管理配置", "按官方方式安装"]) {
       await expect(page.getByText(claim, { exact: true })).toHaveCount(0);
     }
   }
@@ -562,7 +562,7 @@ for (const [locale, path] of [["zh", "/quickstart/"], ["en", "/en/quickstart/"]]
 
     /* Never present, in either language. `spctl --master-disable` turns Gatekeeper
        off machine-wide, which is exactly what the surviving half of the promise
-       says OneAgent will not ask for. */
+       says BootAgent will not ask for. */
     await expect(page.getByText("spctl --master-disable", { exact: false })).toHaveCount(1);
     await expect(page.locator("code", { hasText: "spctl --master-disable" })).toBeVisible();
 

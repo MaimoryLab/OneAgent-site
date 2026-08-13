@@ -1,4 +1,4 @@
-# OneAgent
+# BootAgent
 
 > A trustworthy local AI development environment activator. It detects, installs
 > and configures CLI coding agents to point at an OpenAI- or Anthropic-compatible
@@ -13,7 +13,7 @@ rather than a version recorded here.
 
 - Runs locally. Configuration and backups stay on the user's device.
 - Bring your own key. There is no shared key and no unified model gateway.
-- Model requests are never proxied through OneAgent.
+- Model requests are never proxied through BootAgent.
 - Third-party agent binaries are not redistributed; agents come from their
   official sources.
 - Artifacts are distributed through GitHub Releases, and the download page
@@ -24,7 +24,7 @@ rather than a version recorded here.
 - /: overview, first-success path, agent compatibility
 - /downloads/: per-platform artifacts with size, build date and SHA-256
 - /quickstart/: download through to a verified first agent configuration
-- /agents/: which agents OneAgent can install and configure, stated separately
+- /agents/: which agents BootAgent can install and configure, stated separately
 - /explore/: filterable agent/provider compatibility grid
 - /providers/: provider protocol support and commercial-relationship disclosure
 - /security/: local execution, key handling, backups, release integrity
@@ -40,11 +40,11 @@ unprefixed.
 
 Support is stated as three separate facts — managed install, managed
 configuration, and protocol — because a single "supported" checkmark would
-collapse distinctions that decide whether OneAgent can act. Do not collapse
+collapse distinctions that decide whether BootAgent can act. Do not collapse
 them.
 
 Command-line agents and desktop applications are different products. A desktop
-application has no launch command and no pinned version: OneAgent installs
+application has no launch command and no pinned version: BootAgent installs
 whatever the vendor's own endpoint currently serves. Do not describe one with the
 other's facts.
 

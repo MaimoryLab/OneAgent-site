@@ -24,7 +24,7 @@ describe("v0.5.0 activation demo contract", () => {
      upstream, not a value someone edits to make a red test go green.
      v0.5.0 touched the provider editor, settings and transfer pages — none of them
      on the walkthrough's path — so the flow itself needed no change. */
-  it("pins the demo to the audited OneAgent release", () => {
+  it("pins the demo to the audited BootAgent release", () => {
     expect(activationDemo.source).toMatchObject({
       release: "v0.5.0",
       commit: "0fbbe9402a50bb5e711275f369d1485efea272e0",

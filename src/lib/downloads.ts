@@ -41,10 +41,15 @@ export interface AgentSupport {
 
 /* The product's repository, which is not this one. Actions sets
    GITHUB_REPOSITORY to the repository being built — this site — so reading it
-   here pointed every CI and Pages build at MaimoryLab/OneAgent-site, which has
-   no releases, and the download page rendered "not published yet" no matter what
+   here pointed every CI and Pages build at this repository, which has no
+   releases, and the download page rendered "not published yet" no matter what
    upstream had shipped. RELEASE_REPOSITORY overrides it for a fork that
-   publishes its own builds. */
+   publishes its own builds.
+
+   Still the pre-rename slug: the product repository has not been renamed to
+   BootAgent yet. Changing this ahead of it points the download page and the
+   header's GitHub link at a repository that does not exist. See
+   docs/rename-to-bootagent.md, group 1. */
 const repository = process.env.RELEASE_REPOSITORY || "MaimoryLab/OneAgent";
 const releasesUrl = `https://api.github.com/repos/${repository}/releases?per_page=20`;
 export const releasesPageUrl = `https://github.com/${repository}/releases`;
@@ -263,9 +268,9 @@ export function formatDate(value: string | null): string {
 
 export function supportLabels(support: AgentSupport): string[] {
   const labels: string[] = [];
-  if (support.managedInstall) labels.push("OneAgent 可管理安装");
+  if (support.managedInstall) labels.push("BootAgent 可管理安装");
   if (support.officialInstallGuide) labels.push("官方安装引导");
-  if (support.managedConfig) labels.push("OneAgent 可管理配置");
+  if (support.managedConfig) labels.push("BootAgent 可管理配置");
   if (!support.managedConfig) labels.push("配置由 Agent 官方流程管理");
   return labels;
 }

@@ -19,10 +19,10 @@ const checksumUrl =
   channel?.targets.flatMap((target) => target.artifacts).find((artifact) => artifact.checksumUrl)?.checksumUrl ?? null;
 ---
 <BaseLayout
-  title={published ? "下载 OneAgent — 未签名技术预览版" : "下载 OneAgent — 尚未公开发行"}
+  title={published ? "下载 BootAgent — 未签名技术预览版" : "下载 BootAgent — 尚未公开发行"}
   description={published
-    ? "下载 OneAgent 技术预览版，每个产物都附 GitHub Releases 报告的 SHA-256。"
-    : "OneAgent 尚未公开发行。这里会列出各平台产物、体积与 SHA-256，供下载前核对。"}
+    ? "下载 BootAgent 技术预览版，每个产物都附 GitHub Releases 报告的 SHA-256。"
+    : "BootAgent 尚未公开发行。这里会列出各平台产物、体积与 SHA-256，供下载前核对。"}
 >
   <header class="page-hero">
     <div class="shell page-hero-grid">
@@ -32,7 +32,7 @@ const checksumUrl =
         <h1 class="page-title">{published ? "选好平台，直接开始。" : "还没有可下载的产物。"}</h1>
       </div>
       <div class="page-hero-aside">
-        <strong>无需 OneAgent 账号</strong>
+        <strong>无需 BootAgent 账号</strong>
         {published
           ? "每个产物都带着版本、体积、构建日期与 SHA-256，下载前你就能核对清楚。"
           : "发行之后，每个产物都会带上版本、体积、构建日期与 SHA-256，供你下载前核对。"}
@@ -66,7 +66,7 @@ const checksumUrl =
           The promise is replaced rather than quietly dropped: what the site still
           refuses to do is weaken the policy itself. */}
       <p>因为未签名，macOS 首次打开会被 Gatekeeper 拦截。<a href="quickstart/#macos-gatekeeper">macOS 首次打开指南</a>说明这一步放行了什么、以及为什么签名版发布后就不再需要它。</p>
-      <p>OneAgent 不会让你关闭 Gatekeeper、执行 <code>spctl --master-disable</code> 或降低系统整体安全设置；上述流程只针对这一个应用，且由你逐步确认。</p>
+      <p>BootAgent 不会让你关闭 Gatekeeper、执行 <code>spctl --master-disable</code> 或降低系统整体安全设置；上述流程只针对这一个应用，且由你逐步确认。</p>
     </div>
   </section>
 </BaseLayout>

@@ -1,5 +1,5 @@
 {
-  "name": "oneagent-public-site",
+  "name": "bootagent-public-site",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.17.0",

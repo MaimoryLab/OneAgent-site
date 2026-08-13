@@ -6,11 +6,11 @@ import { localeFromPath } from "../../i18n";
 import { useCatalogLabels } from "../../i18n/catalog";
 const { protocolStatusLabels } = useCatalogLabels(localeFromPath(Astro.url.pathname));
 ---
-<BaseLayout title="Provider 目录 — OneAgent" description="查看 OneAgent 的公开 Provider 接入、协议状态和商业关系披露。">
+<BaseLayout title="Provider 目录 — BootAgent" description="查看 BootAgent 的公开 Provider 接入、协议状态和商业关系披露。">
   <header class="page-hero">
     <div class="shell page-hero-grid">
       <div><nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / Provider</nav><p class="eyebrow">Bring your own provider</p><h1 class="page-title">你的账号，你的 Key，你选择的 Provider。</h1></div>
-      <div class="page-hero-aside"><strong>没有统一网关</strong>OneAgent 不转售模型、不代收充值、不代理推理流量。商业合作状态与兼容性结论分开保存和展示。</div>
+      <div class="page-hero-aside"><strong>没有统一网关</strong>BootAgent 不转售模型、不代收充值、不代理推理流量。商业合作状态与兼容性结论分开保存和展示。</div>
     </div>
   </header>
   <section class="section-compact">
@@ -21,7 +21,7 @@ const { protocolStatusLabels } = useCatalogLabels(localeFromPath(Astro.url.pathn
             <h2>{provider.name}</h2>
             <span class:list={["chip", provider.relationship === "none" ? "" : "chip-orange"]}>{provider.relationship === "none" ? "无商业合作" : provider.disclosure}</span>
           </div>
-          <p>使用 Provider 官方账号和 Key；OneAgent 只负责本地连接测试与目标 Agent 配置。</p>
+          <p>使用 Provider 官方账号和 Key；BootAgent 只负责本地连接测试与目标 Agent 配置。</p>
           <div class="agent-status">
             {provider.protocols.map((protocol) => <span class="chip">{protocolLabels[protocol.id] ?? protocol.id} · {protocolStatusLabels[protocol.status] ?? protocol.status}</span>)}
           </div>

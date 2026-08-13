@@ -5,7 +5,7 @@ order: 1
 summary: 三个平台各自的安装方式，以及首次启动被系统拦截时怎么放行。
 ---
 
-如果你只想尽快跑通第一个 Agent，请看[快速开始](/quickstart/)，那是一条六步的最短路径。本页补充的是它没展开的部分：各平台的差异，以及 OneAgent 到底往你机器上写了什么。
+如果你只想尽快跑通第一个 Agent，请看[快速开始](/quickstart/)，那是一条六步的最短路径。本页补充的是它没展开的部分：各平台的差异，以及 BootAgent 到底往你机器上写了什么。
 
 ## 下载哪一个
 
@@ -17,7 +17,7 @@ summary: 三个平台各自的安装方式，以及首次启动被系统拦截�
 
 这不是出错。当前发行的是未签名、未公证的技术预览版，所以 Gatekeeper 会在第一次打开时挡下来。[快速开始](/quickstart/)里有四张截图逐步说明怎么放行，照着做即可。
 
-放行是一次性的，之后正常打开。签名和公证完成后这一步会消失，在那之前 OneAgent 不会提供任何降低你系统安全策略的绕过方法。
+放行是一次性的，之后正常打开。签名和公证完成后这一步会消失，在那之前 BootAgent 不会提供任何降低你系统安全策略的绕过方法。
 
 ## Windows 与 Linux
 
@@ -25,17 +25,17 @@ Windows 的 Authenticode 签名同样还没完成，首次运行时 SmartScreen 
 
 Linux 没有系统级的签名拦截，下载后加可执行权限即可运行。
 
-## OneAgent 装了什么
+## BootAgent 装了什么
 
 它本身是一个应用，不常驻后台、不装系统服务、不改你的 shell 配置。真正会被写入的只有两类文件：
 
 **Agent 的配置文件。** 每个 Agent 有自己的位置，比如 Codex 是 `~/.codex/config.toml`，Claude Code 是 `~/.claude/settings.json`。只有你在界面上确认之后才会写，写之前一定先备份，详见[备份与回退](/help/05-backup/)。
 
-**OneAgent 自己的目录。** `~/.oneagent/`，存放配置模版、以及它托管安装的运行时。
+**BootAgent 自己的目录。** `~/.oneagent/`，存放配置模版、以及它托管安装的运行时。
 
 ## 运行时不依赖你本机装了什么
 
-命令行 Agent 大多需要 Node。如果你机器上没有，OneAgent 会把它装进 `~/.oneagent/runtimes/`，不动系统的 Node，也不改 PATH。已经装了的话它会直接用现有的。
+命令行 Agent 大多需要 Node。如果你机器上没有，BootAgent 会把它装进 `~/.oneagent/runtimes/`，不动系统的 Node，也不改 PATH。已经装了的话它会直接用现有的。
 
 包和运行时默认走 npmmirror（阿里云）镜像，国内网络不用另外配代理。
 
