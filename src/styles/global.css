@@ -68,13 +68,13 @@
      color-contrast rule only measures text. Alpha stays off: 5.71:1 on --paper,
      6.51:1 on --surface. */
   --focus-ring: #983f20;
-  --chip-accent-line: rgba(169, 70, 35, 0.2);
   --chip-green-line: rgba(63, 107, 46, 0.2);
   --chip-orange-line: rgba(138, 90, 18, 0.2);
   --chip-red-line: rgba(163, 43, 29, 0.2);
   /* Bare channels, not a colour: HeroParticles composes rgba() from these per
-     particle. Keep it in step with the fallback in that component's script. */
-  --particle: 169, 70, 35;
+     particle. Keep it in step with the fallback in that component's script.
+     Ink, not terracotta — ambient decoration does not spend the accent. */
+  --particle: 33, 31, 27;
 
   /* Type scale measured off apple.com's compiled marketing stylesheet. The
      tracking curve is not monotonic: 40px is the 0em neutral point, larger
@@ -199,7 +199,7 @@ button, select { color: inherit; }
 .header-inner { min-height: var(--header-height); display: flex; align-items: center; gap: 34px; }
 .wordmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: -0.01em; }
 .wordmark-mark { transition: border-color var(--dur-micro) var(--ease-apple), background-color var(--dur-micro) var(--ease-apple); }
-.wordmark:hover .wordmark-mark { border-color: var(--accent); background: var(--accent-soft); }
+.wordmark:hover .wordmark-mark { background: var(--surface-pressed); }
 .wordmark-mark {
   width: 34px;
   height: 34px;
@@ -323,7 +323,7 @@ button, select { color: inherit; }
 .button-secondary { color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
 .button-secondary:hover { background: var(--surface-muted); }
 .button-small { min-height: 36px; padding-inline: 13px; font-size: 13px; }
-.button-text { min-height: auto; padding: 2px 0; color: var(--accent); border: 0; }
+.button-text { min-height: auto; padding: 2px 0; color: var(--ink); border: 0; text-decoration: underline; text-underline-offset: 3px; }
 /* Overrides .button's lift: a text link sliding sideways reads as "go here",
    where a vertical hop reads as a button. */
 .button-text:hover { transform: translateX(3px); }
@@ -346,7 +346,9 @@ button, select { color: inherit; }
 /* Sentence case, not the uppercase-tracked cap it used to be: the tracked-caps
    eyebrow reads as template chrome, and against CJK headings it forced every
    label into English to survive the styling. Chinese labels now sit here. */
-.eyebrow { margin: 0 0 14px; color: var(--accent); font-size: 13px; font-weight: 650; letter-spacing: .02em; }
+/* Ink-faint, not accent: after the ratio inversion the terracotta appears only
+   where it marks an action or a selection, and a label is neither. */
+.eyebrow { margin: 0 0 14px; color: var(--ink-faint); font-size: 13px; font-weight: 650; letter-spacing: .02em; }
 .display {
   margin: 0;
   max-width: 900px;
@@ -355,7 +357,11 @@ button, select { color: inherit; }
   letter-spacing: var(--ls-hero);
   font-weight: 600;
 }
-.display em { color: var(--accent); font-style: normal; }
+/* Emphasis by ink, not by colour: the giant terracotta second line was the
+   single largest block of accent on the site, and with the ratio inverted the
+   hero's terracotta lives in the mark's stem and the primary button. The em
+   keeps its role through the size the display scale already gives it. */
+.display em { color: var(--ink); font-style: normal; }
 .page-title { margin: 0; font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); font-weight: 600; }
 .section-title { margin: 0; max-width: var(--measure-text); font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); font-weight: 600; }
 .card-title { margin: 0; font-size: 21px; line-height: 1.25; letter-spacing: .011em; font-weight: 600; }
@@ -367,7 +373,9 @@ button, select { color: inherit; }
 .prose p, .prose li { max-width: var(--measure-text); }
 /* :not(.button) keeps this from overriding .button-primary's white text —
    both selectors are 0-2-0 and this one used to win on order alone. */
-.prose a:not(.button) { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+/* Links keep the underline as their affordance; ink instead of accent so body
+   text carries no ambient terracotta. 12.4:1 on --paper. */
+.prose a:not(.button) { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .prose code, code.inline { padding: 2px 5px; overflow-wrap: anywhere; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 0.88em ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 /* Markdown tables. Authored help articles can emit these, and with no rules at
    all a browser renders a borderless grid with collapsed padding that reads as
@@ -422,14 +430,14 @@ button, select { color: inherit; }
 .steps { counter-reset: step; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--line-strong); }
 .step { counter-increment: step; padding: 30px 32px 0 0; min-height: 210px; border-bottom: 1px solid var(--line); }
 .step + .step { padding-left: 32px; border-left: 1px solid var(--line); }
-.step::before { content: "0" counter(step); display: block; margin-bottom: 52px; color: var(--accent); font: 650 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.step::before { content: "0" counter(step); display: block; margin-bottom: 52px; color: var(--ink-faint); font: 650 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .step h3 { margin: 0 0 9px; font-size: 21px; letter-spacing: .011em; font-weight: 600; }
 .step p { margin: 0; color: var(--ink-soft); font-size: var(--fs-caption); }
 
 .agent-list { display: grid; border-top: 1px solid var(--line-strong); }
 .agent-row { min-height: 86px; padding: 18px 8px; display: grid; grid-template-columns: 42px minmax(160px, 1fr) minmax(240px, 1.4fr) auto; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); transition: background-color var(--dur-micro) var(--ease-apple), box-shadow var(--dur-micro) var(--ease-apple); }
 @media (hover: hover) {
-  .agent-row:hover { background: var(--surface); box-shadow: inset 3px 0 0 var(--accent); }
+  .agent-row:hover { background: var(--surface); box-shadow: inset 3px 0 0 var(--line-strong); }
 }
 .agent-row:active { background: var(--surface-pressed); transition-duration: 100ms; }
 .agent-row strong { display: block; letter-spacing: -.015em; }
@@ -440,13 +448,15 @@ button, select { color: inherit; }
 .agent-fallback { font-size: 13px; font-weight: 650; }
 
 .chip { min-height: 26px; padding: 3px 8px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-soft); background: var(--surface); font-size: 11px; font-weight: 600; white-space: nowrap; }
-.chip-accent { color: var(--accent); background: var(--accent-soft); border-color: var(--chip-accent-line); }
+/* Neutral like the base chip: 托管配置 is a fact about support, not a state that
+   needs colour. The green/orange/red chips keep theirs — those encode status. */
+.chip-accent { color: var(--ink-soft); background: var(--surface); border-color: var(--line-strong); }
 .chip-green { color: var(--green); background: var(--green-soft); border-color: var(--chip-green-line); }
 .chip-orange { color: var(--orange); background: var(--orange-soft); border-color: var(--chip-orange-line); }
 .chip-red { color: var(--red); background: var(--red-soft); border-color: var(--chip-red-line); }
 
 .split-callout { display: grid; grid-template-columns: .78fr 1.22fr; gap: 72px; align-items: start; }
-.callout-index { color: var(--accent); font: 650 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.callout-index { color: var(--ink-faint); font: 650 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .callout-body { padding-top: 1px; }
 .callout-body h2 { margin: 0 0 20px; font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); font-weight: 600; }
 .callout-body p { max-width: var(--measure-text); color: var(--ink-soft); font-size: var(--fs-intro); letter-spacing: var(--ls-intro); }
@@ -466,7 +476,9 @@ button, select { color: inherit; }
 .notice strong { display: block; color: var(--ink); }
 .notice p { margin: 2px 0 0; color: var(--ink-soft); }
 .notice-warning { background: var(--orange-soft); border-color: var(--chip-orange-line); }
-.notice-info { background: var(--accent-soft); border-color: var(--chip-accent-line); }
+/* Info notices sit on the neutral surface; only warnings and successes carry a
+   tint, because those are states. */
+.notice-info { background: var(--surface); border-color: var(--line-strong); }
 .notice-success { background: var(--green-soft); border-color: var(--chip-green-line); }
 .notice-mark { flex: 0 0 auto; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: 12px; font-weight: 650; }
 
@@ -589,7 +601,7 @@ button, select { color: inherit; }
 .service-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid var(--line-strong); }
 .service { padding: 30px 30px 34px 0; border-bottom: 1px solid var(--line); }
 .service + .service { padding-left: 30px; border-left: 1px solid var(--line); }
-.service-number { color: var(--accent); font: 650 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.service-number { color: var(--ink-faint); font: 650 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .service h2 { margin: 58px 0 10px; font-size: var(--fs-h4); letter-spacing: var(--ls-h4); font-weight: 600; }
 .service p, .service li { color: var(--ink-soft); font-size: var(--fs-caption); }
 .service ul { padding-left: 18px; }
@@ -826,11 +838,10 @@ button, select { color: inherit; }
   /* Opaque for the same reason as the light theme: 2.65:1 composited, 8.33:1
      without the alpha. */
   --focus-ring: #ee9a75;
-  --chip-accent-line: rgba(238, 154, 117, 0.28);
   --chip-green-line: rgba(143, 203, 116, 0.28);
   --chip-orange-line: rgba(224, 174, 92, 0.28);
   --chip-red-line: rgba(240, 138, 120, 0.28);
-  --particle: 238, 154, 117;
+  --particle: 244, 239, 230;
 }
 
 /* The Codex and OpenCode marks declare fill="currentColor", but an <img> has no
