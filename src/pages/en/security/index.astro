@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import { localePath } from "../../../i18n";
+import { releasesPageUrl } from "../../../lib/downloads";
 import { getPreviewChannel } from "../../../lib/release-channel";
 const preview = await getPreviewChannel();
 const publishedTarget = preview?.targets.find((target) => target.status === "available") ?? null;
@@ -47,19 +48,20 @@ const windowsSigning = preview?.targets.find((target) => target.platform === "wi
         <p>Configuration directories and files holding a key are readable only by the current user. The cleanroom check confirms the real user directory was untouched by the test run.</p>
 
         <h2 id="distribution">Every channel ships the same package</h2>
-        <p>This site, GitHub Releases, a file host and an internal drive all distribute the identical official build. For a given version, the contents and the SHA-256 match.</p>
+        {/* Names the channels that actually exist — see the Chinese page. */}
+        <p>The GitHub Releases this site points at and the Gitee mirror for mainland-China networks distribute the identical official build. For a given version, the contents and checksums match.</p>
         <p>Channels do not repackage, append promotional content, or re-sign.</p>
         <p>Third-party agent binaries are not redistributed by BootAgent. They come from the official installer, a mirror with written permission, or your own manual install.</p>
 
         <h2 id="release-evidence">Current release evidence</h2>
         {publishedTarget && publishedArtifact ? (
           <>
-            <p>These values come from the published release metadata on GitHub Releases, so you can check each one against the release page itself.</p>
+            {/* Version and digest moved to the release page this links to — see
+                the Chinese page. */}
+            <p>These states come from the published release metadata on GitHub Releases; the version and each artifact's checksum are stated on <a href={releasesPageUrl} rel="noopener">the current release page</a> itself.</p>
             <ul>
               <li>Channel: <code>{preview?.channel}</code></li>
-              <li>Version: <code>{preview?.version}</code></li>
               <li>Platform: {publishedTarget.platformLabel} {publishedTarget.archLabel}</li>
-              <li>SHA-256: <code>{publishedArtifact.sha256}</code></li>
               <li>macOS signing: {macosSigning === "notarized"
                 ? <>Developer ID-signed and notarised by Apple, ticket stapled. The signing identity's Team ID is <code>F2VC757B28</code>.</>
                 : "unsigned and unnotarised."}</li>

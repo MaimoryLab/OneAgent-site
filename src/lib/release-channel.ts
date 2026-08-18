@@ -169,18 +169,57 @@ function channelOf(release: GitHubRelease): { channel: string; label: string; st
     : { channel: previewChannelId, label: "技术预览版", stable: false };
 }
 
-function artifactFor(asset: AssetTarget): ReleaseArtifact[] {
+/* The Gitee mirror for mainland-China networks, queried per release tag at
+   build time so a mirror link is only ever emitted for an asset the mirror
+   actually hosts — as of v0.7.2 that is the two macOS DMGs, and a blanket URL
+   rewrite would 404 every Windows and Linux download it touched.
+ *
+ * The mirrored darwin-arm64 DMG was downloaded and hashed before this link
+ * existed: its SHA-256 (325cbcf6…01ee) matches the digest GitHub's feed
+ * publishes for the same file, which is what the same-package promise
+ * requires of a mirror. An unreachable Gitee API degrades to an empty map and
+ * the page simply keeps its GitHub links. */
+const giteeMirrorRepository = "maimory/BootAgent";
+let giteeAssetsPromise: Promise<Map<string, string>> | null = null;
+function giteeMirrorAssets(tag: string): Promise<Map<string, string>> {
+  giteeAssetsPromise ??= (async () => {
+    try {
+      const response = await fetch(
+        `https://gitee.com/api/v5/repos/${giteeMirrorRepository}/releases/tags/${encodeURIComponent(tag)}`,
+      );
+      if (!response.ok) return new Map();
+      const release = (await response.json()) as { assets?: { name?: string; browser_download_url?: string }[] };
+      return new Map(
+        (release.assets ?? [])
+          .filter((asset): asset is { name: string; browser_download_url: string } =>
+            Boolean(asset.name && asset.browser_download_url))
+          .map((asset) => [asset.name, asset.browser_download_url]),
+      );
+    } catch {
+      return new Map();
+    }
+  })();
+  return giteeAssetsPromise;
+}
+
+function artifactFor(asset: AssetTarget, mirror: Map<string, string>): ReleaseArtifact[] {
   /* A missing digest means the asset predates GitHub's per-asset digests. The
      checksum file is still linked, so a reader can verify by hand — but the page
      must not print a checksum that was never published. */
   if (!asset.sha256) return [];
+  const mirrorUrl = mirror.get(asset.file);
   return [{
     file: asset.file,
     sha256: asset.sha256,
     bytes: asset.bytes,
     kind: "binary",
     checksumUrl: asset.checksumUrl,
-    downloads: [{ id: "github", label: "GitHub Releases", kind: "official", url: asset.downloadUrl, primary: true }],
+    downloads: [
+      { id: "github", label: "GitHub Releases", kind: "official", url: asset.downloadUrl, primary: true },
+      ...(mirrorUrl
+        ? [{ id: "gitee", label: "Gitee 镜像", kind: "mirror" as const, url: mirrorUrl, primary: false }]
+        : []),
+    ],
   }];
 }
 
@@ -198,9 +237,10 @@ export async function getPreviewChannel(): Promise<ReleaseChannel | null> {
   const assets = releaseTargets(release);
   const { channel, label, stable } = channelOf(release);
   const version = release.tag_name.replace(/^v/, "");
+  const mirror = await giteeMirrorAssets(release.tag_name);
   const targets: ReleaseTarget[] = plannedTargets.map((planned) => {
     const asset = assets.find((candidate) => candidate.id === planned.id);
-    const artifacts = asset ? artifactFor(asset) : [];
+    const artifacts = asset ? artifactFor(asset, mirror) : [];
     return {
       ...planned,
       /* An asset whose digest never got published is `verification-pending`, not
@@ -245,4 +285,9 @@ export function binaryArtifact(target: ReleaseTarget): ReleaseArtifact | null {
 
 export function primaryDownload(artifact: ReleaseArtifact): DownloadLink | null {
   return artifact.downloads.find((download) => download.primary) ?? artifact.downloads[0] ?? null;
+}
+
+/** The mirror link for this artifact, when the mirror hosts the file. */
+export function mirrorDownload(artifact: ReleaseArtifact): DownloadLink | null {
+  return artifact.downloads.find((download) => download.kind === "mirror") ?? null;
 }

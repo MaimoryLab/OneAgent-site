@@ -1,10 +1,33 @@
 {
   "schema_version": 1,
   "source": "internal/desktopapp/registry.go",
-  "source_ref": "v0.4.0",
-  "source_commit": "ff81ee81df8a5d9bf91be336d5df280fe20736d8",
-  "note": "Transcribed by hand from upstream's Go registry, which has no generated lock file. See data/README.md.",
+  "source_ref": "v0.7.1",
+  "source_commit": "4fe376cb",
+  "note": "Transcribed by hand from upstream's Go registry, which has no generated lock file. Rank follows the registry's declaration order (first entry renders first). See data/README.md.",
   "agents": {
+    "dsh-desktop": {
+      "name": "DSH Desktop",
+      "config_adapter": "dsh",
+      "config_path": ".dsh/settings.yaml",
+      "protocol": "openai",
+      "unofficial": true,
+      "install": {
+        "macos": "macos-dmg",
+        "windows": "windows-installer"
+      },
+      "rank": 1
+    },
+    "claude-desktop": {
+      "name": "Claude Desktop",
+      "config_adapter": "claude-desktop",
+      "protocol": "anthropic",
+      "manual_install": true,
+      "install": {
+        "macos": "official-download",
+        "windows": "official-download"
+      },
+      "rank": 2
+    },
     "chatgpt-desktop": {
       "name": "ChatGPT Desktop",
       "config_adapter": "codex",
@@ -15,18 +38,42 @@
         "macos": "macos-dmg",
         "windows": "windows-store"
       },
-      "rank": 1
+      "rank": 3
     },
     "workbuddy": {
       "name": "WorkBuddy",
       "config_adapter": "workbuddy",
       "config_path": ".workbuddy/models.json",
       "protocol": "openai",
+      "edition": "cn",
       "install": {
         "macos": "macos-zip",
         "windows": "windows-installer"
       },
-      "rank": 2
+      "rank": 4
+    },
+    "workbuddy-intl": {
+      "name": "WorkBuddy AI",
+      "config_adapter": "workbuddy",
+      "config_path": ".workbuddy-ai/models.json",
+      "protocol": "openai",
+      "edition": "intl",
+      "install": {
+        "macos": "macos-zip",
+        "windows": "windows-installer"
+      },
+      "rank": 5
+    },
+    "zcode": {
+      "name": "ZCode",
+      "config_adapter": "zcode",
+      "config_path": ".zcode/v2/config.json",
+      "protocol": "openai",
+      "install": {
+        "macos": "macos-zip",
+        "windows": "windows-installer"
+      },
+      "rank": 6
     }
   }
 }

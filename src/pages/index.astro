@@ -7,7 +7,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { catalog } from "../lib/catalog";
 import { localePath } from "../i18n";
 import { useCatalogLabels } from "../i18n/catalog";
-import { protocolLabels } from "../lib/content";
 
 /* The channel and version used to be printed under the hero actions. They now
    live on /downloads/ and /security/ only: the version is a property of today's
@@ -36,7 +35,6 @@ const href = (path: string) => localePath("zh-CN", path);
             the brand rather than as a nav affordance. aria-hidden on the SVG
             inside BrandMark, so the name beside it carries the text. */}
         <p class="hero-brand"><span class="hero-brand-mark"><BrandMark size={44} /></span><span>BootAgent</span></p>
-        <p class="eyebrow">本地优先 · 自带 API Key</p>
         <h1 class="display">一个入口，<br /><em>激活你的 AI 开发环境。</em></h1>
       </div>
       <div class="hero-side">
@@ -67,7 +65,7 @@ const href = (path: string) => localePath("zh-CN", path);
     <div class="shell reveal">
       <div class="section-heading">
         <div><p class="eyebrow">兼容目录</p><h2 class="section-title">目录来自真实仓库数据，不是一张静态兼容表。</h2></div>
-        <p>{availableAgents.length} 个 Agent（{cliCount} 个命令行、{desktopCount} 个桌面端）、{catalog.providers.length} 个公开 Provider，以及 OpenAI Responses、Anthropic Messages 与 Chat Completions 的独立兼容状态。</p>
+        <p>{availableAgents.length} 个 Agent（{cliCount} 个命令行、{desktopCount} 个桌面端）与 {catalog.providers.length} 个公开 Provider，安装、配置与连接验证的支持状态逐项标注。</p>
       </div>
       <div class="agent-list">
         {primaryAgents.map((agent) => (
@@ -78,7 +76,6 @@ const href = (path: string) => localePath("zh-CN", path);
             <div class="agent-status">
               {agent.support.managedInstall ? <span class="chip chip-green">托管安装</span> : <span class="chip">官方引导</span>}
               {agent.support.managedConfig ? <span class="chip chip-accent">托管配置</span> : <span class="chip">官方配置</span>}
-              {agent.protocol && <span class="chip">{protocolLabels[agent.protocol]}</span>}
             </div>
           </a>
         ))}

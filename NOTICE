@@ -19,21 +19,27 @@ under licenses/.
   claude-code.svg  MIT  LobeHub contributors              licenses/lobehub-LICENSE
   kilo-cli.svg     MIT  LobeHub contributors              licenses/lobehub-LICENSE
   hermes.svg       MIT  LobeHub contributors              licenses/lobehub-LICENSE
+  dsh.svg          MIT  LobeHub contributors              licenses/lobehub-LICENSE
+  kimi-code.svg    MIT  LobeHub contributors              licenses/lobehub-LICENSE
+  pi.svg           MIT  LobeHub contributors              licenses/lobehub-LICENSE
   openclaw.svg     MIT  Jason Young (cc-switch contributors)  licenses/cc-switch-LICENSE
 
 hermes.svg is the drawing lobe-icons also publishes as nousresearch.svg,
 identical but for its <title>: Hermes Agent is Nous Research's product, so the
-company mark identifies it. ChatGPT Desktop renders codex.svg rather than a
-second copy of the same file: it is OpenAI's own application and shares Codex's
-configuration.
+company mark identifies it. The same reasoning covers three shared renders:
+ChatGPT Desktop renders codex.svg (OpenAI's own application, sharing Codex's
+configuration), Claude Desktop renders claude-code.svg (Anthropic's own
+application), and DSH Desktop renders dsh.svg — DeepSeek's mark identifies the
+models the app drives, while the catalog copy states that the app itself is
+built by a third party.
 
 An agent with no entry in asset-rights.json has no bundled mark and renders a
 letter glyph instead. That is deliberate: a vendor favicon copied in without an
 auditable redistribution basis would be both a licensing and a trademark
-problem, so the absence of a mark is the correct state rather than a gap. Aider
-and WorkBuddy are in that position -- neither has a mark in lobe-icons, Aider
-publishes no brand kit and its Apache-2.0 code licence grants no trademark
-rights, and WorkBuddy publishes no vector at all.
+problem, so the absence of a mark is the correct state rather than a gap. Aider,
+WorkBuddy (both editions) and ZCode are in that position -- none has a mark in
+lobe-icons, Aider publishes no brand kit and its Apache-2.0 code licence grants
+no trademark rights, and the desktop vendors publish no vector at all.
 
 BootAgent's own mark under public/images/brand/ and public/favicon.png is
 first-party work under this repository's licence, so it carries no third-party

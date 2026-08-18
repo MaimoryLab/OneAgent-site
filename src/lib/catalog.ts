@@ -25,6 +25,17 @@ const adapterProtocols: Record<string, ProtocolId> = {
   "kilo-cli": "openai",
   aider: "openai",
   workbuddy: "openai",
+  /* v0.7.1 additions, read from upstream internal/config/write.go's writer per
+     adapter: WriteDSH/WriteOpenClaw/WriteKimiCode/WritePI all write
+     openai-completions blocks, WriteHermes an OpenAI base_url YAML; the desktop
+     registry declares claude-desktop as anthropic and pins zcode to openai. */
+  dsh: "openai",
+  pi: "openai",
+  "kimi-code": "openai",
+  hermes: "openai",
+  openclaw: "openai",
+  "claude-desktop": "anthropic",
+  zcode: "openai",
 };
 
 interface AgentSource {

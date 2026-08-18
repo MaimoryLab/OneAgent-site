@@ -57,6 +57,23 @@
       "licenseSource": "licenses/lobehub-LICENSE",
       "copyrightOwner": "LobeHub contributors",
       "sha256": "8f9443e351b6dacce71871790201b799d92e8bf96a45ef79aeb5e9bf4db423e2"
+    },
+    "kimi-code": {
+      "file": "kimi-code.svg",
+      "source": "https://github.com/lobehub/lobe-icons/blob/master/packages/static-svg/icons/kimi.svg",
+      "license": "MIT",
+      "licenseSource": "licenses/lobehub-LICENSE",
+      "copyrightOwner": "LobeHub contributors",
+      "sha256": "ed08131b46acf70e6e2144eceb775e74098b58ea65fa21eaee04be7b05cfe63b"
+    },
+    "pi": {
+      "file": "pi.svg",
+      "source": "https://github.com/lobehub/lobe-icons/blob/master/packages/static-svg/icons/pi.svg",
+      "license": "MIT",
+      "licenseSource": "licenses/lobehub-LICENSE",
+      "copyrightOwner": "LobeHub contributors",
+      "sha256": "d82978781b824273c55473822c1f243a6ed34fc6e8c2dbfe1a90dfc66ae43ee8",
+      "note": "Pi's own blocked-out wordmark, not Inflection's Pi.ai assistant (lobe-icons publishes that separately as inflection.svg). Upstream verified the geometry against pi.dev/logo-auto.svg; this copy is preferred because pi.dev's hardcodes #000/#fff in a prefers-color-scheme block and cannot take the theme colour."
     }
   }
 }

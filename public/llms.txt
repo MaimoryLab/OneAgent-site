@@ -17,13 +17,13 @@ real state rather than a version recorded here.
 - Model requests are never proxied through BootAgent.
 - Third-party agent binaries are not redistributed; agents come from their
   official sources.
-- Artifacts are distributed through GitHub Releases, and the download page
-  prints the digest that feed reports.
+- Artifacts are distributed through GitHub Releases (with a Gitee mirror for
+  mainland-China networks); a checksum manifest is published with each release.
 
 ## Pages
 
 - /: overview, first-success path, agent compatibility
-- /downloads/: per-platform artifacts with size, build date and SHA-256
+- /downloads/: per-platform installers with size, build date and signing status
 - /quickstart/: download through to a verified first agent configuration
 - /agents/: which agents BootAgent can install and configure, stated separately
 - /explore/: filterable agent/provider compatibility grid

@@ -21,8 +21,8 @@ const checksumUrl =
 <BaseLayout
   title={published ? "下载 BootAgent — 技术预览版" : "下载 BootAgent — 尚未公开发行"}
   description={published
-    ? "下载 BootAgent 技术预览版：macOS 版已签名并经 Apple 公证，每个产物都附 GitHub Releases 报告的 SHA-256。"
-    : "BootAgent 尚未公开发行。这里会列出各平台产物、体积与 SHA-256，供下载前核对。"}
+    ? "下载 BootAgent 技术预览版：macOS 版已签名并经 Apple 公证，产物经 GitHub Releases 分发并附校验清单。"
+    : "BootAgent 尚未公开发行。发行后这里会列出各平台的安装包。"}
 >
   <header class="page-hero">
     <div class="shell page-hero-grid">
@@ -33,8 +33,8 @@ const checksumUrl =
       <div class="page-hero-aside">
         <strong>无需 BootAgent 账号</strong>
         {published
-          ? "每个产物都带着版本、体积、构建日期与 SHA-256，下载前你就能核对清楚。"
-          : "发行之后，每个产物都会带上版本、体积、构建日期与 SHA-256，供你下载前核对。"}
+          ? "安装包由官方发行流构建，macOS 版已签名并经 Apple 公证；校验值随发行公布。"
+          : "发行之后，这里会列出各平台的安装包与它们的校验清单入口。"}
       </div>
     </div>
   </header>
@@ -44,19 +44,15 @@ const checksumUrl =
   <section class="section section-muted">
     <div class="narrow prose">
       <p class="eyebrow">发行完整性</p>
-      <h2 class="section-title">{published ? "页面上的 SHA-256 让你可以自己核对。" : "发行之后，页面上的 SHA-256 让你可以自己核对。"}</h2>
-      {/* The old copy claimed byte-identical files across "官网、GitHub Release、
-          网盘和企业云盘". Only one of those channels exists: the download page
-          links to GitHub Releases and prints the digest that feed reports. */}
-      <p>产物只通过 GitHub Releases 发行，页面上的 SHA-256 就是该发行流报告的摘要。</p>
+      <h2 class="section-title">每个渠道分发的都是同一个官方构建。</h2>
+      <p>产物由 GitHub Releases 发行，校验清单随每次发行一同公布。</p>
       <p>渠道不追加推广文件，不替换安装脚本，不二次签名。</p>
-      {/* Linking the published manifest matters more than printing the digest:
-          it lets a reader check against the release itself rather than against a
-          number this page could have got wrong. */}
+      {/* Linking the published manifest rather than printing digests here: the
+          reader checks against the release itself, not against a number this
+          page could have got wrong — and the page stays free of hex. */}
       {checksumUrl && (
-        <p>也可以直接对照发行流发布的校验清单：<a href={checksumUrl} rel="noopener">SHA256SUMS</a>。</p>
+        <p>需要校验时，对照发行流发布的<a href={checksumUrl} rel="noopener">校验清单</a>；算出的值不一致就不要运行，并把文件名与下载地址发到支持页面。</p>
       )}
-      <p>算出来的值和页面不一致？别运行它，把下载地址、文件名和实际哈希发到支持页面。</p>
       <h3>当前是技术预览版</h3>
       <p>macOS 版自 v0.7.0 起带 Developer ID 签名并通过 Apple 公证，首次打开不再被 Gatekeeper 拦截。Windows 的 Authenticode 签名还没完成，SmartScreen 会提示一次；签名与验证门禁齐备后，每个平台各自进入 Stable。</p>
       {/* The four-step Gatekeeper bypass came down with v0.7.0, as its own copy
