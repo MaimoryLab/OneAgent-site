@@ -1,20 +1,20 @@
 ---
 import ActivationConsole from "../components/ActivationConsole.astro";
 import AgentMark from "../components/AgentMark.astro";
+import BrandMark from "../components/BrandMark.astro";
 import HeroParticles from "../components/HeroParticles.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { catalog } from "../lib/catalog";
 import { localePath } from "../i18n";
 import { useCatalogLabels } from "../i18n/catalog";
 import { protocolLabels } from "../lib/content";
-import { getPreviewChannel } from "../lib/release-channel";
 
-/* null means the release feed had nothing to show — an unpublished fork, or a
-   build that ran without network. The note still has to say what channel this
-   is, because that claim is about the product and does not depend on any
-   particular release existing. */
-const preview = await getPreviewChannel();
-const available = preview?.targets.find((target) => target.status === "available");
+/* The channel and version used to be printed under the hero actions. They now
+   live on /downloads/ and /security/ only: the version is a property of today's
+   build rather than of the product, and leading the home page with "unsigned"
+   made the signing status the first thing said about BootAgent — to readers and
+   to search engines, which were quoting that line back as the page's summary.
+   Both pages still state it in full, and the footer links to /security/. */
 /* Only agents the catalog can describe a support contract for. Slicing the
    catalog positionally would put a coming-soon entry on the home page as soon as
    one outranked an installable agent, in a section whose whole claim is that the
@@ -31,6 +31,11 @@ const href = (path: string) => localePath("zh-CN", path);
     <HeroParticles />
     <div class="shell hero-copy">
       <div>
+        {/* The mark at display size, paired with the name. The header's copy is
+            26px and scrolls away; this is the one place the logo is presented as
+            the brand rather than as a nav affordance. aria-hidden on the SVG
+            inside BrandMark, so the name beside it carries the text. */}
+        <p class="hero-brand"><span class="hero-brand-mark"><BrandMark size={44} /></span><span>BootAgent</span></p>
         <p class="eyebrow">Local-first · Bring your own key</p>
         <h1 class="display">一个入口，<br /><em>激活你的 AI 开发环境。</em></h1>
       </div>
@@ -39,7 +44,6 @@ const href = (path: string) => localePath("zh-CN", path);
         <div class="hero-actions">
           <button class="button button-primary" type="button" data-activation-trigger="activation-console" aria-controls="activation-console">开始激活演示</button>
         </div>
-        <p class="hero-note">{preview?.version ? `${preview.version} · ` : ""}未签名技术预览版{available ? ` · 当前开放 ${available.platformLabel} ${available.archLabel}` : ""}</p>
       </div>
     </div>
     <ActivationConsole />

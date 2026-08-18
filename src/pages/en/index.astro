@@ -1,16 +1,15 @@
 ---
 import ActivationConsole from "../../components/ActivationConsole.astro";
 import AgentMark from "../../components/AgentMark.astro";
+import BrandMark from "../../components/BrandMark.astro";
 import HeroParticles from "../../components/HeroParticles.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { catalog } from "../../lib/catalog";
 import { localePath } from "../../i18n";
 import { useCatalogLabels } from "../../i18n/catalog";
 import { protocolLabels } from "../../lib/content";
-import { getPreviewChannel } from "../../lib/release-channel";
 
-const preview = await getPreviewChannel();
-const available = preview?.targets.find((target) => target.status === "available");
+/* The channel and version note was removed here too — see the Chinese home page. */
 /* Available agents only — see the Chinese home page for why this is not a
    positional slice of the whole catalog. */
 const availableAgents = catalog.agents.filter((agent) => agent.status === "available");
@@ -25,6 +24,8 @@ const href = (path: string) => localePath("en", path);
     <HeroParticles />
     <div class="shell hero-copy">
       <div>
+        {/* See the Chinese home page. */}
+        <p class="hero-brand"><span class="hero-brand-mark"><BrandMark size={44} /></span><span>BootAgent</span></p>
         <p class="eyebrow">Local-first · Bring your own key</p>
         <h1 class="display">One entry point,<br /><em>your whole AI dev environment.</em></h1>
       </div>
@@ -33,7 +34,6 @@ const href = (path: string) => localePath("en", path);
         <div class="hero-actions">
           <button class="button button-primary" type="button" data-activation-trigger="activation-console" aria-controls="activation-console">Start activation demo</button>
         </div>
-        <p class="hero-note">{preview?.version ? `${preview.version} · ` : ""}unsigned technical preview{available ? ` · currently ${available.platformLabel} ${available.archLabel}` : ""}</p>
       </div>
     </div>
     <ActivationConsole />

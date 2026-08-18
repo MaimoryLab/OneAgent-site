@@ -230,7 +230,19 @@ const copy = locale === "en"
       dismiss: "关闭",
     };
 ---
-<div class="product-shot activation-shell">
+{/* data-nosnippet, because this is a replica of the product's UI rather than
+    prose about it. It is by far the largest block of text on the home page —
+    around 2,700 of the page's 3,200 visible characters — and all of it is
+    interface labels: agent names next to "待安装", model ids, step numbers. A
+    snippet generator picking the densest text on the page was choosing between
+    those fragments and the page's actual copy, and Google was returning the home
+    page with no usable summary at all. Excluding it leaves the hero, the three
+    steps and the catalog section as the text describing this page.
+
+    It stays fully indexed and fully readable — nosnippet governs quoting in
+    results, not crawling — and every claim it makes is still in the DOM for a
+    reader, a screen reader, and the e2e suite that asserts on it. */}
+<div class="product-shot activation-shell" data-nosnippet>
   <div class="activation-demo-caption" aria-label={copy.sample}>
     <span><i aria-hidden="true"></i>{copy.sample}</span>
     <span>{copy.source} · {activationDemo.source.commit.slice(0, 7)}</span>

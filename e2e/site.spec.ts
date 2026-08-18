@@ -37,7 +37,14 @@ test("home presents one activation entry without claiming a real scan", async ({
   await expect(page.getByText("示例环境", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("不访问设备", { exact: true })).toBeVisible();
   await expect(page.locator('input[type="password"], input[name*="key" i]')).toHaveCount(0);
-  await expect(page.locator(".hero-note")).toContainText("未签名技术预览版");
+  /* The channel note is deliberately not on this page any more — it is stated in
+     full on /downloads/ and /security/, both asserted below. What the home page
+     must not do is imply a signed release, so the absence is the assertion. */
+  await expect(page.locator(".hero-note")).toHaveCount(0);
+  await expect(page.locator(".hero-brand")).toContainText("BootAgent");
+  /* The demo is a replica of the product UI, so it is excluded from search
+     snippets; without this the home page had no usable summary in results. */
+  await expect(page.locator(".activation-shell")).toHaveAttribute("data-nosnippet", "");
 });
 
 test("activation demo uses the v0.5.0 English product vocabulary", async ({ page }) => {
@@ -967,7 +974,8 @@ test("navigating between pages runs a cross-document view transition", async ({ 
 });
 
 test.describe("hero entrance", () => {
-  const heroParts = [".eyebrow", ".display", ".lede", ".hero-actions", ".hero-note", ".product-shot"];
+  // .hero-brand leads the stagger now, in place of the removed channel note.
+  const heroParts = [".hero-brand", ".eyebrow", ".display", ".lede", ".hero-actions", ".product-shot"];
 
   test("staggers the hero into place on first paint", async ({ page, viewport }) => {
     await page.goto("/");
@@ -982,7 +990,7 @@ test.describe("hero entrance", () => {
       // Stacked layout moves the block, not the lines — see the note in global.css.
       expect(delays).toEqual([0, 180]);
     } else {
-      expect(delays).toEqual([0, 70, 160, 230, 290, 360]);
+      expect(delays).toEqual([0, 70, 140, 220, 290, 360]);
     }
   });
 
