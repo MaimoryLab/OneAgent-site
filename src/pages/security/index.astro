@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { releasesPageUrl } from "../../lib/downloads";
 import { getPreviewChannel } from "../../lib/release-channel";
 const preview = await getPreviewChannel();
 const publishedTarget = preview?.targets.find((target) => target.status === "available") ?? null;
@@ -41,19 +42,25 @@ const windowsSigning = preview?.targets.find((target) => target.platform === "wi
         <p>配置目录和含密钥的文件只对当前用户开放。cleanroom 会复核真实用户目录未被测试流程改动。</p>
 
         <h2 id="distribution">每个渠道都是同一个包</h2>
-        <p>官网、GitHub Release、网盘、企业云盘分发的是完全相同的官方构建。同一版本，文件内容与 SHA-256 一致。</p>
+        {/* Names the channels that actually exist: GitHub Releases and the Gitee
+            mirror for mainland networks. The mirrored artifact was hashed against
+            GitHub's published digest before the mirror was ever linked. */}
+        <p>官网指向的 GitHub Releases 与面向国内网络的 Gitee 镜像分发的是完全相同的官方构建。同一版本，文件内容与校验值一致。</p>
         <p>渠道不重新打包，不追加推广内容，不二次签名。</p>
         <p>第三方 Agent 二进制不由 BootAgent 转发。它们来自官方安装源、书面授权的镜像，或你手动安装。</p>
 
         <h2 id="release-evidence">当前发行证据</h2>
         {publishedTarget && publishedArtifact ? (
           <>
-            <p>下面这些值来自 GitHub Releases 已发布的产物元数据，你可以对着发行页逐条核对。</p>
+            {/* The version and per-artifact digest used to be printed here.
+                They now live only on the release page this links to: the reader
+                verifies against the release itself, and this page stays a
+                statement of what holds for the current channel rather than a
+                copy of one release's numbers. */}
+            <p>以下状态来自 GitHub Releases 已发布的产物元数据；版本号与各产物的校验值以<a href={releasesPageUrl} rel="noopener">当前发行页</a>为准。</p>
             <ul>
               <li>渠道：<code>{preview?.channel}</code></li>
-              <li>版本：<code>{preview?.version}</code></li>
               <li>平台：{publishedTarget.platformLabel} {publishedTarget.archLabel}</li>
-              <li>SHA-256：<code>{publishedArtifact.sha256}</code></li>
               <li>macOS 签名：{macosSigning === "notarized"
                 ? <>Developer ID 签名并经 Apple 公证，公证票据已装订。签名主体 Team ID 为 <code>F2VC757B28</code>。</>
                 : "未签名、未公证。"}</li>

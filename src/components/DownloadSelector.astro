@@ -1,7 +1,7 @@
 ---
 import { bestLocaleFor, localeFromPath, localePath } from "../i18n";
 import { formatBytes, formatDate, releasesPageUrl } from "../lib/downloads";
-import { binaryArtifact, getPreviewChannel, primaryDownload } from "../lib/release-channel";
+import { binaryArtifact, getPreviewChannel, mirrorDownload, primaryDownload } from "../lib/release-channel";
 
 /* Everything below reads off a channel: the platform picker, the checksum, the
    size. With no release published there is nothing to pick between, so the
@@ -14,6 +14,7 @@ const defaultTarget = channel?.targets.find((target) => target.status === "avail
    default the picker preselects, and the client script keeps the two in step. */
 const defaultArtifact = defaultTarget ? binaryArtifact(defaultTarget) : null;
 const defaultDownload = defaultArtifact ? primaryDownload(defaultArtifact) : null;
+const defaultMirror = defaultArtifact ? mirrorDownload(defaultArtifact) : null;
 /* The sidebar notice describes macOS signing, so it reads the same per-target
    state the signing row reads. A constant here would contradict that row the
    moment the feed serves a pre-0.7.0 release — a rollback, or a fork publishing
@@ -29,13 +30,14 @@ const c = locale === "en"
       detected: "Showing the platform that is currently downloadable; you can switch at any time.",
       primaryEyebrow: "Direct download",
       primaryCta: "Download now",
-      historyNote: "Past versions and the full artifact list live on",
+      mirrorNote: "Chinese-language browser detected — this download points at the Gitee mirror, the identical official build.",
+      mirrorFallback: "Download from GitHub instead",
+      historyNote: "Checksums, past versions and the full artifact list live on",
       notStableTitle: "This is not stable yet",
       notStableBody: macosSigning === "notarized"
-        ? "The macOS build is Developer ID-signed and notarised by Apple, so the first launch opens normally. The Windows build carries no Authenticode signature yet, so SmartScreen warns once about an unknown publisher. Each platform reaches stable on its own once its signing and verification evidence are complete — until then, verify the SHA-256 after downloading."
-        : "This macOS build predates signing, so Gatekeeper blocks its first launch — prefer the newest release, whose macOS builds are signed and notarised from v0.7.0 on. Verify the SHA-256 after downloading. BootAgent never asks you to disable Gatekeeper or weaken your system-wide settings.",
+        ? "The macOS build is Developer ID-signed and notarised by Apple, so the first launch opens normally. The Windows build carries no Authenticode signature yet, so SmartScreen warns once about an unknown publisher. Each platform reaches stable on its own once its signing and verification evidence are complete — until then, checksums for every artifact are published on GitHub Releases."
+        : "This macOS build predates signing, so Gatekeeper blocks its first launch — prefer the newest release, whose macOS builds are signed and notarised from v0.7.0 on. Checksums are published on GitHub Releases. BootAgent never asks you to disable Gatekeeper or weaken your system-wide settings.",
       verified: "Verified and downloadable",
-      version: "Version",
       channelLabel: "Release channel",
       size: "File size",
       built: "Build date",
@@ -51,11 +53,7 @@ const c = locale === "en"
       download: (platform: string) => `Download the ${platform} preview`,
       quickstart: "Read the quickstart",
       sameBuildTitle: "You get the verified official build",
-      sameBuildBody: "This site, GitHub Releases and any mirror must serve the identical SHA-256. Repackaging is not permitted.",
-      checksumTitle: "macOS verification command",
-      copy: "Copy",
-      copied: "Copied",
-      cleanroomNote: "The digest identifies this exact file; any change to the package changes the SHA-256.",
+      sameBuildBody: "Every channel — this site, GitHub Releases, any mirror — serves the identical official build. Repackaging is not permitted.",
       unavailableTitle: "This platform has no public release yet",
       unavailableBody: "The build workflow is in place, but until the native build, cleanroom evidence and release metadata are all present there is no empty download button and no CI artifact described as generally available.",
       progress: "See release progress",
@@ -72,13 +70,14 @@ const c = locale === "en"
       detected: "已优先显示当前可下载的平台；你可以随时手动切换。",
       primaryEyebrow: "直接下载",
       primaryCta: "立即下载",
-      historyNote: "历史版本与完整产物清单见",
+      mirrorNote: "检测到中文浏览器环境，下载已指向国内镜像（Gitee，同一官方构建）。",
+      mirrorFallback: "改从 GitHub 下载",
+      historyNote: "校验值、历史版本与完整产物清单见",
       notStableTitle: "还不叫 Stable",
       notStableBody: macosSigning === "notarized"
-        ? "macOS 版已由 Developer ID 签名并经 Apple 公证，首次打开不再被拦截。Windows 版尚未完成 Authenticode 签名，SmartScreen 会提示一次“未知发布者”。按 Stable 门禁，每个平台在签名与验证证据齐备后各自转正——在那之前，下载后请核对 SHA-256。"
-        : "这个 macOS 版本早于签名交付，首次打开会被 Gatekeeper 拦截——请优先使用最新版本，macOS 产物自 v0.7.0 起已签名并公证。下载后请核对 SHA-256。BootAgent 不会要求你关闭 Gatekeeper 或降低系统整体安全设置。",
+        ? "macOS 版已由 Developer ID 签名并经 Apple 公证，首次打开不再被拦截。Windows 版尚未完成 Authenticode 签名，SmartScreen 会提示一次“未知发布者”。按 Stable 门禁，每个平台在签名与验证证据齐备后各自转正——在那之前，每个产物的校验值都随发行公布在 GitHub Releases。"
+        : "这个 macOS 版本早于签名交付，首次打开会被 Gatekeeper 拦截——请优先使用最新版本，macOS 产物自 v0.7.0 起已签名并公证。校验值随发行公布在 GitHub Releases。BootAgent 不会要求你关闭 Gatekeeper 或降低系统整体安全设置。",
       verified: "已验证可下载",
-      version: "版本",
       channelLabel: "发行渠道",
       size: "文件大小",
       built: "构建日期",
@@ -93,11 +92,7 @@ const c = locale === "en"
       download: (platform: string) => `下载 ${platform} 预览版`,
       quickstart: "查看快速开始",
       sameBuildTitle: "下载即得到被校验的官方同包产物",
-      sameBuildBody: "任何官网、GitHub Release 或镜像渠道都必须保持相同 SHA-256，禁止二次打包。",
-      checksumTitle: "macOS 校验命令",
-      copy: "复制",
-      copied: "已复制",
-      cleanroomNote: "摘要唯一对应此文件；包体任何变化都会改变 SHA-256。",
+      sameBuildBody: "官网、GitHub Releases 与任何镜像渠道分发的都是同一个官方构建，禁止二次打包。",
       unavailableTitle: "这个平台尚未公开发行",
       unavailableBody: "构建工作流已经保留，但在原生构建、cleanroom 证据和发行元数据齐备前，不提供空下载按钮，也不把 CI 产物描述为正式可用。",
       progress: "查看发行进度",
@@ -122,14 +117,19 @@ const c = locale === "en"
   <div class="download-primary">
     <div>
       <p class="eyebrow">{c.primaryEyebrow}</p>
-      <p class="download-primary-title">BootAgent {channel.version}<span class="download-primary-target" data-primary-target> · {defaultTarget!.platformLabel} {defaultTarget!.archLabel}</span></p>
+      <p class="download-primary-title">BootAgent<span class="download-primary-target" data-primary-target> · {defaultTarget!.platformLabel} {defaultTarget!.archLabel}</span></p>
       <p class="download-primary-meta"><span data-primary-size>{formatBytes(defaultArtifact.bytes)}</span> · <span data-primary-signing>{c.signingValue[defaultTarget!.signing]}</span></p>
     </div>
     {/* Named differently from the per-panel buttons on purpose: two links whose
         accessible names both match /下载 .* 预览版/ would trip every strict-mode
         locator in the e2e suite, and a reader scanning the page should see one
         primary action and one detailed panel, not the same button twice. */}
-    <a class="button button-primary download-primary-button" data-primary-link href={defaultDownload.url} download>{c.primaryCta}</a>
+    <a class="button button-primary download-primary-button" data-primary-link data-cn-href={defaultMirror?.url} href={defaultDownload.url} download>{c.primaryCta}</a>
+    {/* Revealed by the script only when the browser prefers Chinese AND the
+        selected target is actually on the mirror — the mirror hosts a subset of
+        the release (the macOS DMGs as of v0.7.2), so Windows and Linux keep
+        GitHub even for Chinese-language browsers. */}
+    <p class="download-mirror-note" data-mirror-note hidden>{c.mirrorNote} <a data-mirror-fallback href={defaultDownload.url} rel="noopener">{c.mirrorFallback}</a></p>
   </div>
 )}
 <div class="download-layout">
@@ -182,6 +182,7 @@ const c = locale === "en"
           data-release-panel={target.id}
           aria-hidden={target.id === defaultTarget.id ? "false" : "true"}
           data-download-url={download?.url}
+          data-download-cn-url={artifact ? mirrorDownload(artifact)?.url : undefined}
           data-target-label={`${target.platformLabel} ${target.archLabel}`}
           data-size-label={artifact ? formatBytes(artifact.bytes) : undefined}
           data-signing-label={c.signingValue[target.signing]}
@@ -197,7 +198,6 @@ const c = locale === "en"
           {target.status === "available" && artifact && download ? (
             <>
               <dl class="release-meta-grid">
-                <div><dt>{c.version}</dt><dd>{channel.version}</dd></div>
                 <div><dt>{c.channelLabel}</dt><dd>{c.channelValue}</dd></div>
                 <div><dt>{c.size}</dt><dd>{formatBytes(artifact.bytes)}</dd></div>
                 <div><dt>{c.built}</dt><dd>{formatDate(target.built_at)}</dd></div>
@@ -212,7 +212,7 @@ const c = locale === "en"
                 <div><dt>{c.signing}</dt><dd>{c.signingValue[target.signing]}</dd></div>
               </dl>
               <div class="download-action">
-                <a class="button button-primary" href={download.url} download>{c.download(target.platformLabel)}</a>
+                <a class="button button-primary" data-cn-href={artifact && mirrorDownload(artifact)?.url} href={download.url} download>{c.download(target.platformLabel)}</a>
                 <a class="button button-secondary" href={href("quickstart/")}>{c.quickstart}</a>
               </div>
               <div class="notice notice-info">
@@ -222,21 +222,11 @@ const c = locale === "en"
                   <p>{c.sameBuildBody}</p>
                 </div>
               </div>
-              <div class="hash-block">
-                <p><strong>SHA-256</strong></p>
-                <div class="hash-row">
-                  {/* Both this and the command below scroll horizontally on narrow
-                      screens, so they need to be reachable without a pointer
-                      (WCAG 2.1.1). The label names which value has focus. */}
-                  <code class="hash-value" tabindex="0" role="group" aria-label="SHA-256">{artifact.sha256}</code>
-                  <button class="copy-button" type="button" data-copy={artifact.sha256} data-copy-label={c.copy} data-copied-label={c.copied}>{c.copy}</button>
-                </div>
-              </div>
-              <div class="hash-block">
-                <p><strong>{c.checksumTitle}</strong></p>
-                <pre class="code-block" tabindex="0" role="group" aria-label={c.checksumTitle}><code>shasum -a 256 {artifact.file}</code></pre>
-              </div>
-              <p class="hero-note">{c.cleanroomNote}</p>
+              {/* The full digest and the verification command used to be printed
+                  here. They are engineering material, and the page's own history
+                  line points at GitHub Releases, which publishes SHA256SUMS with
+                  every release — the reader who verifies gets the value from the
+                  same feed the site would have copied it from. */}
             </>
           ) : (
             <div class="unavailable-panel">
@@ -268,13 +258,27 @@ const c = locale === "en"
      the previous target's file under the new target's name. */
   const primary = root?.querySelector<HTMLElement>(".download-primary");
   const primaryLink = primary?.querySelector<HTMLAnchorElement>("[data-primary-link]");
+  const mirrorNote = primary?.querySelector<HTMLElement>("[data-mirror-note]");
+  const mirrorFallback = primary?.querySelector<HTMLAnchorElement>("[data-mirror-fallback]");
+  /* Browser language, not page language: a Chinese-language browser reading the
+     English page still sits on a mainland network, and the page language says
+     nothing about where the reader is downloading from. The swap only applies
+     where the server emitted a data-cn-href — the mirror hosts a subset of the
+     release, so unmirrored targets keep GitHub for everyone. */
+  const prefersChinaMirror = (navigator.languages ?? [navigator.language])
+    .some((language) => (language ?? "").toLowerCase().startsWith("zh"));
   const updatePrimary = (id: string) => {
     if (!primary || !primaryLink) return;
     const panel = panels.find((candidate) => candidate.dataset.releasePanel === id);
     const url = panel?.dataset.downloadUrl;
     primary.hidden = !url;
     if (!panel || !url) return;
-    primaryLink.href = url;
+    const mirrorUrl = prefersChinaMirror ? panel.dataset.downloadCnUrl : undefined;
+    primaryLink.href = mirrorUrl ?? url;
+    if (mirrorNote) {
+      mirrorNote.hidden = !mirrorUrl;
+      if (mirrorUrl && mirrorFallback) mirrorFallback.href = url;
+    }
     const target = primary.querySelector("[data-primary-target]");
     if (target) target.textContent = ` · ${panel.dataset.targetLabel ?? ""}`;
     const size = primary.querySelector("[data-primary-size]");
@@ -282,6 +286,16 @@ const c = locale === "en"
     const signing = primary.querySelector("[data-primary-signing]");
     if (signing) signing.textContent = panel.dataset.signingLabel ?? "";
   };
+
+  // The per-panel buttons swap once: their data-cn-href is per-file, so an
+  // unmirrored file keeps its GitHub href untouched.
+  if (prefersChinaMirror) {
+    root?.querySelectorAll<HTMLAnchorElement>("a[data-cn-href]").forEach((link) => {
+      const mirrorUrl = link.dataset.cnHref;
+      if (mirrorUrl) link.href = mirrorUrl;
+    });
+    if (primaryLink) updatePrimary(panels.find((panel) => panel.classList.contains("is-active"))?.dataset.releasePanel ?? "");
+  }
 
   const show = (id: string) => {
     panels.forEach((panel) => {
@@ -339,14 +353,4 @@ const c = locale === "en"
       });
     });
   }
-
-  root?.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const value = button.dataset.copy ?? "";
-      await navigator.clipboard.writeText(value);
-      const idle = button.dataset.copyLabel ?? button.textContent ?? "";
-      button.textContent = button.dataset.copiedLabel ?? idle;
-      window.setTimeout(() => { button.textContent = idle; }, 1500);
-    });
-  });
 </script>

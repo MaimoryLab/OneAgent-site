@@ -404,11 +404,9 @@ test("download center recommends an available artifact but keeps manual choices"
   await platform("macos-arm64").check();
   await expect(page.getByRole("link", { name: "下载 macOS 预览版" })).toBeVisible();
   const active = page.locator("[data-release-panel].is-active");
-  await expect(active.locator(".hash-value")).toHaveText(/^[a-f0-9]{64}$/);
-  /* Scoped to the active panel, as the sibling test below already does. Every
-     platform panel is in the DOM with only CSS hiding the inactive ones, so an
-     unscoped match was passing on the coincidence that one platform had an
-     artifact; with four published it resolves to four nodes and fails strict mode. */
+  /* The page no longer prints digests — verification goes through the release's
+     published manifest. What the panel must still get right per target is the
+     signing state and a real download link. */
   await expect(active.getByText("Developer ID 签名 + Apple 公证", { exact: true })).toBeVisible();
 
   /* The primary block is the zero-decision path: it must offer the same file
@@ -426,7 +424,10 @@ test("download center recommends an available artifact but keeps manual choices"
      four assets, and a green suite that never checks a second platform would not
      have caught it. */
   await platform("windows-x64").check();
-  await expect(active.locator(".hash-value")).toHaveText(/^[a-f0-9]{64}$/);
+  await expect(active.getByRole("link", { name: "下载 Windows 预览版" })).toHaveAttribute(
+    "href",
+    /^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\/.*windows/,
+  );
   /* Signing diverged by platform at v0.7.0: notarised macOS above, unsigned
      Windows here. Asserting both directions keeps a later "simplification" from
      collapsing the per-target value back into one channel-wide claim. */
@@ -558,9 +559,44 @@ test("download page states the channel and links to the official release", async
      against a hidden copy first and fails on visibility. */
   const active = page.locator("[data-release-panel].is-active");
   await expect(active.getByText("技术预览版", { exact: true })).toBeVisible();
-  await expect(active.locator(".hash-value")).toHaveText(/^[a-f0-9]{64}$/);
   const download = active.getByRole("link", { name: /下载 .* 预览版/ });
   await expect(download).toHaveAttribute("href", /^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\//);
+  /* Digests came off the page; the promise that replaced them is a route to the
+     release's own checksum manifest, asserted by destination like the guide link. */
+  await expect(page.locator('a[href*="SHA256SUMS"], a[href$="/releases"]').first()).toBeVisible();
+});
+
+/* Mirror routing is a browser-language decision, not a page-language one: a
+   zh browser gets the Gitee mirror for the files the mirror hosts, and GitHub
+   for everything else — the mirror carries a subset of the release, and a
+   blanket rewrite would 404 the rest. The default-locale tests above prove the
+   en-US browser keeps GitHub everywhere. */
+test.describe("mainland-China download mirror", () => {
+  test.use({ locale: "zh-CN" });
+
+  test("zh browsers get Gitee where mirrored and GitHub elsewhere", async ({ page }) => {
+    await skipWithoutPublishedRelease(page);
+    const primary = page.locator("[data-primary-link]");
+    test.skip(
+      (await page.locator("a[data-cn-href]").count()) === 0,
+      "The Gitee mirror had no assets for this release at build time.",
+    );
+    /* Selected explicitly: the test browsers carry a Windows user agent, so the
+       page's own detection moves the picker off the macOS default. */
+    const picker = page.getByRole("group", { name: "选择平台与架构" });
+    await picker.locator('input[value="macos-arm64"]').check();
+    // macOS is mirrored: primary points at Gitee, note appears with a GitHub fallback.
+    await expect(primary).toHaveAttribute("href", /^https:\/\/gitee\.com\/[^/]+\/[^/]+\/releases\/download\//);
+    const note = page.locator("[data-mirror-note]");
+    await expect(note).toBeVisible();
+    await expect(note.getByRole("link")).toHaveAttribute("href", /^https:\/\/github\.com\//);
+
+    // Windows is not on the mirror: the swap must leave it on GitHub, and the
+    // mirror note must not claim otherwise.
+    await picker.locator('input[value="windows-x64"]').check();
+    await expect(primary).toHaveAttribute("href", /^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\/.*windows/);
+    await expect(note).toBeHidden();
+  });
 });
 
 /* The Gatekeeper guide's own copy promised its removal — "签名与公证完成后，上面
@@ -986,8 +1022,8 @@ test("navigating between pages runs a cross-document view transition", async ({ 
 });
 
 test.describe("hero entrance", () => {
-  // .hero-brand leads the stagger now, in place of the removed channel note.
-  const heroParts = [".hero-brand", ".eyebrow", ".display", ".lede", ".hero-actions", ".product-shot"];
+  // Five parts since the eyebrow line came out: lockup leads, console lands last.
+  const heroParts = [".hero-brand", ".display", ".lede", ".hero-actions", ".product-shot"];
 
   test("staggers the hero into place on first paint", async ({ page, viewport }) => {
     await page.goto("/");
@@ -1002,7 +1038,7 @@ test.describe("hero entrance", () => {
       // Stacked layout moves the block, not the lines — see the note in global.css.
       expect(delays).toEqual([0, 180]);
     } else {
-      expect(delays).toEqual([0, 70, 140, 220, 290, 360]);
+      expect(delays).toEqual([0, 90, 180, 260, 340]);
     }
   });
 
@@ -1188,17 +1224,23 @@ test.describe("dark scheme", () => {
        sit inside a <mask>, where the two are channel values punching out the eyes
        rather than colours that paint anything. */
     expect(monochrome.map((entry) => entry.file).sort()).toEqual([
+      // Twice: Claude Desktop renders the Claude mark, the same sharing rule as
+      // ChatGPT Desktop below.
+      "claude-code.svg",
       "claude-code.svg",
       // Twice: ChatGPT Desktop renders the OpenAI mark rather than a second copy
       // of the same file, so codex.svg appears once per row that uses it.
       "codex.svg",
       "codex.svg",
-      // DeepSeek's whale, the same lobe-icons currentColor glyph as the others.
+      // Twice: the dsh CLI and DSH Desktop both render DeepSeek's whale.
+      "dsh.svg",
       "dsh.svg",
       "hermes.svg",
       "kilo-cli.svg",
+      "kimi-code.svg",
       "openclaw.svg",
       "opencode.svg",
+      "pi.svg",
     ]);
     for (const entry of monochrome) expect(entry.filter, entry.file).toBe("invert(1)");
     for (const entry of filters.filter((entry) => !entry.monochrome)) {
@@ -1318,9 +1360,12 @@ test("the elements a visitor taps acknowledge the press itself", async ({ page, 
   const console_ = page.locator("#activation-console");
   await page.getByRole("button", { name: "开始激活演示" }).click();
   await console_.getByRole("tab", { name: "命令行 Agent" }).click();
+  /* The Agent rows acknowledge pointer-down before the selection state changes.
+     Scrolled into view first: the CLI tab lists ten agents since v0.7.1 and the
+     row sits below the console's visible area, where a centre-of-box press
+     would land on nothing. */
   const agent = console_.locator('[data-agent-id="claude-code"]');
-
-  /* The Agent rows acknowledge pointer-down before the selection state changes. */
+  await agent.scrollIntoViewIfNeeded();
   await expect(agent).toHaveCSS("transform", "none");
   const box = await agent.boundingBox();
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);

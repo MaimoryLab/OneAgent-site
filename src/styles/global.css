@@ -504,6 +504,10 @@ button, select { color: inherit; }
 .download-primary-target { color: var(--ink-soft); font-weight: 560; }
 .download-primary-meta { margin: 6px 0 0; color: var(--ink-faint); font-size: 14px; }
 .download-primary-button { padding: 13px 28px; font-size: 16px; }
+/* Full-width below the button so the swap note reads as part of the card. */
+.download-mirror-note { flex-basis: 100%; margin: 2px 0 0; color: var(--ink-faint); font-size: 13px; }
+.download-mirror-note a { text-decoration: underline; text-underline-offset: 3px; }
+.download-mirror-note a:hover { color: var(--ink); }
 .download-history { margin: 26px 0 0; color: var(--ink-faint); font-size: 13px; }
 .download-history a { text-decoration: underline; text-underline-offset: 3px; }
 .download-history a:hover { color: var(--ink); }
@@ -548,12 +552,7 @@ button, select { color: inherit; }
 .release-meta-grid dt { color: var(--ink-faint); font-size: 12px; }
 .release-meta-grid dd { margin: 5px 0 0; font-weight: 650; }
 .download-action { margin: 28px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.hash-block { margin-top: 24px; }
-.hash-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
-.hash-value, .code-block { margin: 0; padding: 14px 15px; overflow-x: auto; color: var(--code-ink); background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius-control); font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-.copy-button { padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-control); background: var(--surface); cursor: pointer; font-size: 12px; font-weight: 600; transition: background-color var(--dur-micro) var(--ease-apple); }
-.copy-button:hover { background: var(--surface-muted); }
-.copy-button:active { background: var(--surface-pressed); transition-duration: 100ms; }
+.code-block { margin: 0; padding: 14px 15px; overflow-x: auto; color: var(--code-ink); background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius-control); font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 .unavailable-panel { padding: 38px 0; }
 .unavailable-panel h3 { margin: 0 0 7px; font-size: 23px; }
 .unavailable-panel p { max-width: 580px; color: var(--ink-soft); }
@@ -673,8 +672,6 @@ button, select { color: inherit; }
   .release-head .chip { margin-top: 16px; }
   .release-meta-grid { grid-template-columns: 1fr; }
   .release-meta-grid div:nth-child(even) { padding-left: 0; border-left: 0; }
-  .hash-row { grid-template-columns: 1fr; }
-  .copy-button { min-height: 40px; }
   .detail-grid, .provider-grid { grid-template-columns: 1fr; }
   .detail-cell:nth-child(even) { padding-left: 0; border-left: 0; }
   .timeline-item { grid-template-columns: 1fr; gap: 8px; }
@@ -719,7 +716,6 @@ button, select { color: inherit; }
    missed in review. Distance and curve carry the motion instead. */
 @media not (prefers-reduced-motion: reduce) {
   .hero .hero-brand,
-  .hero .eyebrow,
   .hero .display,
   .hero .lede,
   .hero .hero-actions,
@@ -728,26 +724,22 @@ button, select { color: inherit; }
   }
   /* The lockup leads with the undelayed start; everything below steps down at
      the cadence the stagger has always used. */
-  .hero .eyebrow { animation-delay: 70ms; }
-  .hero .display { animation-delay: 140ms; }
-  .hero .lede { animation-delay: 220ms; }
-  .hero .hero-actions { animation-delay: 290ms; }
-  .product-shot { animation-delay: 360ms; }
+  .hero .display { animation-delay: 90ms; }
+  .hero .lede { animation-delay: 180ms; }
+  .hero .hero-actions { animation-delay: 260ms; }
+  .product-shot { animation-delay: 340ms; }
 }
 
 @keyframes hero-rise {
   from { transform: translateY(var(--hero-rise-from, 40px)); }
 }
 
-/* Measured at 375px, the tightest gap between two staggered lines is 14px
-   (eyebrow→h1). Any travel past that lets one
-   line cross into the next mid-flight and obscure it, and a travel under it is
-   too small to perceive — there is no distance that is both safe and visible
-   once the hero stacks. So narrow screens animate the block as a whole: the
-   lines keep their relative positions, so nothing can overlap. */
+/* Measured at 375px, the tightest staggered gap (lockup→h1) allows no travel
+   that is both safe and visible once the hero stacks — one line would cross
+   into the next mid-flight. So narrow screens animate the block as a whole:
+   the lines keep their relative positions, so nothing can overlap. */
 @media (max-width: 680px) {
   .hero .hero-brand,
-  .hero .eyebrow,
   .hero .display,
   .hero .lede,
   .hero .hero-actions { animation: none; }

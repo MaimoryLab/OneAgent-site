@@ -18,7 +18,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           <span class="notice-mark">i</span><div><strong>macOS 版已签名并通过 Apple 公证</strong><p>自 v0.7.0 起，macOS 产物带 Developer ID 签名并经公证，校验 SHA-256 后直接打开即可。Windows 版的 Authenticode 签名尚未完成，SmartScreen 仍会提示一次，这也是渠道仍叫技术预览版的原因之一。</p></div>
         </div>
         <h2 id="download">1. 下载并校验</h2>
-        <p>从下载中心选择与你的平台和架构匹配的产物。运行前计算 SHA-256，并与下载页显示的值逐字核对。</p>
+        <p>从下载中心选择与你的平台和架构匹配的产物。需要校验时，与 GitHub Releases 随发行公布的校验清单逐字核对。</p>
         <h2 id="launch">2. 启动 BootAgent</h2>
         <p>macOS 打开 DMG 后把应用拖入「应用程序」，Windows 运行安装器，Linux 给下载的文件加可执行权限。界面在本机回环地址上提供服务，不暴露到局域网或公网；关闭应用后本地服务随之退出。</p>
         {/* The four-step Gatekeeper bypass that lived here promised its own

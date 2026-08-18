@@ -25,7 +25,7 @@ import { localePath } from "../../../i18n";
           <span class="notice-mark">i</span><div><strong>The macOS build is signed and notarised by Apple</strong><p>From v0.7.0 the macOS artifact carries a Developer ID signature and Apple notarisation — verify the SHA-256 and open it normally. Windows Authenticode signing is not done yet, so SmartScreen still warns once; that is part of why the channel is still called a technical preview.</p></div>
         </div>
         <h2 id="download">1. Download and verify</h2>
-        <p>Pick the artifact matching your platform and architecture from the download centre. Compute its SHA-256 before running anything, and compare it character by character with the value shown on that page.</p>
+        <p>Pick the artifact matching your platform and architecture from the download centre. To verify it, compare its checksum character by character with the manifest GitHub Releases publishes for the release.</p>
         <h2 id="launch">2. Launch BootAgent</h2>
         <p>On macOS open the DMG and drag the app into Applications; on Windows run the installer; on Linux make the download executable. The interface is served on your machine's loopback address, never exposed to your LAN or the internet, and the local service exits with the app.</p>
         {/* The four-step Gatekeeper bypass that lived here promised its own

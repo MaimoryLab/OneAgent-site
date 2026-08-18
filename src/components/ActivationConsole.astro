@@ -45,7 +45,6 @@ const versionCommand = `$ ${scenario.selectedAgent.command ?? scenario.selectedA
 const copy = locale === "en"
   ? {
       sample: "Demo environment",
-      source: `UI path pinned to ${activationDemo.source.release}`,
       brandSubtitle: "Agent Manager",
       workspace: "Workspace",
       noDevice: "No device access",
@@ -138,7 +137,6 @@ const copy = locale === "en"
     }
   : {
       sample: "示例环境",
-      source: `界面路径固定为 ${activationDemo.source.release}`,
       brandSubtitle: "Agent 管家",
       workspace: "工作区",
       noDevice: "不访问设备",
@@ -245,7 +243,9 @@ const copy = locale === "en"
 <div class="product-shot activation-shell" data-nosnippet>
   <div class="activation-demo-caption" aria-label={copy.sample}>
     <span><i aria-hidden="true"></i>{copy.sample}</span>
-    <span>{copy.source} · {activationDemo.source.commit.slice(0, 7)}</span>
+    {/* The release/commit provenance moved out of the visible caption — it is
+        engineering metadata, and the machine contract that pins the walkthrough
+        lives in data-source-release below, where the e2e suite reads it. */}
   </div>
 
   <activation-console

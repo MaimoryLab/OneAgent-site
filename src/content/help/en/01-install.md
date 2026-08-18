@@ -9,9 +9,9 @@ If you only want to get one agent working, read [Quickstart](/en/quickstart/) in
 
 ## Which build to download
 
-The [download centre](/en/downloads/) recommends a build for your system, but every platform's artifact is listed on the same page, so you can pick manually. Each one carries its filename, size and SHA-256, so you can check it before you download.
+The [download centre](/en/downloads/) recommends a build for your system, but every platform's artifact is listed on the same page, so you can pick manually.
 
-Verifying the hash is worth doing. The command is on the download page; if the value you compute does not match the page, do not run the file.
+To verify a download, check it against the checksum manifest GitHub Releases publishes with each release; if the value you compute does not match, do not run the file.
 
 ## macOS: signed and notarised
 

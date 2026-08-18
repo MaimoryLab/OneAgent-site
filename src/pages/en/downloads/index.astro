@@ -8,12 +8,15 @@ import { getPreviewChannel } from "../../../lib/release-channel";
    promised verification evidence for artifacts that do not exist yet. */
 const channel = await getPreviewChannel();
 const published = channel?.targets.some((target) => target.status === "available") ?? false;
+/* One manifest covers the whole release — same derivation as the Chinese page. */
+const checksumUrl =
+  channel?.targets.flatMap((target) => target.artifacts).find((artifact) => artifact.checksumUrl)?.checksumUrl ?? null;
 ---
 <BaseLayout
   title={published ? "Download BootAgent — technical preview" : "Download BootAgent — not yet released"}
   description={published
-    ? "Download the BootAgent technical preview. The macOS build is signed and notarised by Apple; every artifact carries the SHA-256 reported by GitHub Releases."
-    : "BootAgent has not been released publicly yet. This page will list each platform's artifact, size and SHA-256 so you can check it before downloading."}
+    ? "Download the BootAgent technical preview. The macOS build is signed and notarised by Apple; artifacts ship through GitHub Releases with a published checksum manifest."
+    : "BootAgent has not been released publicly yet. Once it is, this page will list each platform's installer."}
 >
   <header class="page-hero">
     <div class="shell page-hero-grid">
@@ -24,8 +27,8 @@ const published = channel?.targets.some((target) => target.status === "available
       <div class="page-hero-aside">
         <strong>No BootAgent account required</strong>
         {published
-          ? "Every artifact carries its version, size, build date and SHA-256, so you can check it before you download."
-          : "Once released, every artifact will carry its version, size, build date and SHA-256, so you can check it before you download."}
+          ? "Installers come from the official release pipeline; the macOS build is signed and notarised by Apple, and checksums are published with each release."
+          : "Once released, this page will list each platform's installer and the release's checksum manifest."}
       </div>
     </div>
   </header>
@@ -35,13 +38,12 @@ const published = channel?.targets.some((target) => target.status === "available
   <section class="section section-muted">
     <div class="narrow prose">
       <p class="eyebrow">Release integrity</p>
-      <h2 class="section-title">{published ? "The SHA-256 on this page is here so you can check it yourself." : "Once released, the SHA-256 on this page is here so you can check it yourself."}</h2>
-      {/* The old copy claimed byte-identical files across this site, GitHub
-          Releases, a file host and an internal drive. Only one of those exists:
-          the page links to GitHub Releases and prints that feed's digest. */}
-      <p>Artifacts are distributed through GitHub Releases, and the SHA-256 on this page is the digest that feed reports.</p>
+      <h2 class="section-title">Every channel ships the same official build.</h2>
+      <p>Artifacts ship through GitHub Releases, and a checksum manifest is published with every release.</p>
       <p>Channels do not append promotional files, swap the install script, or re-sign the build.</p>
-      <p>If the value you compute does not match the page, do not run the file. Send the download URL, the filename and the hash you actually got to the support page.</p>
+      {checksumUrl && (
+        <p>To verify a download, check it against the release's published <a href={checksumUrl} rel="noopener">checksum manifest</a>; if the values disagree, do not run the file — send the filename and download URL to the support page.</p>
+      )}
       <h3>This is a technical preview</h3>
       <p>From v0.7.0 the macOS build carries a Developer ID signature and Apple notarisation, so Gatekeeper no longer blocks the first launch. Windows Authenticode signing is not done yet, so SmartScreen warns once; each platform enters stable on its own once its signing and verification gates are complete.</p>
       {/* The four-step Gatekeeper bypass came down with v0.7.0, as its own copy
