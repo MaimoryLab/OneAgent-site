@@ -72,8 +72,9 @@ describe("bundled agent marks are auditable", () => {
 /* public/images/guide/ carries its own manifest and had no guard at all, which is
    the same gap this file was written to close for the agent marks — a screenshot
    could be swapped for one containing an account name or device name and nothing
-   would notice. NOTICE states these contain no identifying detail; the digests are
-   what make that claim checkable. */
+   would notice. The manifest records each capture's provenance, and the digests
+   are what make those claims checkable. Empty since the Gatekeeper guide came
+   down with v0.7.0's signed builds; the guard stays for anything added later. */
 const guideDirectory = join(process.cwd(), "public/images/guide");
 const guideFiles = readdirSync(guideDirectory).filter((name) => name !== "asset-rights.json");
 const guideRecorded = Object.entries(guideRights.assets as Record<string, Record<string, string>>);

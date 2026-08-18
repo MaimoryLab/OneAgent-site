@@ -34,8 +34,8 @@ real state rather than a version recorded here.
 - /support/: how to get help and report problems
 
 English translations exist for /en/, /en/downloads/, /en/quickstart/,
-/en/explore/ and /en/security/. Chinese is the default locale and is served
-unprefixed.
+/en/explore/, /en/security/ and /en/help/. Chinese is the default locale and is
+served unprefixed.
 
 ## Notes for machine readers
 

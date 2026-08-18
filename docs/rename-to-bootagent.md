@@ -125,9 +125,10 @@ do not.
   `public/images/bootagent-overview.jpg` is the default Open Graph image and worth
   a look — if it shows UI carrying the old name it is stale content whatever it is
   called.
-- **The macOS screenshots** under `public/images/guide/` show dialogs naming the
-  old product. Retaking them is the only honest way to update those strings, and
-  it also clears the `asset-rights.json` entries above.
+- **The macOS screenshots** under `public/images/guide/` showed dialogs naming
+  the old product. Resolved without a retake: v0.7.0 shipped signed macOS
+  builds, the Gatekeeper guide came down as its own copy promised, and the
+  screenshots and their `asset-rights.json` entries went with it.
 
 ## Verification
 

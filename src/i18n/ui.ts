@@ -65,7 +65,7 @@ const strings = {
   en: {
     "site.title": "BootAgent — a trustworthy local AI development environment activator",
     /* See the Chinese entry for why this names agents and protocols outright. */
-    "site.description": "BootAgent detects and installs coding agents like Claude Code, Codex and OpenCode on your own machine, connects them to any OpenAI- or Anthropic-compatible provider, and verifies the protocol before writing config. Your API keys never leave your computer.",
+    "site.description": "BootAgent detects and installs coding agents like Claude Code, Codex and OpenCode on your own machine, connects them to any OpenAI- or Anthropic-compatible provider, and verifies the protocol and backs up existing config before writing anything. Your API keys never leave your computer.",
     "skip.main": "Skip to main content",
     "nav.home": "BootAgent home",
     "nav.downloads": "Downloads",

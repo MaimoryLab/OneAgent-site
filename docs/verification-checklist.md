@@ -118,9 +118,11 @@ manifests. They carry upstream's own field names and text. Update them by
 re-copying from a released tag per [`data/README.md`](../data/README.md) and
 reading the diff — never by hand-editing a field to what you expect it to become.
 
-The same applies to `public/images/guide/asset-rights.json`, which records what is
-visible *inside* the macOS screenshots. Editing that text to match a rename makes
-the provenance record describe something the images do not show.
+The same discipline applied to `public/images/guide/asset-rights.json` while it
+recorded the Gatekeeper screenshots (both came down with v0.7.0's signed macOS
+builds): editing provenance text to match a rename makes the record describe
+something the images do not show. The manifest survives, empty, and guards
+anything added to that directory later.
 
 ## When a tool contradicts itself, park the question
 

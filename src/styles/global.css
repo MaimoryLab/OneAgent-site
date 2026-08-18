@@ -467,6 +467,31 @@ button, select { color: inherit; }
 .notice-success { background: var(--green-soft); border-color: var(--chip-green-line); }
 .notice-mark { flex: 0 0 auto; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-size: 12px; font-weight: 650; }
 
+/* The zero-decision path: one card above the picker holding the file the
+   visitor most likely wants. It restates version, target, size and signing so
+   the common case never has to read the grid below — and the client script
+   swaps its contents when the picker's selection changes. */
+.download-primary {
+  margin-bottom: 30px;
+  padding: 22px 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-lift);
+}
+.download-primary .eyebrow { margin: 0; }
+.download-primary-title { margin: 7px 0 0; font-size: 21px; font-weight: 650; letter-spacing: -0.012em; }
+.download-primary-target { color: var(--ink-soft); font-weight: 560; }
+.download-primary-meta { margin: 6px 0 0; color: var(--ink-faint); font-size: 14px; }
+.download-primary-button { padding: 13px 28px; font-size: 16px; }
+.download-history { margin: 26px 0 0; color: var(--ink-faint); font-size: 13px; }
+.download-history a { text-decoration: underline; text-underline-offset: 3px; }
+.download-history a:hover { color: var(--ink); }
 .download-layout { display: grid; grid-template-columns: 260px minmax(0,1fr); gap: 54px; align-items: start; }
 .download-layout > * { min-width: 0; }
 .platform-control { position: sticky; top: 98px; }
@@ -602,6 +627,8 @@ button, select { color: inherit; }
   .step::before, .service h2 { margin-bottom: 24px; }
   .service h2 { margin-top: 28px; }
   .download-layout { grid-template-columns: minmax(0,1fr); gap: 32px; }
+  .download-primary { flex-direction: column; align-items: stretch; text-align: left; }
+  .download-primary-button { text-align: center; }
   .platform-control, .side-index { position: static; }
   .side-index { display: none; }
   .footer-grid { grid-template-columns: 1.5fr repeat(3,1fr); gap: 30px; }
@@ -684,8 +711,8 @@ button, select { color: inherit; }
   .product-shot {
     animation: hero-rise 620ms var(--ease-enter) both;
   }
-  /* The lockup leads, so it takes the undelayed start and everything below it
-     keeps the stagger it had when the eyebrow was first. */
+  /* The lockup leads with the undelayed start; everything below steps down at
+     the cadence the stagger has always used. */
   .hero .eyebrow { animation-delay: 70ms; }
   .hero .display { animation-delay: 140ms; }
   .hero .lede { animation-delay: 220ms; }
