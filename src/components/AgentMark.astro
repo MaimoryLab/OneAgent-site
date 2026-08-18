@@ -30,7 +30,15 @@ const markFiles: Record<string, string> = {
   hermes: "hermes.svg",
   openclaw: "openclaw.svg",
   dsh: "dsh.svg",
+  "kimi-code": "kimi-code.svg",
+  pi: "pi.svg",
   "chatgpt-desktop": "codex.svg",
+  /* DSH Desktop drives DeepSeek's models, and the mark identifies the product a
+     reader recognises — the same reasoning as chatgpt-desktop above. The app is
+     built by a third party (Unofficial in upstream's registry), which the
+     catalog copy states; the mark does not claim the publisher. */
+  "dsh-desktop": "dsh.svg",
+  "claude-desktop": "claude-code.svg",
 };
 /* Every mark ships as fill="currentColor". Loaded through <img> the keyword
    has no page to inherit from and falls back to black, which disappears on a
@@ -39,7 +47,10 @@ const markFiles: Record<string, string> = {
    openclaw is here despite containing #000 and #fff: those are inside a <mask>,
    where black and white are channel values that punch out the eyes rather than
    colours that paint anything. Every visible path is currentColor like the rest. */
-const monochrome = new Set(["codex", "opencode", "claude-code", "kilo-cli", "hermes", "openclaw", "dsh", "chatgpt-desktop"]);
+const monochrome = new Set([
+  "codex", "opencode", "claude-code", "kilo-cli", "hermes", "openclaw",
+  "dsh", "kimi-code", "pi", "chatgpt-desktop", "dsh-desktop", "claude-desktop",
+]);
 const markFile = markFiles[id];
 const imageSource = markFile ? `${import.meta.env.BASE_URL}images/agents/${markFile}` : null;
 ---

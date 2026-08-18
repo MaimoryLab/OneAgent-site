@@ -29,7 +29,7 @@ coupling splitting the repositories was meant to remove.
 Copy both files from a released tag, not from `main`:
 
 ```bash
-tag=v0.5.0   # the release the site should describe
+tag=v0.7.1   # the release the site should describe
 for f in agents.lock.json providers.lock.json; do
   curl -fsSL "https://raw.githubusercontent.com/MaimoryLab/BootAgent/$tag/manifests/$f" -o "data/$f"
 done
@@ -43,8 +43,9 @@ command — which is what the previous copies were fetched with — now 404s.
 `pnpm run build` runs `astro check` and `scripts/validate-build.mjs`, so a shape
 change in either file fails the build rather than rendering a broken page.
 
-Current copies and the activation walkthrough were audited against tag `v0.5.0`
-(commit `0fbbe94`) on 2026-08-10. Earlier copies tracked a `main` commit because no
+Current copies were refreshed from tag `v0.7.1` (commit `4fe376cb`) on
+2026-08-18; the activation walkthrough remains pinned to `v0.5.0` (commit
+`0fbbe94`), whose screens it mirrors. Earlier copies tracked a `main` commit because no
 tag existed; that workaround is no longer needed.
 
 The lock-file contents have not changed since `v0.3.0` — `v0.4.0` and `v0.5.0` both
@@ -54,9 +55,10 @@ mirrors. `v0.5.0` changed the provider editor, the settings page and the transfe
 page; none of those sit on the walkthrough's path (`agents → profile → provider →
 model → review → install → overview`), so the demo needed only its baseline updated.
 
-The v0.5.0 command-line contract is seven agents, all `config_mode: auto`: `codex`,
-`claude-code`, `opencode`, `kilo-cli`, `aider`, and — new in `v0.3.0` —
-`openclaw` at rank 6 and `hermes` at rank 7. The history is worth keeping because
+The v0.7.1 command-line contract is ten agents, all `config_mode: auto`, ranked:
+`dsh` (DeepSeek Harness, rank 1), `codex`, `claude-code`, `opencode`, `kilo-cli`,
+`aider`, `openclaw`, `hermes`, `kimi-code`, and `pi` (rank 10). `v0.7.x` also
+added the `jiekou` provider at order 1. The history is worth keeping because
 the site followed each pass and the last one reverses a removal:
 
 - `3217923` listed fourteen agents.
@@ -112,7 +114,7 @@ a stale checksum on a download page is worse than no checksum.
 Agent icons are also not vendored wholesale. Upstream ships an image asset only
 when its source, license and SHA-256 are recorded in
 `frontend/src/components/icons/asset-rights.json`, and uses a generic mark
-otherwise. This site follows the same rule: the two marks it ships (`codex.svg`,
-`opencode.svg`) each have an entry in `public/images/agents/asset-rights.json`,
-and the five agents without one render a letter glyph. Adding an agent to the
-lock file does not mean adding a mark for it.
+otherwise. This site follows the same rule: every mark it ships has an entry in
+`public/images/agents/asset-rights.json` (nine as of the v0.7.1 refresh), and an
+agent without one renders a letter glyph. Adding an agent to the lock file does
+not mean adding a mark for it.
