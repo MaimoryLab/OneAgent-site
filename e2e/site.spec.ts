@@ -1173,6 +1173,8 @@ test.describe("dark scheme", () => {
       // of the same file, so codex.svg appears once per row that uses it.
       "codex.svg",
       "codex.svg",
+      // DeepSeek's whale, the same lobe-icons currentColor glyph as the others.
+      "dsh.svg",
       "hermes.svg",
       "kilo-cli.svg",
       "openclaw.svg",

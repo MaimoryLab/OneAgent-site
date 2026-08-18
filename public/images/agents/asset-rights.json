@@ -49,6 +49,14 @@
       "licenseSource": "licenses/cc-switch-LICENSE",
       "copyrightOwner": "Jason Young (cc-switch contributors)",
       "sha256": "9eac78bcfa8e106ed3267293235281743e161b5accf2ff5c676700b64cfcdbbc"
+    },
+    "dsh": {
+      "file": "dsh.svg",
+      "source": "https://github.com/lobehub/lobe-icons/blob/master/packages/static-svg/icons/deepseek.svg",
+      "license": "MIT",
+      "licenseSource": "licenses/lobehub-LICENSE",
+      "copyrightOwner": "LobeHub contributors",
+      "sha256": "8f9443e351b6dacce71871790201b799d92e8bf96a45ef79aeb5e9bf4db423e2"
     }
   }
 }
