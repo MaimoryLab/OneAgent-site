@@ -42,9 +42,9 @@ BootAgent 的模型列表来自 Provider 接口的实时返回，不是内置清
 
 ## 首次打开被系统拦住
 
-这不是出错。当前是未签名未公证的技术预览版，macOS 的 Gatekeeper 和 Windows 的 SmartScreen 都会拦一次。
+macOS 版自 v0.7.0 起已签名并经 Apple 公证，正常打开不会被拦截。如果你被拦住了，先确认版本：v0.6.x 及更早的历史包没有签名，[升级到当前版本](/downloads/)即可，不要为旧版添加放行例外。
 
-[快速开始](/quickstart/)里有 macOS 的四张截图逐步说明。放行是一次性的。
+Windows 的 Authenticode 签名还没完成，SmartScreen 会提示一次"未知发布者"，确认 SHA-256 一致后再继续。
 
 ## 想退回改动之前
 

@@ -4,8 +4,12 @@ import { getPreviewChannel } from "../../lib/release-channel";
 const preview = await getPreviewChannel();
 const publishedTarget = preview?.targets.find((target) => target.status === "available") ?? null;
 const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact.kind === "binary") ?? null;
+/* Signing diverged by platform at v0.7.0, so the evidence list states each
+   gated platform separately instead of one line for the release. */
+const macosSigning = preview?.targets.find((target) => target.platform === "macos")?.signing ?? null;
+const windowsSigning = preview?.targets.find((target) => target.platform === "windows")?.signing ?? null;
 ---
-<BaseLayout title="安全、隐私与发行完整性 — BootAgent" description="BootAgent 的本地执行、密钥处理、配置备份、同包分发和未签名预览版边界。">
+<BaseLayout title="安全、隐私与发行完整性 — BootAgent" description="BootAgent 的本地执行、密钥处理、配置备份、同包分发与发行签名证据。">
   <header class="page-hero">
     <div class="shell page-hero-grid">
       <div><nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / 安全与隐私</nav><p class="eyebrow">Trust is inspectable</p><h1 class="page-title">每一条边界都可以自己核对。</h1></div>
@@ -46,14 +50,30 @@ const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact
           <>
             <p>下面这些值来自 GitHub Releases 已发布的产物元数据，你可以对着发行页逐条核对。</p>
             <ul>
-              <li>渠道：<code>technical-preview-unsigned</code></li>
+              <li>渠道：<code>{preview?.channel}</code></li>
               <li>版本：<code>{preview?.version}</code></li>
               <li>平台：{publishedTarget.platformLabel} {publishedTarget.archLabel}</li>
               <li>SHA-256：<code>{publishedArtifact.sha256}</code></li>
-              <li>签名与公证：尚未完成，因此不是 Stable。</li>
+              <li>macOS 签名：{macosSigning === "notarized"
+                ? <>Developer ID 签名并经 Apple 公证，公证票据已装订。签名主体 Team ID 为 <code>F2VC757B28</code>。</>
+                : "未签名、未公证。"}</li>
+              <li>Windows 签名：{windowsSigning === "signed"
+                ? "Authenticode 签名已完成。"
+                : "Authenticode 尚未完成，因此整体仍不是 Stable。"}</li>
             </ul>
+            {macosSigning === "notarized" && (
+              <>
+                {/* The signature is the one release claim a reader can verify
+                    offline, so the exact command goes here rather than "it is
+                    signed, trust us". The expected identity is stated so the
+                    output has something to be compared against. */}
+                <p>macOS 的签名可以在装好后自己验：</p>
+                <pre class="code-block" tabindex="0" role="group" aria-label="macOS 签名核验命令"><code>spctl -a -vv -t exec /Applications/BootAgent.app</code></pre>
+                <p class="prose-fine">预期输出 <code>accepted</code>，来源 <code>Notarized Developer ID</code>，签名者 Team ID 与上面一致。</p>
+              </>
+            )}
             {/* 构建来源不在发行元数据里。原生构建与 cleanroom 复核由发布流程执行并记录在
-                仓库中，这个页面只声明它能证明的部分：已发布产物的摘要。 */}
+                仓库中，这个页面只声明它能证明的部分：已发布产物的摘要与签名。 */}
             <p class="prose-fine">原生构建与 cleanroom 复核的结论记录在发布流程里，不由这个页面代为断言。</p>
           </>
         ) : (
@@ -64,7 +84,7 @@ const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact
           <h2 id="stable">Stable 门禁</h2>
           <p>每个平台各自达标后独立进入 Stable，不必等其他平台。</p>
           <ul>
-            <li>macOS：Developer ID 签名、公证、stapled ticket</li>
+            <li>macOS：Developer ID 签名、公证、stapled ticket——自 v0.7.0 起已达成</li>
             <li>Windows：有效的 Authenticode 签名</li>
             <li>所有平台：原生构建与 cleanroom 证据</li>
           </ul>
@@ -75,7 +95,7 @@ const publishedArtifact = publishedTarget?.artifacts.find((artifact) => artifact
             <li>VPN、代理节点，或绕过网络限制的指导</li>
             <li>共享 API Key、统一模型网关、模型或 API 转售</li>
             <li>未授权的 Agent 二进制与渠道定制包</li>
-            <li>把未签名预览版说成 Stable 或安全认证版本</li>
+            <li>把技术预览版说成 Stable 或安全认证版本</li>
           </ul>
         </div>
       </article>

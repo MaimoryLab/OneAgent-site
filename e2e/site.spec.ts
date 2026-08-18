@@ -409,7 +409,7 @@ test("download center recommends an available artifact but keeps manual choices"
      platform panel is in the DOM with only CSS hiding the inactive ones, so an
      unscoped match was passing on the coincidence that one platform had an
      artifact; with four published it resolves to four nodes and fails strict mode. */
-  await expect(active.getByText("未签名、未公证", { exact: true })).toBeVisible();
+  await expect(active.getByText("Developer ID 签名 + Apple 公证", { exact: true })).toBeVisible();
 
   /* Windows shipping is the substance of the v0.3.0 sync, so it is asserted
      rather than left implied: the parsing bug that prompted this dropped three of
@@ -417,6 +417,10 @@ test("download center recommends an available artifact but keeps manual choices"
      have caught it. */
   await platform("windows-x64").check();
   await expect(active.locator(".hash-value")).toHaveText(/^[a-f0-9]{64}$/);
+  /* Signing diverged by platform at v0.7.0: notarised macOS above, unsigned
+     Windows here. Asserting both directions keeps a later "simplification" from
+     collapsing the per-target value back into one channel-wide claim. */
+  await expect(active.getByText("未签名", { exact: true })).toBeVisible();
 });
 
 /* Security and enterprise came out of the chrome, but the pages did not go
@@ -540,28 +544,31 @@ test("download page states the channel and links to the official release", async
      DOM and only CSS hides the inactive ones, so an unscoped text match resolves
      against a hidden copy first and fails on visibility. */
   const active = page.locator("[data-release-panel].is-active");
-  await expect(active.getByText("未签名技术预览版", { exact: true })).toBeVisible();
+  await expect(active.getByText("技术预览版", { exact: true })).toBeVisible();
   await expect(active.locator(".hash-value")).toHaveText(/^[a-f0-9]{64}$/);
   const download = active.getByRole("link", { name: /下载 .* 预览版/ });
   await expect(download).toHaveAttribute("href", /^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\//);
 });
 
-/* The Gatekeeper guide replaced a promise the site made in five places: that it
-   documented no way around the OS security policy. Reversing that was a decision,
-   so the shape of what replaced it is asserted rather than left to review.
+/* The Gatekeeper guide's own copy promised its removal — "签名与公证完成后，上面
+   四步都不再需要，届时这份指南也会撤下" — and v0.7.0's notarised macOS builds
+   called that promise due. What this test guarded before was the shape of the
+   bypass walkthrough; what it guards now is the shape of what replaced it.
  *
- * The load-bearing part is the boundary. Telling a reader how to allow one app is
- * a different act from telling them to disable Gatekeeper, and the second must
- * never appear — including by someone later "simplifying" the guide into a
- * one-line spctl command, which is the shortcut this test exists to block. */
+ * The load-bearing parts: the #macos-gatekeeper anchor keeps resolving (the
+ * download page and external links still point at it); the walkthrough stays
+ * gone rather than creeping back for "just one more release"; and the boundary
+ * promise — BootAgent never asks for `spctl --master-disable` — survives the
+ * rewrite, since that sentence is the half of the old guide that was never
+ * conditional on signing. */
 for (const [locale, path] of [["zh", "/quickstart/"], ["en", "/en/quickstart/"]] as const) {
-  test(`${locale} first-launch guide allows one app without weakening the system`, async ({ page }) => {
+  test(`${locale} first-launch section states the signed reality without weakening the system`, async ({ page }) => {
     await page.goto(path);
 
     /* The side index is display:none below the desktop breakpoint, so navigating
        through it only proves anything where it is rendered. Where it is hidden the
        heading still has to be reachable by fragment — that is the link the
-       download page and the page's own warning notice both point at. */
+       download page points at. */
     const index = page.locator(".side-index").getByRole("link", { name: /macOS/ });
     if (await index.isVisible()) {
       await index.click();
@@ -570,32 +577,24 @@ for (const [locale, path] of [["zh", "/quickstart/"], ["en", "/en/quickstart/"]]
     }
     await expect(page.locator("#macos-gatekeeper")).toBeVisible();
 
-    /* Never present, in either language. `spctl --master-disable` turns Gatekeeper
-       off machine-wide, which is exactly what the surviving half of the promise
-       says BootAgent will not ask for. */
+    /* Exactly one mention, inside <code>: the promise that BootAgent never asks
+       for it. `spctl --master-disable` turns Gatekeeper off machine-wide, which
+       must never appear as an instruction. */
     await expect(page.getByText("spctl --master-disable", { exact: false })).toHaveCount(1);
     await expect(page.locator("code", { hasText: "spctl --master-disable" })).toBeVisible();
 
-    // Four steps, each with a screenshot that actually resolves.
-    const steps = page.locator(".guide-steps > li");
-    await expect(steps).toHaveCount(4);
-    const images = page.locator(".guide-steps img");
-    await expect(images).toHaveCount(4);
-    const count = await images.count();
-    for (let index = 0; index < count; index += 1) {
-      const image = images.nth(index);
-      /* naturalWidth is 0 for an image that 404ed, which is how a base-path
-         mistake shows up — the English page is under /en/, so a relative src
-         would resolve to a path that does not exist. */
-      await expect
-        .poll(() => image.evaluate((node) => (node as HTMLImageElement).naturalWidth))
-        .toBeGreaterThan(0);
-      // Screenshots carry meaning here, so none may ship with an empty alt.
-      await expect(image).not.toHaveAttribute("alt", "");
-    }
+    // The bypass walkthrough came down with v0.7.0 and must not return.
+    await expect(page.locator(".guide-steps")).toHaveCount(0);
 
-    // The trade-off is stated rather than buried: signing removes the need for this.
-    await expect(page.getByText(locale === "zh" ? /签名与公证完成后/ : /Once signing and notarisation are done/)).toBeVisible();
+    // The section leads with the verifiable claim, not the old block.
+    await expect(
+      page.getByText(locale === "zh" ? /已通过 Apple 公证/ : /notarised by Apple/).first(),
+    ).toBeVisible();
+    /* Readers of v0.6.x-era downloads are routed to an upgrade rather than
+       taught an allowance for an unsigned build. */
+    await expect(
+      page.locator("#macos-gatekeeper ~ p").getByRole("link", { name: locale === "zh" ? /升级到当前版本/ : /upgrade to the current version/ }),
+    ).toBeVisible();
   });
 }
 

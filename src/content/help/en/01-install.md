@@ -1,8 +1,8 @@
 ---
 title: Installing and first launch
-description: How to install on each platform, what the operating system blocks on first launch, and what BootAgent writes to your machine.
+description: How to install on each platform, the release's signing state, and what BootAgent writes to your machine.
 order: 1
-summary: What differs per platform, and how to get past the first-launch block.
+summary: What differs per platform, including each platform's signing state.
 ---
 
 If you only want to get one agent working, read [Quickstart](/en/quickstart/) instead — that is the six-step shortest path. This page covers what it leaves out: the differences between platforms, and what BootAgent actually writes to your machine.
@@ -13,15 +13,15 @@ The [download centre](/en/downloads/) recommends a build for your system, but ev
 
 Verifying the hash is worth doing. The command is on the download page; if the value you compute does not match the page, do not run the file.
 
-## macOS blocks the first launch
+## macOS: signed and notarised
 
-This is not a failure. What ships today is an unsigned, unnotarised technical preview, so Gatekeeper stops it the first time you open it. [Quickstart](/en/quickstart/) has four screenshots walking through how to allow it.
+From v0.7.0 the macOS artifact carries a Developer ID signature and Apple notarisation. Open the DMG, drag the app into Applications and launch it normally — there is no "cannot verify the developer" block any more.
 
-You only do this once. The step disappears once signing and notarisation are done, and until then BootAgent will not document any way around your operating system's security policy.
+If you are opening v0.6.x or an earlier preview, Gatekeeper still stops it — those packages were unsigned. Do not add an allowance for an old build; [upgrade to the current version](/en/downloads/) instead. BootAgent will not document any way around your operating system's security policy.
 
 ## Windows and Linux
 
-Windows Authenticode signing is not done either, so SmartScreen may warn about an unknown publisher on first run. Handle it the same way as on macOS.
+Windows Authenticode signing is not done yet, so SmartScreen may warn about an unknown publisher on first run. Confirm the download source and the SHA-256 before continuing.
 
 Linux has no system-level signing gate. Download it, make it executable, run it.
 

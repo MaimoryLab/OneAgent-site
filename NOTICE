@@ -46,15 +46,6 @@ and in MaimoryLab/BootAgent is rendered from that definition rather than traced
 from a bitmap. bootagent-logo.png is the 1024px rendering of it and is kept as
 the source of record even though nothing on the site references it directly.
 
-Screenshots under public/images/guide/ are screen captures of macOS system UI,
-showing what the operating system displays when it blocks an unsigned
-application. The interface elements pictured are the property of Apple Inc. They
-are included to document the operating system's own behaviour, which the
-first-launch guide cannot be followed without; no endorsement or affiliation is
-implied. Each one's contents and SHA-256 are recorded in
-public/images/guide/asset-rights.json. They contain no account name, device name
-or other identifying detail.
-
 ================================================================================
 Third-party trademarks
 ================================================================================

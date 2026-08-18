@@ -4,10 +4,11 @@
 > and configures CLI coding agents to point at an OpenAI- or Anthropic-compatible
 > provider of your choosing. Everything runs locally.
 
-No release has been published yet. When one is, it will be an unsigned,
-unnotarised technical preview, and is never described as stable. The download
-page reads the GitHub Releases feed at build time, so it states the real state
-rather than a version recorded here.
+Releases ship through GitHub Releases as a technical preview, never described
+as stable. The macOS builds are Developer ID-signed and notarised by Apple
+since v0.7.0; the Windows installers are not yet Authenticode-signed. The
+download page reads the GitHub Releases feed at build time, so it states the
+real state rather than a version recorded here.
 
 ## Product boundary
 

@@ -19,9 +19,9 @@ const checksumUrl =
   channel?.targets.flatMap((target) => target.artifacts).find((artifact) => artifact.checksumUrl)?.checksumUrl ?? null;
 ---
 <BaseLayout
-  title={published ? "下载 BootAgent — 未签名技术预览版" : "下载 BootAgent — 尚未公开发行"}
+  title={published ? "下载 BootAgent — 技术预览版" : "下载 BootAgent — 尚未公开发行"}
   description={published
-    ? "下载 BootAgent 技术预览版，每个产物都附 GitHub Releases 报告的 SHA-256。"
+    ? "下载 BootAgent 技术预览版：macOS 版已签名并经 Apple 公证，每个产物都附 GitHub Releases 报告的 SHA-256。"
     : "BootAgent 尚未公开发行。这里会列出各平台产物、体积与 SHA-256，供下载前核对。"}
 >
   <header class="page-hero">
@@ -59,14 +59,13 @@ const checksumUrl =
       )}
       <p>算出来的值和页面不一致？别运行它，把下载地址、文件名和实际哈希发到支持页面。</p>
       <h3>当前是技术预览版</h3>
-      <p>macOS Developer ID 公证与 Windows Authenticode 还没完成，所以它不叫 Stable。签名、公证与原生验证门禁齐备后，每个平台各自进入 Stable。</p>
-      {/* This used to promise the site documented no way around the OS security
-          policy. It now does, for macOS, because the alternative was readers
-          hitting a "移到废纸篓" dialog with no explanation and no path forward.
-          The promise is replaced rather than quietly dropped: what the site still
-          refuses to do is weaken the policy itself. */}
-      <p>因为未签名，macOS 首次打开会被 Gatekeeper 拦截。<a href="quickstart/#macos-gatekeeper">macOS 首次打开指南</a>说明这一步放行了什么、以及为什么签名版发布后就不再需要它。</p>
-      <p>BootAgent 不会让你关闭 Gatekeeper、执行 <code>spctl --master-disable</code> 或降低系统整体安全设置；上述流程只针对这一个应用，且由你逐步确认。</p>
+      <p>macOS 版自 v0.7.0 起带 Developer ID 签名并通过 Apple 公证，首次打开不再被 Gatekeeper 拦截。Windows 的 Authenticode 签名还没完成，SmartScreen 会提示一次；签名与验证门禁齐备后，每个平台各自进入 Stable。</p>
+      {/* The four-step Gatekeeper bypass came down with v0.7.0, as its own copy
+          promised it would. The link stays for readers still holding a v0.6.x
+          download: the guide now tells them to upgrade rather than teaching an
+          allowance no current build needs. */}
+      <p>还在运行 v0.6.x 或更早的历史预览版？那些包未签名，macOS 会拦截首次打开——<a href="quickstart/#macos-gatekeeper">macOS 首次打开说明</a>解释了原因，以及为什么现在直接升级比放行旧版更好。</p>
+      <p>BootAgent 不会让你关闭 Gatekeeper、执行 <code>spctl --master-disable</code> 或降低系统整体安全设置。</p>
     </div>
   </section>
 </BaseLayout>

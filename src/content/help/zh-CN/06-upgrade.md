@@ -51,6 +51,6 @@ BootAgent 托管安装的 Agent 默认装最新版本，所以更新就是重新
 
 ## 当前还是技术预览版
 
-macOS 的公证和 Windows 的签名都还没完成，所以升级到新版本后，首次打开可能仍然会被系统拦一次，处理方式和[首次安装](/help/01-install/)时一样。
+macOS 版自 v0.7.0 起已签名并经 Apple 公证，升级后首次打开不再被系统拦截。Windows 的 Authenticode 签名还没完成，升级后 SmartScreen 仍可能提示一次，处理方式和[首次安装](/help/01-install/)时一样。
 
-签名完成之后这个步骤会消失。在那之前 BootAgent 不会提供任何降低你系统安全策略的绕过方法。
+BootAgent 不会提供任何降低你系统安全策略的绕过方法。

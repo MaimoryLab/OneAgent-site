@@ -64,6 +64,6 @@ If it fails repeatedly on a mainland-China network, check whether a proxy or fir
 
 ## Still a technical preview
 
-macOS notarisation and Windows signing are not finished, so after upgrading, the first launch may be blocked once by the operating system again. Handle it the way you did at [first install](/en/help/01-install/).
+The macOS build is signed and notarised by Apple since v0.7.0, so upgrading no longer triggers a first-launch block there. Windows Authenticode signing is not finished, so SmartScreen may still warn once after an upgrade — handle it the way you did at [first install](/en/help/01-install/).
 
-That step disappears once signing is complete. Until then BootAgent will not document any way around your operating system's security policy.
+BootAgent will not document any way around your operating system's security policy.
