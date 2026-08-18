@@ -36,7 +36,7 @@ const href = (path: string) => localePath("zh-CN", path);
             the brand rather than as a nav affordance. aria-hidden on the SVG
             inside BrandMark, so the name beside it carries the text. */}
         <p class="hero-brand"><span class="hero-brand-mark"><BrandMark size={44} /></span><span>BootAgent</span></p>
-        <p class="eyebrow">Local-first · Bring your own key</p>
+        <p class="eyebrow">本地优先 · 自带 API Key</p>
         <h1 class="display">一个入口，<br /><em>激活你的 AI 开发环境。</em></h1>
       </div>
       <div class="hero-side">
@@ -52,11 +52,11 @@ const href = (path: string) => localePath("zh-CN", path);
   <section class="section">
     <div class="shell reveal">
       <div class="section-heading">
-        <div><p class="eyebrow">One activation path</p><h2 class="section-title">检测、连接、验证，每一步都能解释。</h2></div>
+        <div><p class="eyebrow">激活流程</p><h2 class="section-title">检测、连接、验证，每一步都能解释。</h2></div>
         <p>配置、备份与凭证都留在本机。任何写入之前，先验证这个 Agent 真正需要的那个协议。</p>
       </div>
       <div class="steps">
-        <article class="step"><h3>识别环境</h3><p>已安装、待配置、只能走官方流程——三种状态分开列出，而不是压成一个勾。</p></article>
+        <article class="step"><h3>识别环境</h3><p>已安装、待配置、只能走官方流程——三种状态分开列出，装了和配好了是两件事。</p></article>
         <article class="step"><h3>连接 Provider</h3><p>按 Agent 所需协议筛选 Provider，也可以填你自己的端点。兼容等级逐项标明。</p></article>
         <article class="step"><h3>验证并复核</h3><p>验证通过后，给出 Ready 状态、写入位置、备份情况和下一条命令。</p></article>
       </div>
@@ -66,7 +66,7 @@ const href = (path: string) => localePath("zh-CN", path);
   <section class="section section-muted">
     <div class="shell reveal">
       <div class="section-heading">
-        <div><p class="eyebrow">Compatibility catalog</p><h2 class="section-title">真实目录，不用一张静态兼容表糊弄你。</h2></div>
+        <div><p class="eyebrow">兼容目录</p><h2 class="section-title">目录来自真实仓库数据，不是一张静态兼容表。</h2></div>
         <p>{availableAgents.length} 个 Agent（{cliCount} 个命令行、{desktopCount} 个桌面端）、{catalog.providers.length} 个公开 Provider，以及 OpenAI Responses、Anthropic Messages 与 Chat Completions 的独立兼容状态。</p>
       </div>
       <div class="agent-list">

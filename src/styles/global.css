@@ -343,7 +343,10 @@ button, select { color: inherit; }
   border: 1px solid var(--line-strong);
   border-radius: 15px;
 }
-.eyebrow { margin: 0 0 14px; color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+/* Sentence case, not the uppercase-tracked cap it used to be: the tracked-caps
+   eyebrow reads as template chrome, and against CJK headings it forced every
+   label into English to survive the styling. Chinese labels now sit here. */
+.eyebrow { margin: 0 0 14px; color: var(--accent); font-size: 13px; font-weight: 650; letter-spacing: .02em; }
 .display {
   margin: 0;
   max-width: 900px;

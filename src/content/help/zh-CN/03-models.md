@@ -21,7 +21,7 @@ summary: 换模型的四步操作，以及换完之后每个 Agent 各自要做�
 BootAgent 不维护一份写死的模型清单。它去问 Provider 的接口当前有哪些模型可用，所以：
 
 - Provider 上了新模型，你立刻能选到，不用等 BootAgent 更新
-- 如果某个 Provider 不提供模型列表接口，BootAgent 会让你手动输入模型 ID，而不是假装列表为空
+- 如果某个 Provider 不提供模型列表接口，BootAgent 会直接让你手动输入模型 ID
 
 ## 换完之后要做什么
 
