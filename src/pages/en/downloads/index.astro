@@ -19,8 +19,7 @@ const published = channel?.targets.some((target) => target.status === "available
     <div class="shell page-hero-grid">
       <div>
         <nav class="breadcrumb" aria-label="Breadcrumb"><a href={localePath("en", "")}>Home</a> / Downloads</nav>
-        <p class="eyebrow">Download center</p>
-        <h1 class="page-title">{published ? "Pick your platform and get started." : "There is nothing to download yet."}</h1>
+        <h1 class="page-title">{published ? "Download BootAgent" : "There is nothing to download yet."}</h1>
       </div>
       <div class="page-hero-aside">
         <strong>No BootAgent account required</strong>
@@ -35,7 +34,7 @@ const published = channel?.targets.some((target) => target.status === "available
   </section>
   <section class="section section-muted">
     <div class="narrow prose">
-      <p class="eyebrow">Integrity</p>
+      <p class="eyebrow">Release integrity</p>
       <h2 class="section-title">{published ? "The SHA-256 on this page is here so you can check it yourself." : "Once released, the SHA-256 on this page is here so you can check it yourself."}</h2>
       {/* The old copy claimed byte-identical files across this site, GitHub
           Releases, a file host and an internal drive. Only one of those exists:

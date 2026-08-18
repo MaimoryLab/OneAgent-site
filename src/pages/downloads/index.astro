@@ -28,8 +28,7 @@ const checksumUrl =
     <div class="shell page-hero-grid">
       <div>
         <nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / 下载</nav>
-        <p class="eyebrow">Download center</p>
-        <h1 class="page-title">{published ? "选好平台，直接开始。" : "还没有可下载的产物。"}</h1>
+        <h1 class="page-title">{published ? "下载 BootAgent" : "还没有可下载的产物。"}</h1>
       </div>
       <div class="page-hero-aside">
         <strong>无需 BootAgent 账号</strong>
@@ -44,7 +43,7 @@ const checksumUrl =
   </section>
   <section class="section section-muted">
     <div class="narrow prose">
-      <p class="eyebrow">Integrity</p>
+      <p class="eyebrow">发行完整性</p>
       <h2 class="section-title">{published ? "页面上的 SHA-256 让你可以自己核对。" : "发行之后，页面上的 SHA-256 让你可以自己核对。"}</h2>
       {/* The old copy claimed byte-identical files across "官网、GitHub Release、
           网盘和企业云盘". Only one of those channels exists: the download page

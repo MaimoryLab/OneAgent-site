@@ -35,7 +35,6 @@ const slugOf = (entry: CollectionEntry<"help">) => entry.id.replace(/^[^/]+\//, 
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href={localePath("en", "")}>Home</a> / <a href={localePath("en", "help/")}>Help</a> / {article.data.title}
         </nav>
-        <p class="eyebrow">Help</p>
         <h1 class="page-title">{article.data.title}</h1>
       </div>
       <div class="page-hero-aside"><strong>{article.data.summary}</strong></div>

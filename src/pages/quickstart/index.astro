@@ -6,8 +6,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <div class="shell page-hero-grid">
       <div>
         <nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / 快速开始</nav>
-        <p class="eyebrow">Six deliberate steps</p>
-        <h1 class="page-title">第一次成功，不需要先理解每个配置文件。</h1>
+        <h1 class="page-title">六步完成第一次激活</h1>
       </div>
       <div class="page-hero-aside"><strong>目标</strong>完成一个 Agent、一个 Provider 和一个实际模型协议的配置，并知道 BootAgent 写了什么。</div>
     </div>
@@ -33,7 +32,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <p>如果你打开的是 v0.6.x 或更早的历史预览版，Gatekeeper 仍会拦截它——那些包没有签名。不要为旧版本添加放行例外：<a href="downloads/">升级到当前版本</a>，拦截随签名一起消失。</p>
         <p>这条边界不变：BootAgent 从不要求你执行 <code>spctl --master-disable</code>、关闭 Gatekeeper 或降低系统整体安全设置。</p>
         <h2 id="agent">3. 选择 Agent</h2>
-        <p>选择你真正要使用的工具。标记为“官方安装引导”的 Agent 仍可进入流程，但 BootAgent 不会把它们伪装成自动安装或自动配置。</p>
+        <p>选择你真正要使用的工具。标记为“官方安装引导”的 Agent 仍可进入流程，安装与配置由官方渠道完成，BootAgent 如实标注这一点。</p>
         <h2 id="provider">4. 连接自己的 Provider</h2>
         <p>选择 Provider 或自定义兼容端点，并使用你自己的 API Key。BootAgent 不提供共享 Key，不建立统一模型网关，也不代收模型费用。</p>
         <h2 id="probe">5. 测试真实协议</h2>

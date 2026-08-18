@@ -28,7 +28,7 @@ const protocolStatusNotes: Record<string, string> = {
 <BaseLayout title={`${provider.name} Provider — BootAgent`} description={`${provider.name} 在 BootAgent 中的公开协议接入和商业关系披露。`}>
   <header class="page-hero">
     <div class="shell page-hero-grid">
-      <div><nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / <a href="providers/">Provider</a> / {provider.name}</nav><p class="eyebrow">Provider profile</p><h1 class="page-title">{provider.name}</h1></div>
+      <div><nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / <a href="providers/">Provider</a> / {provider.name}</nav><h1 class="page-title">{provider.name}</h1></div>
       <div class="page-hero-aside"><strong>{provider.relationship === "none" ? "当前无商业合作" : provider.disclosure}</strong>商业关系数据与兼容性数据独立，不能影响默认排序或技术结论。</div>
     </div>
   </header>

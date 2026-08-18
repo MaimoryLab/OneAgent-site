@@ -10,8 +10,7 @@ import { localePath } from "../../../i18n";
     <div class="shell page-hero-grid">
       <div>
         <nav class="breadcrumb" aria-label="Breadcrumb"><a href={localePath("en", "")}>Home</a> / Quickstart</nav>
-        <p class="eyebrow">Six deliberate steps</p>
-        <h1 class="page-title">Succeed once, without reading every config file first.</h1>
+        <h1 class="page-title">Six steps to a first activation</h1>
       </div>
       <div class="page-hero-aside">
         <strong>Goal</strong>
@@ -40,7 +39,7 @@ import { localePath } from "../../../i18n";
         <p>If you are opening v0.6.x or an earlier preview, Gatekeeper still blocks it — those packages were unsigned. Do not add an exception for an old build: <a href={localePath("en", "downloads/")}>upgrade to the current version</a> and the block disappears with the signature.</p>
         <p>The boundary has not moved: BootAgent never asks you to run <code>spctl --master-disable</code>, disable Gatekeeper, or lower your system-wide security settings.</p>
         <h2 id="agent">3. Choose an agent</h2>
-        <p>Choose the tool you actually intend to use. Agents marked “official guide” still go through the flow, but BootAgent will not dress them up as automatically installed or configured.</p>
+        <p>Choose the tool you actually intend to use. Agents marked “official guide” still go through the flow; their install and configuration happen through the vendor's own channel, and BootAgent labels that plainly.</p>
         <h2 id="provider">4. Connect your own provider</h2>
         <p>Choose a provider or a custom compatible endpoint, and use your own API key. BootAgent offers no shared key, builds no unified model gateway, and never bills you for model usage.</p>
         <h2 id="probe">5. Test the real protocol</h2>
