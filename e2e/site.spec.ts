@@ -344,8 +344,8 @@ test("Explorer filters only catalog-backed combinations", async ({ page }) => {
  * a hardcoded list. Upstream v0.3.0 shipped openclaw and hermes, which this test
  * used to name as planned — so a fixed list turns the invariant into a fact about
  * one release, and the test fails for the wrong reason the next time the catalog
- * moves. `planned-agents.json` is legitimately empty today, and an empty planned
- * set is a vacuous pass, which is the honest outcome: there is nothing to exclude. */
+ * moves. An empty planned set is a vacuous pass, which is the honest outcome:
+ * there is nothing to exclude. */
 test("Explorer leaves coming-soon agents out of the verdict grid", async ({ page }) => {
   const planned = Object.keys(
     (JSON.parse(readFileSync("data/planned-agents.json", "utf8")) as { agents: Record<string, unknown> }).agents,

@@ -9,6 +9,11 @@ import { binaryArtifact, getPreviewChannel, primaryDownload } from "../lib/relea
    panels that look like a broken page. */
 const channel = await getPreviewChannel();
 const defaultTarget = channel?.targets.find((target) => target.status === "available") ?? channel?.targets[0] ?? null;
+/* The sidebar notice describes macOS signing, so it reads the same per-target
+   state the signing row reads. A constant here would contradict that row the
+   moment the feed serves a pre-0.7.0 release — a rollback, or a fork publishing
+   unsigned builds, both of which RELEASE_REPOSITORY exists to allow. */
+const macosSigning = channel?.targets.find((target) => target.platform === "macos")?.signing ?? null;
 const locale = localeFromPath(Astro.url.pathname);
 const href = (path: string) => localePath(bestLocaleFor(locale, path), path);
 const c = locale === "en"
@@ -18,7 +23,9 @@ const c = locale === "en"
       pending: "Verifying",
       detected: "Showing the platform that is currently downloadable; you can switch at any time.",
       notStableTitle: "This is not stable yet",
-      notStableBody: "The macOS build is Developer ID-signed and notarised by Apple, so the first launch opens normally. The Windows build carries no Authenticode signature yet, so SmartScreen warns once about an unknown publisher. Each platform reaches stable on its own once its signing and verification evidence are complete — until then, verify the SHA-256 after downloading.",
+      notStableBody: macosSigning === "notarized"
+        ? "The macOS build is Developer ID-signed and notarised by Apple, so the first launch opens normally. The Windows build carries no Authenticode signature yet, so SmartScreen warns once about an unknown publisher. Each platform reaches stable on its own once its signing and verification evidence are complete — until then, verify the SHA-256 after downloading."
+        : "This macOS build predates signing, so Gatekeeper blocks its first launch — prefer the newest release, whose macOS builds are signed and notarised from v0.7.0 on. Verify the SHA-256 after downloading. BootAgent never asks you to disable Gatekeeper or weaken your system-wide settings.",
       verified: "Verified and downloadable",
       version: "Version",
       channelLabel: "Release channel",
@@ -56,7 +63,9 @@ const c = locale === "en"
       pending: "验证中",
       detected: "已优先显示当前可下载的平台；你可以随时手动切换。",
       notStableTitle: "还不叫 Stable",
-      notStableBody: "macOS 版已由 Developer ID 签名并经 Apple 公证，首次打开不再被拦截。Windows 版尚未完成 Authenticode 签名，SmartScreen 会提示一次“未知发布者”。按 Stable 门禁，每个平台在签名与验证证据齐备后各自转正——在那之前，下载后请核对 SHA-256。",
+      notStableBody: macosSigning === "notarized"
+        ? "macOS 版已由 Developer ID 签名并经 Apple 公证，首次打开不再被拦截。Windows 版尚未完成 Authenticode 签名，SmartScreen 会提示一次“未知发布者”。按 Stable 门禁，每个平台在签名与验证证据齐备后各自转正——在那之前，下载后请核对 SHA-256。"
+        : "这个 macOS 版本早于签名交付，首次打开会被 Gatekeeper 拦截——请优先使用最新版本，macOS 产物自 v0.7.0 起已签名并公证。下载后请核对 SHA-256。BootAgent 不会要求你关闭 Gatekeeper 或降低系统整体安全设置。",
       verified: "已验证可下载",
       version: "版本",
       channelLabel: "发行渠道",

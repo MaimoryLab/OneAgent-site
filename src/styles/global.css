@@ -684,8 +684,8 @@ button, select { color: inherit; }
   .product-shot {
     animation: hero-rise 620ms var(--ease-enter) both;
   }
-  /* The lockup leads, so it takes the undelayed start and everything below it
-     keeps the stagger it had when the eyebrow was first. */
+  /* The lockup leads with the undelayed start; everything below steps down at
+     the cadence the stagger has always used. */
   .hero .eyebrow { animation-delay: 70ms; }
   .hero .display { animation-delay: 140ms; }
   .hero .lede { animation-delay: 220ms; }
