@@ -1,5 +1,11 @@
 {
   "schema_version": 1,
   "note": "Agents BootAgent intends to support but does not ship yet. These are NOT in agents.lock.json — upstream removed them from the installer contract, so nothing here claims installable or configurable support. Kept visible because a reader comparing tools should see what is coming rather than find it absent. Move an entry into agents.lock.json (by refreshing the vendored copy) when upstream ships it, and delete it from here.",
-  "agents": {}
+  "agents": {
+    "dsh": {
+      "name": "DeepSeek Harness",
+      "group": "auto",
+      "rank": 1
+    }
+  }
 }

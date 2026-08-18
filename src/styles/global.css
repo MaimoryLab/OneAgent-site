@@ -329,6 +329,20 @@ button, select { color: inherit; }
 .button-text:hover { transform: translateX(3px); }
 .button[aria-disabled="true"] { color: var(--ink-faint); background: var(--paper-strong); border-color: var(--line); cursor: not-allowed; transform: none; }
 
+/* The home page's brand lockup. Same construction as .wordmark in the header —
+   plate, ring in --ink, stem in --brand — at display size and without the hover
+   state, since it is not a link. */
+.hero-brand { display: inline-flex; align-items: center; gap: 14px; margin: 0 0 22px; font-size: clamp(20px, 2.4vw, 26px); font-weight: 650; letter-spacing: -0.02em; }
+.hero-brand-mark {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 15px;
+}
 .eyebrow { margin: 0 0 14px; color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .display {
   margin: 0;
@@ -360,30 +374,6 @@ button, select { color: inherit; }
 .prose th, .prose td { padding: 9px 14px 9px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
 .prose th { color: var(--ink); font-weight: 600; border-bottom-color: var(--line-strong); white-space: nowrap; }
 .prose tbody tr:last-child td { border-bottom: none; }
-/* Numbered walkthroughs that pair a step with a screenshot. The counter is kept
-   visible outside the measure so the images can be wider than the text column
-   without the numbers drifting away from them. */
-.guide-steps { margin: 28px 0 0; padding: 0; list-style: none; counter-reset: guide-step; }
-.guide-steps > li { position: relative; margin-top: 28px; padding-left: 44px; counter-increment: guide-step; }
-.guide-steps > li::before {
-  content: counter(guide-step);
-  position: absolute; top: 1px; left: 0;
-  display: grid; place-items: center;
-  width: 28px; height: 28px;
-  border: 1px solid var(--line-strong); border-radius: 50%;
-  background: var(--surface); color: var(--ink);
-  font-size: 14px; font-variant-numeric: tabular-nums;
-}
-.guide-steps figure { margin: 14px 0 0; }
-/* Screenshots carry their intrinsic width/height so the layout does not shift as
-   they load; the cap here keeps the wide System Settings capture readable rather
-   than letting it span the whole column. */
-.guide-steps img {
-  display: block;
-  width: 100%; max-width: 460px; height: auto;
-  border: 1px solid var(--line); border-radius: 8px;
-  background: var(--surface);
-}
 /* Reference material that belongs on the page but should not compete with it:
    the boundary and gating facts a reader consults rather than reads through.
    Kept at full contrast — only the heading scale and leading step down. */
@@ -593,6 +583,10 @@ button, select { color: inherit; }
 .footer-brand p { max-width: 330px; margin: 17px 0 0; }
 .footer-brand .footer-fine { color: var(--ink-faint); }
 .footer-bottom { margin-top: 60px; padding-top: 18px; display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 11px; }
+/* Its own rule: the .footer-grid link styles above do not reach into this row. */
+.footer-bottom a { color: inherit; transition: color var(--dur-micro) var(--ease-apple); }
+.footer-bottom a:hover { color: var(--ink); }
+.footer-bottom a:active { color: var(--accent); transition-duration: 100ms; }
 
 @media (max-width: 920px) {
   .desktop-nav, .header-link { display: none; }
@@ -682,18 +676,20 @@ button, select { color: inherit; }
    quarter, that window is long enough to be read and short enough to be
    missed in review. Distance and curve carry the motion instead. */
 @media not (prefers-reduced-motion: reduce) {
+  .hero .hero-brand,
   .hero .eyebrow,
   .hero .display,
   .hero .lede,
   .hero .hero-actions,
-  .hero .hero-note,
   .product-shot {
     animation: hero-rise 620ms var(--ease-enter) both;
   }
-  .hero .display { animation-delay: 70ms; }
-  .hero .lede { animation-delay: 160ms; }
-  .hero .hero-actions { animation-delay: 230ms; }
-  .hero .hero-note { animation-delay: 290ms; }
+  /* The lockup leads, so it takes the undelayed start and everything below it
+     keeps the stagger it had when the eyebrow was first. */
+  .hero .eyebrow { animation-delay: 70ms; }
+  .hero .display { animation-delay: 140ms; }
+  .hero .lede { animation-delay: 220ms; }
+  .hero .hero-actions { animation-delay: 290ms; }
   .product-shot { animation-delay: 360ms; }
 }
 
@@ -702,17 +698,17 @@ button, select { color: inherit; }
 }
 
 /* Measured at 375px, the tightest gap between two staggered lines is 14px
-   (eyebrow→h1) and buttons→release-note is 18px. Any travel past that lets one
+   (eyebrow→h1). Any travel past that lets one
    line cross into the next mid-flight and obscure it, and a travel under it is
    too small to perceive — there is no distance that is both safe and visible
    once the hero stacks. So narrow screens animate the block as a whole: the
    lines keep their relative positions, so nothing can overlap. */
 @media (max-width: 680px) {
+  .hero .hero-brand,
   .hero .eyebrow,
   .hero .display,
   .hero .lede,
-  .hero .hero-actions,
-  .hero .hero-note { animation: none; }
+  .hero .hero-actions { animation: none; }
   .hero-copy { animation: hero-rise 520ms var(--ease-enter) both; }
   .product-shot { animation-delay: 180ms; }
 }

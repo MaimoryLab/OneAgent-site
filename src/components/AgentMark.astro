@@ -29,16 +29,17 @@ const markFiles: Record<string, string> = {
   "kilo-cli": "kilo-cli.svg",
   hermes: "hermes.svg",
   openclaw: "openclaw.svg",
+  dsh: "dsh.svg",
   "chatgpt-desktop": "codex.svg",
 };
-/* All six marks ship as fill="currentColor". Loaded through <img> the keyword
+/* Every mark ships as fill="currentColor". Loaded through <img> the keyword
    has no page to inherit from and falls back to black, which disappears on a
    dark ground — so they get inverted there.
 
    openclaw is here despite containing #000 and #fff: those are inside a <mask>,
    where black and white are channel values that punch out the eyes rather than
    colours that paint anything. Every visible path is currentColor like the rest. */
-const monochrome = new Set(["codex", "opencode", "claude-code", "kilo-cli", "hermes", "openclaw", "chatgpt-desktop"]);
+const monochrome = new Set(["codex", "opencode", "claude-code", "kilo-cli", "hermes", "openclaw", "dsh", "chatgpt-desktop"]);
 const markFile = markFiles[id];
 const imageSource = markFile ? `${import.meta.env.BASE_URL}images/agents/${markFile}` : null;
 ---

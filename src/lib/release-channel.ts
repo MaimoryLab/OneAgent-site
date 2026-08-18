@@ -53,6 +53,11 @@ export interface ReleaseTarget {
   arch: string;
   archLabel: string;
   status: TargetStatus;
+  /* Per platform, not per channel: as of v0.7.0 the macOS artifacts are
+     notarised while the Windows installers still carry no Authenticode
+     signature, so a single channel-wide "unsigned" flag would be wrong in one
+     direction or the other whichever way it pointed. */
+  signing: TargetSigning;
   verification: {
     native_build: boolean;
     cleanroom: "verified" | "not-recorded" | "failed";
@@ -63,12 +68,21 @@ export interface ReleaseTarget {
   artifacts: ReleaseArtifact[];
 }
 
+export type TargetSigning =
+  /** macOS: Developer ID signature + Apple notarisation, ticket stapled. */
+  | "notarized"
+  /** Windows: a valid Authenticode signature. Only ever true on the stable channel. */
+  | "signed"
+  /** The OS has a signature gate (Gatekeeper / SmartScreen) and the artifact carries no signature. */
+  | "unsigned"
+  /** Linux: no OS-level signature gate exists; the SHA-256 is the check. */
+  | "not-applicable";
+
 export interface ReleaseChannel {
   channel: string;
   label: string;
   published_at: string | null;
   version: string | null;
-  unsigned: boolean;
   status: "available" | "unavailable";
   targets: ReleaseTarget[];
 }
@@ -90,28 +104,69 @@ const plannedTargets: Array<{ id: string; platform: string; platformLabel: strin
   { id: "linux-arm64", platform: "linux", platformLabel: "Linux", arch: "arm64", archLabel: "ARM64" },
 ];
 
-const previewChannelId = "technical-preview-unsigned";
+const previewChannelId = "technical-preview";
 
-/* What separates Stable from the preview is signing: Developer ID notarisation on
-   macOS, Authenticode on Windows. GitHub's `prerelease` flag does not record
-   either, so it cannot be the input to that decision.
+/* What separates Stable from the preview is signing on every gated platform:
+   Developer ID notarisation on macOS AND Authenticode on Windows. GitHub's
+   `prerelease` flag records neither, so it cannot be the input to that decision.
  *
  * v0.3.0 is the case that proves it. It is marked `prerelease: false` and its tag
  * says nothing about a preview, so reading the flag alone labelled it 稳定版 — a
  * claim that the binaries are signed, which nothing verified. The release notes
  * mention no signing or notarisation step at all.
  *
- * So the default is the unsigned preview, and Stable requires positive evidence:
- * a tag that opts in explicitly (`+stable`, or a `signed` marker). Getting this
+ * So the default is the preview, and Stable requires positive evidence: a tag
+ * that opts in explicitly (`+stable`, or a `signed` marker). Getting this
  * backwards puts an unearned trust badge on the download page, which is worse
  * than under-claiming — the whole point of the page is that a reader can check
  * what they are running. */
 const stableTagMarker = /\+stable\b|[-.]signed\b/i;
 
-function channelOf(release: GitHubRelease): { channel: string; label: string; unsigned: boolean } {
+/* macOS artifacts are Developer ID-signed and Apple-notarised from v0.7.0 on.
+   The feed records nothing about signing, so this floor is the evidence-bearing
+   constant, established the only way it can be: by checking a published
+   artifact. Verified 2026-08-18 against both v0.7.0 DMGs (darwin-arm64 and
+   darwin-amd64):
+ *
+ *   codesign -dv  → Developer ID Application: steve li (F2VC757B28),
+ *                   flags=0x10000(runtime), Notarization Ticket=stapled
+ *   spctl -a -t exec → accepted, source=Notarized Developer ID
+ *   stapler validate → ticket valid
+ *
+ * Upstream moved signing into the release workflow (BootAgent#199), so the
+ * floor describes the pipeline, not one lucky release. If a macOS build ever
+ * ships unsigned again nothing here can detect it — this constant must be
+ * corrected by hand, the same way it was established.
+ *
+ * The same v0.7.0 check found no Authenticode certificate table in the Windows
+ * installers, which is why Windows stays `unsigned` and the channel as a whole
+ * remains a preview. */
+const macosNotarizedSince = [0, 7, 0] as const;
+
+function versionAtLeast(version: string, floor: readonly [number, number, number]): boolean {
+  /* A suffixed segment ("0-rc1") parses to its leading number, which reads a
+     pre-release as its base version. Acceptable: upstream has only ever tagged
+     plain versions, and the floor exists to separate whole eras, not RCs. */
+  const [major = 0, minor = 0, patch = 0] = version
+    .split(".")
+    .map((part) => Number.parseInt(part, 10))
+    .map((part) => (Number.isNaN(part) ? 0 : part));
+  if (major !== floor[0]) return major > floor[0];
+  if (minor !== floor[1]) return minor > floor[1];
+  return patch >= floor[2];
+}
+
+function signingFor(platform: string, version: string, stable: boolean): TargetSigning {
+  if (platform === "linux") return "not-applicable";
+  if (stable) return platform === "macos" ? "notarized" : "signed";
+  if (platform === "macos" && versionAtLeast(version, macosNotarizedSince)) return "notarized";
+  return "unsigned";
+}
+
+function channelOf(release: GitHubRelease): { channel: string; label: string; stable: boolean } {
   return stableTagMarker.test(release.tag_name)
-    ? { channel: "stable", label: "稳定版", unsigned: false }
-    : { channel: previewChannelId, label: "未签名技术预览版", unsigned: true };
+    ? { channel: "stable", label: "稳定版", stable: true }
+    : { channel: previewChannelId, label: "技术预览版", stable: false };
 }
 
 function artifactFor(asset: AssetTarget): ReleaseArtifact[] {
@@ -141,7 +196,8 @@ export async function getPreviewChannel(): Promise<ReleaseChannel | null> {
   const release = await getLatestRelease();
   if (!release) return null;
   const assets = releaseTargets(release);
-  const { channel, label, unsigned } = channelOf(release);
+  const { channel, label, stable } = channelOf(release);
+  const version = release.tag_name.replace(/^v/, "");
   const targets: ReleaseTarget[] = plannedTargets.map((planned) => {
     const asset = assets.find((candidate) => candidate.id === planned.id);
     const artifacts = asset ? artifactFor(asset) : [];
@@ -151,6 +207,7 @@ export async function getPreviewChannel(): Promise<ReleaseChannel | null> {
          `available`: the download page's whole claim is that you can check what
          you downloaded, and without a checksum you cannot. */
       status: !asset ? "planned" : artifacts.length > 0 ? "available" : "verification-pending",
+      signing: signingFor(planned.platform, version, stable),
       verification: { native_build: false, cleanroom: "not-recorded", evidence: "security/#release-evidence" },
       python: null,
       built_at: release.published_at,
@@ -161,8 +218,7 @@ export async function getPreviewChannel(): Promise<ReleaseChannel | null> {
     channel,
     label,
     published_at: release.published_at,
-    version: release.tag_name.replace(/^v/, ""),
-    unsigned,
+    version,
     status: targets.some((target) => target.status === "available") ? "available" : "unavailable",
     targets,
   };

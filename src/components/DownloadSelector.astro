@@ -17,17 +17,22 @@ const c = locale === "en"
       available: "Available",
       pending: "Verifying",
       detected: "Showing the platform that is currently downloadable; you can switch at any time.",
-      notStableTitle: "This is not stable",
-      notStableBody: "The current package is unsigned and unnotarised, so macOS blocks it on first launch. The quickstart explains how to allow this one app, and what that gives up. BootAgent never asks you to disable Gatekeeper or weaken your system-wide settings.",
+      notStableTitle: "This is not stable yet",
+      notStableBody: "The macOS build is Developer ID-signed and notarised by Apple, so the first launch opens normally. The Windows build carries no Authenticode signature yet, so SmartScreen warns once about an unknown publisher. Each platform reaches stable on its own once its signing and verification evidence are complete — until then, verify the SHA-256 after downloading.",
       verified: "Verified and downloadable",
       version: "Version",
       channelLabel: "Release channel",
       size: "File size",
       built: "Build date",
       signing: "Signing status",
-      unsigned: "Unsigned, unnotarised",
-      verification: "Verification",
-      verificationValue: "Native build + cleanroom passed",
+      /* Keyed by the per-target state the channel reports — signing diverged by
+         platform at v0.7.0, so a single string would be wrong somewhere. */
+      signingValue: {
+        "notarized": "Developer ID + Apple notarisation",
+        "signed": "Authenticode signed",
+        "unsigned": "Unsigned",
+        "not-applicable": "No OS signing gate",
+      } as const,
       download: (platform: string) => `Download the ${platform} preview`,
       quickstart: "Read the quickstart",
       sameBuildTitle: "You get the verified official build",
@@ -35,11 +40,11 @@ const c = locale === "en"
       checksumTitle: "macOS verification command",
       copy: "Copy",
       copied: "Copied",
-      cleanroomNote: "The cleanroom evidence applies to this file's exact SHA-256; any change to the package requires re-verification.",
+      cleanroomNote: "The digest identifies this exact file; any change to the package changes the SHA-256.",
       unavailableTitle: "This platform has no public release yet",
       unavailableBody: "The build workflow is in place, but until the native build, cleanroom evidence and release metadata are all present there is no empty download button and no CI artifact described as generally available.",
       progress: "See release progress",
-      channelValue: "Unsigned technical preview",
+      channelValue: "Technical preview",
       fallbackPlatform: "current platform",
       detectExact: "Detected as {full}. You can still switch manually.",
       detectArchOnly: "Detected as {name} {arch}, but there is no exact build for that architecture here — do not run a build for a mismatched architecture.",
@@ -50,17 +55,21 @@ const c = locale === "en"
       available: "可下载",
       pending: "验证中",
       detected: "已优先显示当前可下载的平台；你可以随时手动切换。",
-      notStableTitle: "这不是 Stable",
-      notStableBody: "当前包未签名、未公证，macOS 首次打开会被拦截。快速开始里说明了如何只为这一个应用放行，以及这样做放弃了什么。BootAgent 不会要求你关闭 Gatekeeper 或降低系统整体安全设置。",
+      notStableTitle: "还不叫 Stable",
+      notStableBody: "macOS 版已由 Developer ID 签名并经 Apple 公证，首次打开不再被拦截。Windows 版尚未完成 Authenticode 签名，SmartScreen 会提示一次“未知发布者”。按 Stable 门禁，每个平台在签名与验证证据齐备后各自转正——在那之前，下载后请核对 SHA-256。",
       verified: "已验证可下载",
       version: "版本",
       channelLabel: "发行渠道",
       size: "文件大小",
       built: "构建日期",
       signing: "签名状态",
-      unsigned: "未签名、未公证",
-      verification: "验证状态",
-      verificationValue: "原生构建 + cleanroom 通过",
+      /* 与英文同理：v0.7.0 起签名状态按平台分化，单一字符串必然在某个平台上说错。 */
+      signingValue: {
+        "notarized": "Developer ID 签名 + Apple 公证",
+        "signed": "Authenticode 签名",
+        "unsigned": "未签名",
+        "not-applicable": "平台无签名门禁",
+      } as const,
       download: (platform: string) => `下载 ${platform} 预览版`,
       quickstart: "查看快速开始",
       sameBuildTitle: "下载即得到被校验的官方同包产物",
@@ -68,11 +77,11 @@ const c = locale === "en"
       checksumTitle: "macOS 校验命令",
       copy: "复制",
       copied: "已复制",
-      cleanroomNote: "cleanroom 证据只对应此文件的精确 SHA-256；包体变化后必须重新验证。",
+      cleanroomNote: "摘要唯一对应此文件；包体任何变化都会改变 SHA-256。",
       unavailableTitle: "这个平台尚未公开发行",
       unavailableBody: "构建工作流已经保留，但在原生构建、cleanroom 证据和发行元数据齐备前，不提供空下载按钮，也不把 CI 产物描述为正式可用。",
       progress: "查看发行进度",
-      channelValue: "未签名技术预览版",
+      channelValue: "技术预览版",
       fallbackPlatform: "当前平台",
       detectExact: "已识别为 {full}；你仍可手动切换。",
       detectArchOnly: "已识别为 {name} {arch}，当前目录没有完全匹配的构建；请勿运行架构不匹配的包。",
@@ -149,8 +158,15 @@ const c = locale === "en"
                 <div><dt>{c.channelLabel}</dt><dd>{c.channelValue}</dd></div>
                 <div><dt>{c.size}</dt><dd>{formatBytes(artifact.bytes)}</dd></div>
                 <div><dt>{c.built}</dt><dd>{formatDate(target.built_at)}</dd></div>
-                <div><dt>{c.signing}</dt><dd>{c.unsigned}</dd></div>
-                <div><dt>{c.verification}</dt><dd>{c.verificationValue}</dd></div>
+                {/* Per-target: macOS is notarised from v0.7.0 while Windows is not,
+                    so the value comes from the channel rather than a constant.
+
+                    The row this replaced read "原生构建 + cleanroom 通过" for every
+                    target unconditionally — a claim the GitHub feed cannot support
+                    (it reports cleanroom as not-recorded), and exactly the kind of
+                    badge the release-channel module exists to prevent. The SHA-256
+                    block below is the verification a reader can actually run. */}
+                <div><dt>{c.signing}</dt><dd>{c.signingValue[target.signing]}</dd></div>
               </dl>
               <div class="download-action">
                 <a class="button button-primary" href={download.url} download>{c.download(target.platformLabel)}</a>

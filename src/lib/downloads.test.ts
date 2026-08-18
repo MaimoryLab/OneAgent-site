@@ -3,11 +3,10 @@ import { detectTargetFromUserAgent, formatBytes, releaseTargets, supportLabels }
 import { recommendedTargetIn, type ReleaseChannel } from "./release-channel";
 
 const channel: ReleaseChannel = {
-  channel: "technical-preview-unsigned",
-  label: "未签名技术预览版",
+  channel: "technical-preview",
+  label: "技术预览版",
   published_at: "2026-07-28T00:00:00Z",
   version: "0.2.0-dev",
-  unsigned: true,
   status: "available",
   targets: [
     {
@@ -17,6 +16,7 @@ const channel: ReleaseChannel = {
       arch: "arm64",
       archLabel: "Apple silicon / ARM64",
       status: "available",
+      signing: "unsigned",
       verification: { native_build: true, cleanroom: "verified", evidence: "security/" },
       python: "3.12.13",
       built_at: "2026-07-26T10:14:28Z",
@@ -38,6 +38,7 @@ const channel: ReleaseChannel = {
       arch: "x64",
       archLabel: "Intel / AMD 64-bit",
       status: "verification-pending",
+      signing: "unsigned",
       verification: { native_build: false, cleanroom: "not-recorded", evidence: null },
       python: null,
       built_at: null,

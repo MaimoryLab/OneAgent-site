@@ -10,9 +10,9 @@ const channel = await getPreviewChannel();
 const published = channel?.targets.some((target) => target.status === "available") ?? false;
 ---
 <BaseLayout
-  title={published ? "Download BootAgent — unsigned technical preview" : "Download BootAgent — not yet released"}
+  title={published ? "Download BootAgent — technical preview" : "Download BootAgent — not yet released"}
   description={published
-    ? "Download the BootAgent technical preview. Every artifact carries the SHA-256 reported by GitHub Releases."
+    ? "Download the BootAgent technical preview. The macOS build is signed and notarised by Apple; every artifact carries the SHA-256 reported by GitHub Releases."
     : "BootAgent has not been released publicly yet. This page will list each platform's artifact, size and SHA-256 so you can check it before downloading."}
 >
   <header class="page-hero">
@@ -44,13 +44,12 @@ const published = channel?.targets.some((target) => target.status === "available
       <p>Channels do not append promotional files, swap the install script, or re-sign the build.</p>
       <p>If the value you compute does not match the page, do not run the file. Send the download URL, the filename and the hash you actually got to the support page.</p>
       <h3>This is a technical preview</h3>
-      <p>macOS Developer ID notarisation and Windows Authenticode are not done yet, so it is not called stable. Each platform enters stable on its own once signing, notarisation and native verification are complete.</p>
-      {/* Replaced a promise that the site documented no way around the OS security
-          policy. It now does, for macOS: without it, a reader meets a "Move to
-          Trash" dialog with no explanation. What the site still refuses to do is
-          weaken the policy itself. */}
-      <p>Because it is unsigned, macOS blocks the first launch. The <a href={localePath("en", "quickstart/#macos-gatekeeper")}>first-launch guide</a> explains what allowing it grants, and why a signed build removes the need for it.</p>
-      <p>BootAgent will never ask you to disable Gatekeeper, run <code>spctl --master-disable</code>, or lower your system-wide security settings. That flow covers this one app and every step is yours to confirm.</p>
+      <p>From v0.7.0 the macOS build carries a Developer ID signature and Apple notarisation, so Gatekeeper no longer blocks the first launch. Windows Authenticode signing is not done yet, so SmartScreen warns once; each platform enters stable on its own once its signing and verification gates are complete.</p>
+      {/* The four-step Gatekeeper bypass came down with v0.7.0, as its own copy
+          promised. The link stays for readers still holding a v0.6.x download:
+          the guide now says upgrade, not how to allow an old build. */}
+      <p>Still running v0.6.x or an earlier preview? Those packages were unsigned, so macOS blocks their first launch — the <a href={localePath("en", "quickstart/#macos-gatekeeper")}>first-launch guide</a> explains why, and why upgrading now beats allowing an old build.</p>
+      <p>BootAgent will never ask you to disable Gatekeeper, run <code>spctl --master-disable</code>, or lower your system-wide security settings.</p>
     </div>
   </section>
 </BaseLayout>

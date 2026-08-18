@@ -8,7 +8,12 @@ import type { Locale } from "./index";
 const strings = {
   "zh-CN": {
     "site.title": "BootAgent — 可信的本地 AI 开发环境激活器",
-    "site.description": "用一个可信的本地流程，激活你自己的 Agent、账号和 Provider。",
+    /* Names the agents and protocols by hand. The previous copy ("用一个可信的本地
+       流程，激活你自己的 Agent、账号和 Provider。") described the flow without ever
+       saying what it operates on, so it matched no query and gave a search engine
+       nothing to prefer over the page's own text — which on the home page is
+       mostly demo-console labels. */
+    "site.description": "BootAgent 在本机检测并安装 Claude Code、Codex、OpenCode 等编码 Agent，连接 OpenAI 或 Anthropic 兼容的 Provider，写入配置前先验证协议并自动备份。API Key 与配置只留在你自己的电脑上。",
     "skip.main": "跳到主要内容",
     "nav.home": "BootAgent 首页",
     "nav.downloads": "下载",
@@ -27,7 +32,11 @@ const strings = {
        dictionaries so useTranslations stays exhaustive. */
     "nav.chineseOnly": "仅中文",
     "nav.menu": "菜单",
-    "cta.download": "下载预览版",
+    /* The header button says what it downloads, not which channel it is. The
+       channel is a property of today's build, and the download page states it in
+       full — a chrome button that reads "下载预览版" on every page of the site made
+       "preview" the loudest word about the product. */
+    "cta.download": "下载 BootAgent",
     "theme.toggle": "切换深色模式",
     "lang.switch": "切换语言",
     "breadcrumb.label": "面包屑",
@@ -42,7 +51,12 @@ const strings = {
     "footer.providerCatalog": "Provider 目录",
     "footer.supportFeedback": "支持与反馈",
     "footer.releaseIndex": "GitHub Releases",
-    "footer.channel": "当前公开渠道：technical-preview-unsigned",
+    /* A link to the page that states the channel in full, rather than the raw
+       slug it used to print. A channel id is release-feed vocabulary and means
+       nothing to a reader who has not already read /security/ — where the
+       channel, each platform's signing status and what the channel does not
+       claim are all set out. */
+    "footer.channel": "发行渠道与完整性",
     /* The count is as fresh as the last deploy, so the label says "查看源码"
        rather than implying a live figure. */
     "github.label": "在 GitHub 上查看 BootAgent 源码",
@@ -50,7 +64,8 @@ const strings = {
   },
   en: {
     "site.title": "BootAgent — a trustworthy local AI development environment activator",
-    "site.description": "Activate your own agents, accounts and providers through one auditable local flow.",
+    /* See the Chinese entry for why this names agents and protocols outright. */
+    "site.description": "BootAgent detects and installs coding agents like Claude Code, Codex and OpenCode on your own machine, connects them to any OpenAI- or Anthropic-compatible provider, and verifies the protocol before writing config. Your API keys never leave your computer.",
     "skip.main": "Skip to main content",
     "nav.home": "BootAgent home",
     "nav.downloads": "Downloads",
@@ -66,7 +81,8 @@ const strings = {
     "nav.openMenu": "Open navigation menu",
     "nav.chineseOnly": "in Chinese",
     "nav.menu": "Menu",
-    "cta.download": "Get the preview",
+    /* See the Chinese entry. */
+    "cta.download": "Download BootAgent",
     "theme.toggle": "Toggle dark mode",
     "lang.switch": "Change language",
     "breadcrumb.label": "Breadcrumb",
@@ -81,7 +97,8 @@ const strings = {
     "footer.providerCatalog": "Provider catalogue",
     "footer.supportFeedback": "Support & feedback",
     "footer.releaseIndex": "GitHub Releases",
-    "footer.channel": "Current public channel: technical-preview-unsigned",
+    /* See the Chinese entry. */
+    "footer.channel": "Release channel & integrity",
     "github.label": "View the BootAgent source on GitHub",
     "github.labelWithCount": "View the BootAgent source on GitHub, {count} stars",
   },

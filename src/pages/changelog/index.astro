@@ -5,7 +5,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <header class="page-hero">
     <div class="shell page-hero-grid">
       <div><nav class="breadcrumb" aria-label="面包屑"><a href="">首页</a> / 更新日志</nav><p class="eyebrow">Release notes</p><h1 class="page-title">只记录已经发生的变化。</h1></div>
-      <div class="page-hero-aside"><strong>0.3.0</strong>首个公开发行版本，仍是未签名技术预览版：macOS 公证与 Windows Authenticode 尚未完成，因此不叫 Stable。</div>
+      <div class="page-hero-aside"><strong>0.7.0</strong>macOS 版自此带 Developer ID 签名并经 Apple 公证；Windows Authenticode 尚未完成，因此仍是技术预览版。</div>
     </div>
   </header>
   <section class="section-compact">
@@ -13,6 +13,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <p class="hero-note">本产品原名 OneAgent，2026 年 8 月改名为 BootAgent。下方条目保留当时的名称，因为它们记录的是那些日期上真实发生的事。</p>
     </div>
     <div class="wide-narrow timeline reveal">
+      <article class="timeline-item"><div class="timeline-date">2026-08-17<br />0.7.0</div><div><span class="chip chip-green">已签名</span><h2>macOS 产物开始携带签名与公证</h2><ul><li>macOS 产物带 Developer ID 签名（Team ID <code>F2VC757B28</code>）并通过 Apple 公证，公证票据已装订，首次打开不再被 Gatekeeper 拦截。</li><li>快速开始里的四步放行指南按其自身承诺撤下；仍在使用 v0.6.x 及更早历史包的读者应直接升级。</li><li>Windows Authenticode 与各平台验证门禁仍未完成，渠道整体仍是技术预览版。</li></ul></div></article>
       <article class="timeline-item"><div class="timeline-date">2026-08-06<br />0.3.0</div><div><span class="chip chip-accent">已发行</span><h2>首个公开发行版本</h2><ul><li>内核由 Python 重写为 Go，manifest 移入 <code>manifests/</code>。</li><li>发行 macOS 与 Windows 各两种架构的产物，共四个，每个都带 GitHub 发行流报告的 SHA-256。</li><li>新增 OpenClaw 与 Hermes 为可管理安装与配置的 Agent；Cursor 不再列入安装清单。</li><li>新增桌面端 Agent 安装：ChatGPT Desktop 与 WorkBuddy。</li><li>内置默认模型固定为 <code>deepseek/deepseek-v4-pro</code>。</li><li>PPIO 与 Novita 登记为赞助方，并在 Provider 页面披露；商业关系不影响 Agent 排序与兼容性结论。</li></ul></div></article>
       <article class="timeline-item"><div class="timeline-date">2026-07-28<br />0.2.0-dev</div><div><h2>可信分发站与发行事实层</h2><ul><li>新增由平台 manifest、SHA256SUMS 和渠道配置生成的公开发行索引。</li><li>macOS arm64 产物完成精确 SHA-256 对应的原生 cleanroom 复核。</li><li>新增独立公开网站，不改变本地 Launcher 打包与运行方式。</li></ul></div></article>
       <article class="timeline-item"><div class="timeline-date">2026-07-28<br />af14f3e</div><div><h2>选择页排序与总览一致</h2><ul><li>按 rank 划分首屏 Agent，避免使用 group 代替用户认知排序。</li><li>guide-only Agent 继续可选择并在 Review 中返回引导结果。</li></ul></div></article>

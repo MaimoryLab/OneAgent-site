@@ -1,38 +1,5 @@
 {
   "schemaVersion": 1,
-  "note": "Provenance for the screenshots in this directory. These are not redistributable third-party marks like the agent icons — they are screen captures of macOS system UI, made on a Mac running OneAgent, showing what the operating system displays when it blocks an unsigned application. Apple owns the interface elements pictured. They are included because the Gatekeeper guide cannot be followed without seeing which dialog is which, and a described-only version would send readers hunting through System Settings. No Apple endorsement is implied. Captured with no account name, device name, or other identifying detail visible; verified before committing.",
-  "assets": {
-    "gatekeeper-1-blocked": {
-      "file": "gatekeeper-1-blocked.png",
-      "shows": "First launch blocked: \"未打开“OneAgent”\", with 完成 and 移到废纸篓.",
-      "source": "Screen capture of macOS system UI",
-      "copyrightOwner": "Apple Inc.",
-      "basis": "illustrative use in documentation of the operating system's own behaviour",
-      "sha256": "f0a683b904e54158bcb7e82feba511d7e78f7c6d94dd397d466c9bbde6e4fdc6"
-    },
-    "gatekeeper-2-settings": {
-      "file": "gatekeeper-2-settings.jpg",
-      "shows": "系统设置 › 隐私与安全性 › 安全性, with the 仍要打开 button beside the blocked-app notice.",
-      "source": "Screen capture of macOS system UI",
-      "copyrightOwner": "Apple Inc.",
-      "basis": "illustrative use in documentation of the operating system's own behaviour",
-      "sha256": "e539e7eb7db17e50f60d3cbe3612cbc2ebc7cc0b2d955a7f8a6d3770e3da2feb"
-    },
-    "gatekeeper-3-open-anyway": {
-      "file": "gatekeeper-3-open-anyway.png",
-      "shows": "Confirmation dialog \"打开“OneAgent”？\" warning that the source cannot be verified.",
-      "source": "Screen capture of macOS system UI",
-      "copyrightOwner": "Apple Inc.",
-      "basis": "illustrative use in documentation of the operating system's own behaviour",
-      "sha256": "a9afa9579b50f5fd0d1e933e8daa8d6fd76b939e48c0ee72e795dbc626cc2cc7"
-    },
-    "gatekeeper-4-authenticate": {
-      "file": "gatekeeper-4-authenticate.jpg",
-      "shows": "Administrator authentication prompt: Touch ID or password.",
-      "source": "Screen capture of macOS system UI",
-      "copyrightOwner": "Apple Inc.",
-      "basis": "illustrative use in documentation of the operating system's own behaviour",
-      "sha256": "40ab789beb82ac7385940a158505421d3b4c312141eb35c45f0570c4b4954fec"
-    }
-  }
+  "note": "Provenance for screenshots in this directory. Empty since v0.7.0: the four Gatekeeper screen captures documented what macOS displays when it blocks an unsigned application, and came down with the bypass walkthrough once the macOS builds became Developer ID-signed and notarised — the quickstart now tells readers of older builds to upgrade instead. The asset-rights test keeps guarding this directory, so any screenshot added later must be recorded here with its source, owner, basis and SHA-256.",
+  "assets": {}
 }

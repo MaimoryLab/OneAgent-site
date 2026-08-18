@@ -1,10 +1,5 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-
-/* Applied explicitly rather than relying on <base> resolution, so the same markup
-   works if this page ever moves under a path segment — which is what breaks the
-   English copy of this guide. */
-const base = import.meta.env.BASE_URL;
 ---
 <BaseLayout title="快速开始 — BootAgent" description="从下载到首次 Agent 配置成功的 BootAgent 快速开始指南。">
   <header class="page-hero">
@@ -20,37 +15,23 @@ const base = import.meta.env.BASE_URL;
   <section class="section-compact">
     <div class="shell content-grid reveal">
       <article class="prose">
-        <div class="notice notice-warning">
-          <span class="notice-mark">!</span><div><strong>当前是未签名技术预览版</strong><p>macOS 首次打开会被 Gatekeeper 拦截，这是预期行为。<a href="#macos-gatekeeper">下面的指南</a>说明如何只为这一个应用放行，以及这样做意味着什么。你也可以选择等签名版本，或使用仓库文档中的源码路径。</p></div>
+        <div class="notice notice-info">
+          <span class="notice-mark">i</span><div><strong>macOS 版已签名并通过 Apple 公证</strong><p>自 v0.7.0 起，macOS 产物带 Developer ID 签名并经公证，校验 SHA-256 后直接打开即可。Windows 版的 Authenticode 签名尚未完成，SmartScreen 仍会提示一次，这也是渠道仍叫技术预览版的原因之一。</p></div>
         </div>
         <h2 id="download">1. 下载并校验</h2>
         <p>从下载中心选择与你的平台和架构匹配的产物。运行前计算 SHA-256，并与下载页显示的值逐字核对。</p>
         <h2 id="launch">2. 启动 BootAgent</h2>
-        <p>解压后运行 BootAgent。界面在本机回环地址上提供服务，不暴露到局域网或公网；关闭应用后本地服务随之退出。</p>
-        <h3 id="macos-gatekeeper">macOS 首次打开：为什么被拦截，怎么放行</h3>
-        <p>当前产物没有 Apple Developer ID 签名，也没有公证。macOS 的 Gatekeeper 因此拒绝打开它，并且第一个弹窗里最显眼的按钮是“移到废纸篓”。这不是下载损坏或误报，而是 Gatekeeper 对所有未公证应用的正常反应。</p>
-        <p>先做一件事再继续：<strong>回到下载页核对 SHA-256</strong>。签名本来负责回答“这个文件是不是发布者构建的那一个”，没有签名时，校验和是你唯一的等价手段。哈希不一致就不要打开。</p>
-        <ol class="guide-steps">
-          <li>
-            <p>第一次打开时出现这个弹窗。点<strong>“完成”</strong>，不要点“移到废纸篓”。</p>
-            <figure><img src={`${base}images/guide/gatekeeper-1-blocked.png`} alt="macOS 弹窗：未打开“BootAgent”，Apple 无法验证其是否包含恶意软件，提供“完成”与“移到废纸篓”两个按钮。" width="520" height="470" loading="lazy" /></figure>
-          </li>
-          <li>
-            <p>打开<strong>系统设置 › 隐私与安全性</strong>，向下滚动到<strong>安全性</strong>。这里会出现一条“已阻止‘BootAgent’以保护 Mac”，旁边是<strong>“仍要打开”</strong>。这一条只在被拦截后的一段时间内显示，如果没看到，重新打开一次应用即可。</p>
-            <figure><img src={`${base}images/guide/gatekeeper-2-settings.jpg`} alt="系统设置的隐私与安全性面板，安全性一节显示已阻止 BootAgent，右侧有“仍要打开”按钮。" width="1446" height="1250" loading="lazy" /></figure>
-          </li>
-          <li>
-            <p>再次确认。这个弹窗把风险说清楚了：Apple 无法验证来源。点<strong>“仍要打开”</strong>。</p>
-            <figure><img src={`${base}images/guide/gatekeeper-3-open-anyway.png`} alt="macOS 确认弹窗：打开“BootAgent”？提示无法验证其是否包含恶意软件，提供“移到废纸篓”“仍要打开”“完成”三个按钮。" width="520" height="638" loading="lazy" /></figure>
-          </li>
-          <li>
-            <p>用<strong>管理员触控 ID 或密码</strong>授权。系统要求管理员身份，是因为这一步改变的是这台机器的执行策略，不只是一次点击。</p>
-            <figure><img src={`${base}images/guide/gatekeeper-4-authenticate.jpg`} alt="macOS 授权弹窗：要求使用管理员触控 ID 或输入管理员密码来允许此次操作。" width="260" height="272" loading="lazy" /></figure>
-          </li>
-        </ol>
-        <div class="notice notice-warning">
-          <span class="notice-mark">!</span><div><strong>这一步实际做了什么</strong><p>它为 BootAgent 这一个应用添加了一条例外，让它绕过公证检查。它不会关闭 Gatekeeper，不影响其他应用，也不改变系统整体安全设置。BootAgent 不会要求你执行 <code>spctl --master-disable</code> 或类似命令——任何让你关掉全局防护的说明都不来自我们。</p><p>代价要说清楚：你放弃的是“Apple 已扫描过这个二进制”这层保证，换来的是自己核对 SHA-256。签名与公证完成后，上面四步都不再需要，届时这份指南也会撤下。</p></div>
-        </div>
+        <p>macOS 打开 DMG 后把应用拖入「应用程序」，Windows 运行安装器，Linux 给下载的文件加可执行权限。界面在本机回环地址上提供服务，不暴露到局域网或公网；关闭应用后本地服务随之退出。</p>
+        {/* The four-step Gatekeeper bypass that lived here promised its own
+            removal: "签名与公证完成后，上面四步都不再需要，届时这份指南也会撤下。"
+            v0.7.0 delivered the signature, so the walkthrough is gone — teaching
+            an allowance would now only serve outdated builds, and the safer move
+            for those is an upgrade, not an exception. The heading and anchor stay
+            because the download page and external links still point here. */}
+        <h3 id="macos-gatekeeper">macOS 首次打开</h3>
+        <p>自 v0.7.0 起，macOS 产物带 Developer ID 签名，并已通过 Apple 公证。首次打开只有 macOS 对下载文件的常规确认，不再出现“无法验证开发者”的拦截，也不需要在系统设置里放行任何东西。</p>
+        <p>如果你打开的是 v0.6.x 或更早的历史预览版，Gatekeeper 仍会拦截它——那些包没有签名。不要为旧版本添加放行例外：<a href="downloads/">升级到当前版本</a>，拦截随签名一起消失。</p>
+        <p>这条边界不变：BootAgent 从不要求你执行 <code>spctl --master-disable</code>、关闭 Gatekeeper 或降低系统整体安全设置。</p>
         <h2 id="agent">3. 选择 Agent</h2>
         <p>选择你真正要使用的工具。标记为“官方安装引导”的 Agent 仍可进入流程，但 BootAgent 不会把它们伪装成自动安装或自动配置。</p>
         <h2 id="provider">4. 连接自己的 Provider</h2>
@@ -68,7 +49,7 @@ const base = import.meta.env.BASE_URL;
           <li>Key 被拒绝：回到 Provider 控制台检查权限与余额，不要把 Key 发到聊天或 Issue。</li>
           <li>协议不兼容：换用明确支持该 Agent 协议的模型，而不是只验证 <code>/v1/models</code>。</li>
           <li>下载校验不一致：不要运行文件，保留文件名、下载地址与实际 SHA-256。</li>
-          <li>macOS 提示“已损坏，无法打开”：这通常仍是公证拦截，而不是文件真的损坏。先核对 SHA-256，一致的话按 <a href="#macos-gatekeeper">macOS 首次打开</a>处理。</li>
+          <li>macOS 提示“已损坏，无法打开”：先核对 SHA-256。如果打开的是 v0.6.x 或更早的旧版本，这通常是旧包的公证拦截，<a href="downloads/">升级到当前签名版本</a>即可；当前版本哈希一致仍报损坏，就重新下载一次。</li>
         </ul>
         <p><a class="button button-primary" href="downloads/">前往下载中心</a></p>
       </article>

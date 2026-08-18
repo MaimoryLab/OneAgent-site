@@ -42,9 +42,9 @@ With a provider from the catalogue, a failure is usually the key. Note that some
 
 ## The operating system blocks the first launch
 
-This is not a failure. What ships today is an unsigned, unnotarised technical preview, so both macOS Gatekeeper and Windows SmartScreen stop it once.
+The macOS build is signed and notarised by Apple since v0.7.0, so a normal launch is not blocked. If you are blocked, check the version first: v0.6.x and earlier were unsigned — [upgrade to the current version](/en/downloads/) rather than adding an allowance for an old build.
 
-[Quickstart](/en/quickstart/) has four screenshots for macOS. You only do this once.
+Windows Authenticode signing is not done yet, so SmartScreen warns once about an unknown publisher. Confirm the SHA-256 matches before continuing.
 
 ## I want to undo a change
 

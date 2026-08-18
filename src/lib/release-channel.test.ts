@@ -46,12 +46,12 @@ describe("release channel", () => {
      its tag says nothing about a preview, so reading the flag labelled it 稳定版
      and implied signed, notarised binaries. Upstream's release notes record no
      signing step. Under-claiming is the safe direction here. */
-  it("stays on the unsigned preview for a plain release, however it is flagged", async () => {
+  it("stays on the technical preview for a plain release, however it is flagged", async () => {
     const { getPreviewChannel } = await load([release()]);
     const channel = await getPreviewChannel();
 
-    expect(channel?.channel).toBe("technical-preview-unsigned");
-    expect(channel?.unsigned).toBe(true);
+    expect(channel?.channel).toBe("technical-preview");
+    expect(channel?.label).toBe("技术预览版");
   });
 
   it("only claims Stable when the tag opts in explicitly", async () => {
@@ -59,7 +59,39 @@ describe("release channel", () => {
     const channel = await getPreviewChannel();
 
     expect(channel?.channel).toBe("stable");
-    expect(channel?.unsigned).toBe(false);
+    expect(channel?.targets.find((target) => target.id === "windows-x64")?.signing).toBe("signed");
+  });
+
+  /* The floor is the evidence: the v0.7.0 DMGs were verified by hand (Developer
+     ID F2VC757B28, notarisation ticket stapled, spctl accepted) and upstream
+     PR #199 moved signing into the release workflow. Windows carried no
+     Authenticode certificate table in the same check. */
+  it("marks macOS notarized from v0.7.0 while Windows stays unsigned", async () => {
+    const { getPreviewChannel } = await load([release({ tag_name: "v0.7.0" })]);
+    const channel = await getPreviewChannel();
+    const signingOf = (id: string) => channel?.targets.find((target) => target.id === id)?.signing;
+
+    expect(signingOf("macos-arm64")).toBe("notarized");
+    expect(signingOf("macos-x64")).toBe("notarized");
+    expect(signingOf("windows-x64")).toBe("unsigned");
+    expect(signingOf("linux-x64")).toBe("not-applicable");
+  });
+
+  it("keeps macOS unsigned for releases before the notarisation floor", async () => {
+    const { getPreviewChannel } = await load([release({ tag_name: "v0.6.4" })]);
+    const channel = await getPreviewChannel();
+
+    expect(channel?.targets.find((target) => target.id === "macos-arm64")?.signing).toBe("unsigned");
+  });
+
+  /* "0.10.0" is newer than "0.7.0" numerically but older lexicographically —
+     the comparison must be numeric per segment or the floor collapses at the
+     first double-digit minor. */
+  it("compares the notarisation floor numerically, not lexicographically", async () => {
+    const { getPreviewChannel } = await load([release({ tag_name: "v0.10.0" })]);
+    const channel = await getPreviewChannel();
+
+    expect(channel?.targets.find((target) => target.id === "macos-arm64")?.signing).toBe("notarized");
   });
 
   it("reports the version without the tag's v prefix", async () => {
