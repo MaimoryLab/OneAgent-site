@@ -529,7 +529,10 @@ const demoLabel = (status: string) => status === "ready"
     background: var(--surface);
     cursor: pointer;
   }
-  .explorer-card:hover, .explorer-card.is-selected { border-color: var(--accent); box-shadow: var(--shadow-lift); }
+  /* Hover lifts neutrally; the accent border is reserved for .is-selected,
+     which is a state, not a hover. */
+  .explorer-card:hover { border-color: var(--line-strong); box-shadow: var(--shadow-lift); }
+  .explorer-card.is-selected { border-color: var(--accent); box-shadow: var(--shadow-lift); }
   .explorer-card-head { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 11px; }
   .explorer-card-head > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
   .explorer-card-head strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; }
