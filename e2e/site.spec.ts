@@ -411,6 +411,16 @@ test("download center recommends an available artifact but keeps manual choices"
      artifact; with four published it resolves to four nodes and fails strict mode. */
   await expect(active.getByText("Developer ID 签名 + Apple 公证", { exact: true })).toBeVisible();
 
+  /* The primary block is the zero-decision path: it must offer the same file
+     the selected panel offers, and follow the picker rather than stay pinned to
+     whatever the server rendered first. */
+  const primary = page.locator(".download-primary");
+  await expect(primary).toContainText("macOS");
+  await expect(primary.getByRole("link", { name: "立即下载" })).toHaveAttribute(
+    "href",
+    /^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\/.*darwin/,
+  );
+
   /* Windows shipping is the substance of the v0.3.0 sync, so it is asserted
      rather than left implied: the parsing bug that prompted this dropped three of
      four assets, and a green suite that never checks a second platform would not
@@ -421,6 +431,9 @@ test("download center recommends an available artifact but keeps manual choices"
      Windows here. Asserting both directions keeps a later "simplification" from
      collapsing the per-target value back into one channel-wide claim. */
   await expect(active.getByText("未签名", { exact: true })).toBeVisible();
+  // The primary block followed the switch, and its file followed the target.
+  await expect(primary).toContainText("Windows");
+  await expect(primary.getByRole("link", { name: "立即下载" })).toHaveAttribute("href", /windows/);
 });
 
 /* Security and enterprise came out of the chrome, but the pages did not go

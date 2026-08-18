@@ -1,6 +1,6 @@
 ---
 import { bestLocaleFor, localeFromPath, localePath } from "../i18n";
-import { formatBytes, formatDate } from "../lib/downloads";
+import { formatBytes, formatDate, releasesPageUrl } from "../lib/downloads";
 import { binaryArtifact, getPreviewChannel, primaryDownload } from "../lib/release-channel";
 
 /* Everything below reads off a channel: the platform picker, the checksum, the
@@ -9,6 +9,11 @@ import { binaryArtifact, getPreviewChannel, primaryDownload } from "../lib/relea
    panels that look like a broken page. */
 const channel = await getPreviewChannel();
 const defaultTarget = channel?.targets.find((target) => target.status === "available") ?? channel?.targets[0] ?? null;
+/* The primary block above the picker: one button for the target a visitor most
+   likely wants, so the common case is zero decisions. It renders off the same
+   default the picker preselects, and the client script keeps the two in step. */
+const defaultArtifact = defaultTarget ? binaryArtifact(defaultTarget) : null;
+const defaultDownload = defaultArtifact ? primaryDownload(defaultArtifact) : null;
 /* The sidebar notice describes macOS signing, so it reads the same per-target
    state the signing row reads. A constant here would contradict that row the
    moment the feed serves a pre-0.7.0 release — a rollback, or a fork publishing
@@ -22,6 +27,9 @@ const c = locale === "en"
       available: "Available",
       pending: "Verifying",
       detected: "Showing the platform that is currently downloadable; you can switch at any time.",
+      primaryEyebrow: "Direct download",
+      primaryCta: "Download now",
+      historyNote: "Past versions and the full artifact list live on",
       notStableTitle: "This is not stable yet",
       notStableBody: macosSigning === "notarized"
         ? "The macOS build is Developer ID-signed and notarised by Apple, so the first launch opens normally. The Windows build carries no Authenticode signature yet, so SmartScreen warns once about an unknown publisher. Each platform reaches stable on its own once its signing and verification evidence are complete — until then, verify the SHA-256 after downloading."
@@ -62,6 +70,9 @@ const c = locale === "en"
       available: "可下载",
       pending: "验证中",
       detected: "已优先显示当前可下载的平台；你可以随时手动切换。",
+      primaryEyebrow: "直接下载",
+      primaryCta: "立即下载",
+      historyNote: "历史版本与完整产物清单见",
       notStableTitle: "还不叫 Stable",
       notStableBody: macosSigning === "notarized"
         ? "macOS 版已由 Developer ID 签名并经 Apple 公证，首次打开不再被拦截。Windows 版尚未完成 Authenticode 签名，SmartScreen 会提示一次“未知发布者”。按 Stable 门禁，每个平台在签名与验证证据齐备后各自转正——在那之前，下载后请核对 SHA-256。"
@@ -106,7 +117,22 @@ const c = locale === "en"
     </div>
   </div>
 ) : (
-<div class="download-layout" data-download-selector>
+<div class="download-layout-wrap" data-download-selector>
+{defaultDownload && defaultArtifact && (
+  <div class="download-primary">
+    <div>
+      <p class="eyebrow">{c.primaryEyebrow}</p>
+      <p class="download-primary-title">BootAgent {channel.version}<span class="download-primary-target" data-primary-target> · {defaultTarget!.platformLabel} {defaultTarget!.archLabel}</span></p>
+      <p class="download-primary-meta"><span data-primary-size>{formatBytes(defaultArtifact.bytes)}</span> · <span data-primary-signing>{c.signingValue[defaultTarget!.signing]}</span></p>
+    </div>
+    {/* Named differently from the per-panel buttons on purpose: two links whose
+        accessible names both match /下载 .* 预览版/ would trip every strict-mode
+        locator in the e2e suite, and a reader scanning the page should see one
+        primary action and one detailed panel, not the same button twice. */}
+    <a class="button button-primary download-primary-button" data-primary-link href={defaultDownload.url} download>{c.primaryCta}</a>
+  </div>
+)}
+<div class="download-layout">
   <aside class="platform-control">
     <fieldset class="platform-picker" data-platform-picker>
       <legend>{c.legend}</legend>
@@ -151,7 +177,15 @@ const c = locale === "en"
       const artifact = binaryArtifact(target);
       const download = artifact ? primaryDownload(artifact) : null;
       return (
-        <section class:list={["release-panel", { "is-active": target.id === defaultTarget.id }]} data-release-panel={target.id} aria-hidden={target.id === defaultTarget.id ? "false" : "true"}>
+        <section
+          class:list={["release-panel", { "is-active": target.id === defaultTarget.id }]}
+          data-release-panel={target.id}
+          aria-hidden={target.id === defaultTarget.id ? "false" : "true"}
+          data-download-url={download?.url}
+          data-target-label={`${target.platformLabel} ${target.archLabel}`}
+          data-size-label={artifact ? formatBytes(artifact.bytes) : undefined}
+          data-signing-label={c.signingValue[target.signing]}
+        >
           <div class="release-head">
             <div>
               <h2>{target.platformLabel}</h2>
@@ -216,6 +250,8 @@ const c = locale === "en"
     })}
   </div>
 </div>
+<p class="download-history">{c.historyNote} <a href={releasesPageUrl} rel="noopener">GitHub Releases</a>{locale === "en" ? "." : "。"}</p>
+</div>
 )}
 
 <script>
@@ -226,12 +262,34 @@ const c = locale === "en"
   const note = root?.querySelector<HTMLElement>("[data-detected-note]");
   const panels = root ? Array.from(root.querySelectorAll<HTMLElement>("[data-release-panel]")) : [];
 
+  /* Keeps the primary block in step with the picker, reading the per-target
+     values the server rendered onto each panel. A target with no artifact has
+     no data-download-url, and the primary block hides rather than keep offering
+     the previous target's file under the new target's name. */
+  const primary = root?.querySelector<HTMLElement>(".download-primary");
+  const primaryLink = primary?.querySelector<HTMLAnchorElement>("[data-primary-link]");
+  const updatePrimary = (id: string) => {
+    if (!primary || !primaryLink) return;
+    const panel = panels.find((candidate) => candidate.dataset.releasePanel === id);
+    const url = panel?.dataset.downloadUrl;
+    primary.hidden = !url;
+    if (!panel || !url) return;
+    primaryLink.href = url;
+    const target = primary.querySelector("[data-primary-target]");
+    if (target) target.textContent = ` · ${panel.dataset.targetLabel ?? ""}`;
+    const size = primary.querySelector("[data-primary-size]");
+    if (size) size.textContent = panel.dataset.sizeLabel ?? "";
+    const signing = primary.querySelector("[data-primary-signing]");
+    if (signing) signing.textContent = panel.dataset.signingLabel ?? "";
+  };
+
   const show = (id: string) => {
     panels.forEach((panel) => {
       const active = panel.dataset.releasePanel === id;
       panel.classList.toggle("is-active", active);
       panel.setAttribute("aria-hidden", active ? "false" : "true");
     });
+    updatePrimary(id);
   };
 
   // The detection notes are localised templates passed from the server through
